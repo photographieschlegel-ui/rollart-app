@@ -74,11 +74,23 @@
 
     <h2>Wettbewerb speichern</h2>
 
-    <input type="text" id="competitionName" placeholder="Wettbewerb">
+    <input type="text"
+    id="competitionName"
+    placeholder="Wettbewerb">
 
-    <input type="text" id="competitionPlace" placeholder="Ort">
+    <input type="text"
+    id="competitionPlace"
+    placeholder="Ort">
 
-    <input type="date" id="competitionDate">
+    <label>Von:</label>
+
+    <input type="date"
+    id="competitionDateFrom">
+
+    <label>Bis:</label>
+
+    <input type="date"
+    id="competitionDateTo">
 
     <button onclick="saveCompetition()">
       Wettbewerb speichern
@@ -98,7 +110,9 @@
 
     <h2>Kategorie speichern</h2>
 
-    <input type="text" id="categoryName" placeholder="Kategorie">
+    <input type="text"
+    id="categoryName"
+    placeholder="Kategorie">
 
     <button onclick="saveCategory()">
       Kategorie speichern
@@ -160,13 +174,19 @@ const db = getFirestore(app);
 
 window.saveCompetition = async function () {
 
-  const name = document.getElementById("competitionName").value;
+  const name =
+  document.getElementById("competitionName").value;
 
-  const place = document.getElementById("competitionPlace").value;
+  const place =
+  document.getElementById("competitionPlace").value;
 
-  const date = document.getElementById("competitionDate").value;
+  const from =
+  document.getElementById("competitionDateFrom").value;
 
-  if(!name || !place || !date){
+  const to =
+  document.getElementById("competitionDateTo").value;
+
+  if(!name || !place || !from || !to){
 
     alert("Bitte alles ausfüllen");
 
@@ -183,7 +203,8 @@ window.saveCompetition = async function () {
       {
         name:name,
         place:place,
-        date:date,
+        from:from,
+        to:to,
         created:new Date().toISOString()
       }
 
@@ -193,7 +214,9 @@ window.saveCompetition = async function () {
 
     document.getElementById("competitionPlace").value = "";
 
-    document.getElementById("competitionDate").value = "";
+    document.getElementById("competitionDateFrom").value = "";
+
+    document.getElementById("competitionDateTo").value = "";
 
     loadCompetitions();
 
@@ -213,13 +236,15 @@ window.saveCompetition = async function () {
 
 window.saveCategory = async function(){
 
-  const competitionId =
-  document.getElementById("competitionSelect").value;
+  const select =
+  document.getElementById("competitionSelect");
+
+  const competitionId = select.value;
 
   const category =
   document.getElementById("categoryName").value;
 
-  if(!competitionId){
+  if(select.selectedIndex === -1){
 
     alert("Bitte Wettbewerb auswählen");
 
@@ -261,7 +286,7 @@ window.saveCategory = async function(){
 
     console.error(e);
 
-    alert("Fehler");
+    alert("Fehler beim Speichern");
 
   }
 
@@ -289,7 +314,8 @@ window.deleteCategory = async function(id){
 
 async function loadCompetitions(){
 
-  const select = document.getElementById("competitionSelect");
+  const select =
+  document.getElementById("competitionSelect");
 
   select.innerHTML = "";
 
@@ -311,7 +337,9 @@ async function loadCompetitions(){
 
       <option value="${d.id}">
 
-        ${c.name} - ${c.place} - ${c.date}
+        ${c.name} |
+        ${c.place} |
+        ${c.from} bis ${c.to}
 
       </option>
 
@@ -362,7 +390,9 @@ async function loadCompetitionList(){
 
           ${c.place}<br>
 
-          ${c.date}<br><br>
+          ${c.from} bis ${c.to}
+
+          <br><br>
 
           <button class="danger"
           onclick="deleteCompetition('${d.id}')">
@@ -397,9 +427,7 @@ async function loadCategories(){
 
     collection(db,"categories"),
 
-    where("competitionId","==",competitionId),
-
-    orderBy("created","desc")
+    where("competitionId","==",competitionId)
 
   );
 
