@@ -8,7 +8,6 @@
 <title>RollArt Score Pro</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 
@@ -28,16 +27,6 @@ padding:20px;
 
 .logo{
 font-size:34px;
-font-weight:bold;
-margin-bottom:20px;
-}
-
-.live-banner{
-background:linear-gradient(135deg,#7c3aed,#2563eb);
-padding:20px;
-border-radius:20px;
-text-align:center;
-font-size:28px;
 font-weight:bold;
 margin-bottom:20px;
 }
@@ -62,8 +51,8 @@ background:#334155;
 
 .card{
 background:#1e293b;
-border-radius:20px;
 padding:20px;
+border-radius:20px;
 margin-top:20px;
 }
 
@@ -82,16 +71,12 @@ border-left:5px solid #22c55e;
 border-left:5px solid #3b82f6;
 }
 
-.score{
-border-left:5px solid #f59e0b;
-}
-
-button,input,select{
+button,input{
 width:100%;
 padding:14px;
 margin-top:10px;
-border-radius:14px;
 border:none;
+border-radius:14px;
 background:#475569;
 color:white;
 font-size:16px;
@@ -106,10 +91,6 @@ background:linear-gradient(135deg,#2563eb,#7c3aed);
 
 .success{
 background:linear-gradient(135deg,#16a34a,#22c55e)!important;
-}
-
-.danger{
-background:linear-gradient(135deg,#dc2626,#ef4444)!important;
 }
 
 .grid{
@@ -130,25 +111,25 @@ gap:15px;
 🏆 RollArt Score Pro
 </div>
 
-<div class="live-banner">
-LIVE WETTKAMPF SYSTEM
-</div>
-
 <div class="tabs">
 
-<div class="tab" onclick="showTab('competitionTab')">
+<div class="tab"
+onclick="showTab('competitionTab')">
 🏟 Wettbewerb
 </div>
 
-<div class="tab" onclick="showTab('pdfTab')">
-📄 PDF Import
+<div class="tab"
+onclick="showTab('pdfTab')">
+📄 PDF
 </div>
 
-<div class="tab" onclick="showTab('categoryTab')">
+<div class="tab"
+onclick="showTab('categoryTab')">
 🕒 Kategorien
 </div>
 
-<div class="tab" onclick="showTab('runnerTab')">
+<div class="tab"
+onclick="showTab('runnerTab')">
 👥 Läufer
 </div>
 
@@ -166,6 +147,18 @@ LIVE WETTKAMPF SYSTEM
 id="competitionName"
 placeholder="Wettbewerb">
 
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
+
+<label>Von</label>
+<input type="date"
+id="competitionFrom">
+
+<label>Bis</label>
+<input type="date"
+id="competitionTo">
+
 <button class="success"
 onclick="saveCompetition()">
 
@@ -181,7 +174,8 @@ onclick="saveCompetition()">
 
 <!-- PDF -->
 
-<div id="pdfTab" style="display:none;">
+<div id="pdfTab"
+style="display:none;">
 
 <div class="card">
 
@@ -192,7 +186,16 @@ id="pdfUpload"
 accept=".pdf">
 
 <button onclick="readPDF()">
+
 PDF analysieren
+
+</button>
+
+<button class="success"
+onclick="saveImportedData()">
+
+💾 Import speichern
+
 </button>
 
 <div id="pdfInfo"></div>
@@ -203,7 +206,8 @@ PDF analysieren
 
 <!-- Kategorien -->
 
-<div id="categoryTab" style="display:none;">
+<div id="categoryTab"
+style="display:none;">
 
 <div class="card">
 
@@ -218,7 +222,8 @@ class="grid"></div>
 
 <!-- Läufer -->
 
-<div id="runnerTab" style="display:none;">
+<div id="runnerTab"
+style="display:none;">
 
 <div class="card">
 
@@ -238,6 +243,13 @@ class="grid"></div>
 let runners = [];
 let categories = [];
 
+let competition = {
+name:"",
+place:"",
+from:"",
+to:""
+};
+
 function showTab(tabId){
 
 const tabs = [
@@ -249,36 +261,62 @@ const tabs = [
 
 tabs.forEach(id=>{
 
-document.getElementById(id)
+document
+.getElementById(id)
 .style.display = "none";
 
 });
 
-document.getElementById(tabId)
+document
+.getElementById(tabId)
 .style.display = "block";
 
 }
 
 function saveCompetition(){
 
-const name =
-document.getElementById("competitionName").value;
+competition = {
+
+name:
+document.getElementById("competitionName").value,
+
+place:
+document.getElementById("competitionPlace").value,
+
+from:
+document.getElementById("competitionFrom").value,
+
+to:
+document.getElementById("competitionTo").value
+
+};
 
 localStorage.setItem(
-"competition_name",
-name
+"rollart_competition",
+JSON.stringify(competition)
 );
 
-document.getElementById("competitionOutput")
+document
+.getElementById("competitionOutput")
 .innerHTML = `
 
 <div class="item">
 
-✅ Wettbewerb gespeichert
+🏆 ${competition.name}
 
 <br><br>
 
-🏆 ${name}
+📍 ${competition.place}
+
+<br><br>
+
+📅 ${competition.from}
+bis
+${competition.to}
+
+<br><br>
+
+✅ Gespeichert
 
 </div>
 
@@ -310,24 +348,26 @@ await pdfjsLib
 .getDocument(typedarray)
 .promise;
 
-let text = "";
+let fullText = "";
 
 for(let i=1;i<=pdf.numPages;i++){
 
 const page =
 await pdf.getPage(i);
 
-const content =
+const textContent =
 await page.getTextContent();
 
-text += " " +
-content.items
+const text =
+textContent.items
 .map(item=>item.str)
 .join(" ");
 
+fullText += " " + text;
+
 }
 
-analyzePDF(text);
+analyzePDF(fullText);
 
 };
 
@@ -341,30 +381,35 @@ runners = [];
 categories = [];
 
 const cleaned =
-text.replace(/\s+/g," ").trim();
+text
+.replace(/\n/g," ")
+.replace(/\s+/g," ")
+.trim();
 
 const categoryRegex =
-/([A-Za-zÄÖÜäöüß0-9\s\.]+?)\s(\d{2}:\d{2})\s(\d{2}:\d{2})/g;
+/([A-Za-zÄÖÜäöüß0-9\s\.]+?)\s(\d{2}:\d{2})\s(\d{2}:\d{2})\s(\d{2}:\d{2}:\d{2})/g;
 
 const categoryMatches =
 [...cleaned.matchAll(categoryRegex)];
 
 categoryMatches.forEach(cat=>{
 
-const categoryName =
+let name =
 cat[1]
+.replace(/30\.04\.2026/gi,"")
+.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
 .replace(/Startfolge Kür/gi,"")
 .replace(/Westhofener Kürpokal/gi,"")
 .replace(/\s+/g," ")
 .trim();
 
-if(categoryName.length > 3){
+if(name.length < 3) return;
 
 categories.push({
 
 id:Date.now()+Math.random(),
 
-name:categoryName,
+name:name,
 
 begin:cat[2],
 
@@ -372,17 +417,28 @@ end:cat[3]
 
 });
 
-}
-
 });
 
 const runnerRegex =
 /(\d+)\s([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s(SSG Ronsdorf|RRD Wuppertal|Wattenscheider RSC|TG Westhofen|TV Datteln 09|TV Walsum-Aldenrade 07)/g;
 
-const runnerMatches =
+const foundRunners =
 [...cleaned.matchAll(runnerRegex)];
 
-runnerMatches.forEach((runner,index)=>{
+let currentCategory = 0;
+let count = 0;
+
+foundRunners.forEach(runner=>{
+
+if(
+categories[currentCategory] &&
+count >= 8
+){
+
+currentCategory++;
+count = 0;
+
+}
 
 runners.push({
 
@@ -395,18 +451,21 @@ name:runner[2],
 club:runner[3],
 
 category:
-categories[index]
-? categories[index].name
+categories[currentCategory]
+? categories[currentCategory].name
 : "Keine Kategorie"
 
 });
+
+count++;
 
 });
 
 renderCategories();
 renderRunners();
 
-document.getElementById("pdfInfo")
+document
+.getElementById("pdfInfo")
 .innerHTML = `
 
 <div class="item">
@@ -442,7 +501,9 @@ output.innerHTML += `
 
 <div class="item category">
 
-<h3>${cat.name}</h3>
+<h3>
+${cat.name}
+</h3>
 
 🕒 ${cat.begin} - ${cat.end}
 
@@ -489,17 +550,68 @@ Start ${runner.start}
 
 }
 
-window.onload = function(){
+function saveImportedData(){
 
-const savedName =
-localStorage.getItem("competition_name");
+localStorage.setItem(
+"rollart_runners",
+JSON.stringify(runners)
+);
 
-if(savedName){
+localStorage.setItem(
+"rollart_categories",
+JSON.stringify(categories)
+);
 
-document.getElementById("competitionName").value =
-savedName;
+alert("✅ Import gespeichert");
 
 }
+
+window.onload = function(){
+
+const savedCompetition =
+localStorage.getItem("rollart_competition");
+
+const savedRunners =
+localStorage.getItem("rollart_runners");
+
+const savedCategories =
+localStorage.getItem("rollart_categories");
+
+if(savedCompetition){
+
+competition =
+JSON.parse(savedCompetition);
+
+document.getElementById("competitionName").value =
+competition.name || "";
+
+document.getElementById("competitionPlace").value =
+competition.place || "";
+
+document.getElementById("competitionFrom").value =
+competition.from || "";
+
+document.getElementById("competitionTo").value =
+competition.to || "";
+
+}
+
+if(savedRunners){
+
+runners =
+JSON.parse(savedRunners);
+
+}
+
+if(savedCategories){
+
+categories =
+JSON.parse(savedCategories);
+
+}
+
+renderCategories();
+renderRunners();
 
 showTab("competitionTab");
 
