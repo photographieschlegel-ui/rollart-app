@@ -1,3 +1,4 @@
+```html id="v8t2mx"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -33,7 +34,7 @@ body{
 
 .tabs{
   display:flex;
-  gap:10px;
+ gap:10px;
   flex-wrap:wrap;
   margin-bottom:20px;
 }
@@ -107,17 +108,12 @@ button{
   background:linear-gradient(135deg,#16a34a,#22c55e)!important;
 }
 
-.warning{
-  background:#f59e0b;
-  color:black;
-  padding:12px;
-  border-radius:12px;
-  margin-top:15px;
-  font-weight:bold;
+.danger{
+  background:linear-gradient(135deg,#dc2626,#ef4444)!important;
 }
 
 h3{
-  margin-top:30px;
+  margin-top:20px;
 }
 
 </style>
@@ -197,6 +193,8 @@ Wettbewerb speichern
 
 <div id="competitionSaved"></div>
 
+<div id="competitionList"></div>
+
 </div>
 
 </div>
@@ -261,7 +259,10 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore,
 collection,
-addDoc
+addDoc,
+getDocs,
+deleteDoc,
+doc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -368,6 +369,8 @@ document.getElementById("competitionSaved").innerHTML = `
 
 `;
 
+loadCompetitions();
+
 }catch(error){
 
 alert(error.message);
@@ -375,6 +378,65 @@ alert(error.message);
 }
 
 };
+
+async function loadCompetitions(){
+
+const list =
+document.getElementById("competitionList");
+
+list.innerHTML = "";
+
+const snapshot =
+await getDocs(collection(db,"competitions"));
+
+snapshot.forEach((d)=>{
+
+const c = d.data();
+
+list.innerHTML += `
+
+<div class="item">
+
+<strong>
+${c.name}
+</strong>
+
+<br><br>
+
+📍 ${c.place}
+
+<br>
+
+📅 ${c.from} bis ${c.to}
+
+<br><br>
+
+<button class="danger"
+onclick="deleteCompetition('${d.id}')">
+
+Wettbewerb löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+window.deleteCompetition = async function(id){
+
+if(!confirm("Wettbewerb löschen?")) return;
+
+await deleteDoc(doc(db,"competitions",id));
+
+loadCompetitions();
+
+};
+
+loadCompetitions();
 
 window.readPDF = async function(){
 
@@ -409,7 +471,7 @@ await pdfjsLib
 .getDocument(typedarray)
 .promise;
 
-let pages = [];
+let fullText = "";
 
 for(let pageNum = 1;
 pageNum <= pdf.numPages;
@@ -426,11 +488,11 @@ textContent.items
 .map(item => item.str)
 .join(" ");
 
-pages.push(text);
+fullText += text + "\n";
 
 }
 
-analyzePDF(pages);
+analyzePDF(fullText);
 
 };
 
@@ -438,23 +500,26 @@ reader.readAsArrayBuffer(file);
 
 };
 
-function analyzePDF(pages){
+function analyzePDF(text){
 
-document.getElementById("scheduleOutput").innerHTML = "";
-document.getElementById("runnerOutput").innerHTML = "";
+analyzeSchedules(text);
 
-let categoryCounter = 0;
-let runnerCounter = 0;
+analyzeRunners(text);
 
-pages.forEach(pageText=>{
+}
 
-const categoryRegex =
-/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+([A-Za-zÄÖÜäöüß0-9\s\.]+)/g;
+function analyzeSchedules(text){
 
-let categoryMatches =
-[...pageText.matchAll(categoryRegex)];
+document
+.getElementById("scheduleOutput")
+.innerHTML = "";
 
-categoryMatches.forEach(match=>{
+const regex =
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+(.+?)(?=\d{2}:\d{2}|$)/gs;
+
+let matches = [...text.matchAll(regex)];
+
+matches.forEach((match,index)=>{
 
 const begin = match[1];
 const end = match[2];
@@ -467,17 +532,11 @@ let category = match[7];
 
 category = category
 
-.replace(/\d{2}:\d{2}.*/,"")
-
-.replace(/\d{2}:\d{2}:\d{2}.*/,"")
-
 .replace(/\s+/g," ")
 
+.replace(/\d+\s+[A-ZÄÖÜ].*/,"")
+
 .trim();
-
-if(category.length < 3) return;
-
-categoryCounter++;
 
 document
 .getElementById("scheduleOutput")
@@ -486,7 +545,7 @@ document
 <div class="item schedule">
 
 <h3>
-${categoryCounter}. ${category}
+${index+1}. ${category}
 </h3>
 
 🕒 ${begin} - ${end}
@@ -517,13 +576,38 @@ ${participants}
 
 });
 
-const runnerRegex =
-/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+(?:\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+)+)\s+(SSG\s+[A-Za-zÄÖÜäöüß\-]+|TV\s+[A-Za-zÄÖÜäöüß0-9\-]+|Wattenscheider\s+RSC|ERC\s+[A-Za-zÄÖÜäöüß\-]+|REV\s+[A-Za-zÄÖÜäöüß\-]+|TuS\s+[A-Za-zÄÖÜäöüß\-]+|SC\s+[A-Za-zÄÖÜäöüß\-]+|SV\s+[A-Za-zÄÖÜäöüß\-]+)/g;
+}
 
-let runnerMatches =
-[...pageText.matchAll(runnerRegex)];
+function analyzeRunners(text){
 
-runnerMatches.forEach(match=>{
+document
+.getElementById("runnerOutput")
+.innerHTML = "";
+
+const regex =
+/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+?)\s+(SSG\s+[A-Za-zÄÖÜäöüß\-]+|RRD\s+[A-Za-zÄÖÜäöüß\-]+|Wattenscheider\s+RSC|TV\s+[A-Za-zÄÖÜäöüß0-9\-]+|TG\s+[A-Za-zÄÖÜäöüß\-]+|ERC\s+[A-Za-zÄÖÜäöüß\-]+|REV\s+[A-Za-zÄÖÜäöüß\-]+|TuS\s+[A-Za-zÄÖÜäöüß\-]+|SC\s+[A-Za-zÄÖÜäöüß\-]+|SV\s+[A-Za-zÄÖÜäöüß\-]+)/g;
+
+let matches = [...text.matchAll(regex)];
+
+if(matches.length === 0){
+
+document
+.getElementById("runnerOutput")
+.innerHTML = `
+
+<div class="item">
+
+Keine Läufer erkannt.
+
+</div>
+
+`;
+
+return;
+
+}
+
+matches.forEach((match,index)=>{
 
 const start = match[1];
 
@@ -535,8 +619,6 @@ const club = match[3]
 .replace(/\s+/g," ")
 .trim();
 
-runnerCounter++;
-
 document
 .getElementById("runnerOutput")
 .innerHTML += `
@@ -544,7 +626,7 @@ document
 <div class="item runner">
 
 <h3>
-${runnerCounter}. Läufer
+${index+1}. Läufer
 </h3>
 
 <strong>
@@ -565,23 +647,16 @@ Start ${start}
 
 });
 
-});
-
 document.getElementById("pdfInfo").innerHTML = `
 
 <div class="item">
 
-✅ PDF erfolgreich analysiert
+✅ PDF analysiert
 
 <br><br>
 
-🕒 Kategorien:
-${categoryCounter}
-
-<br>
-
-👥 Läufer:
-${runnerCounter}
+👥 Läufer erkannt:
+${matches.length}
 
 </div>
 
@@ -593,3 +668,4 @@ ${runnerCounter}
 
 </body>
 </html>
+```
