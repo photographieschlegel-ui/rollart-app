@@ -9,6 +9,146 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+doc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+authDomain: "rollart-score-5319a.firebaseapp.com",
+projectId: "rollart-score-5319a",
+storageBucket: "rollart-score-5319a.firebasestorage.app",
+messagingSenderId: "658963624980",
+appId: "1:658963624980:web:2e4d153f5df087c4f42301"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+window.saveCompetition = async function(){
+
+const name =
+document.getElementById("competitionName").value;
+
+const place =
+document.getElementById("competitionPlace").value;
+
+const from =
+document.getElementById("competitionFrom").value;
+
+const to =
+document.getElementById("competitionTo").value;
+
+if(
+!name ||
+!place ||
+!from ||
+!to
+){
+alert("Bitte alles ausfüllen");
+return;
+}
+
+await addDoc(collection(db,"competitions"),{
+
+name,
+place,
+from,
+to,
+created:new Date()
+
+});
+
+document.getElementById("competitionName").value="";
+document.getElementById("competitionPlace").value="";
+document.getElementById("competitionFrom").value="";
+document.getElementById("competitionTo").value="";
+
+loadCompetitions();
+
+};
+
+window.deleteCompetition = async function(id){
+
+await deleteDoc(
+doc(db,"competitions",id)
+);
+
+loadCompetitions();
+
+};
+
+window.loadCompetitions = async function(){
+
+const list =
+document.getElementById("competitionList");
+
+list.innerHTML = "";
+
+const snapshot =
+await getDocs(
+collection(db,"competitions")
+);
+
+snapshot.forEach((d)=>{
+
+const c = d.data();
+
+list.innerHTML += `
+
+<div class="item">
+
+<strong>
+${c.name}
+</strong>
+
+<br><br>
+
+📍 ${c.place}
+
+<br>
+
+📅 ${c.from} bis ${c.to}
+
+<br><br>
+
+<button class="danger"
+onclick="deleteCompetition('${d.id}')">
+
+Löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+};
+
+window.onload = ()=>{
+
+loadCompetitions();
+
+};
+
+</script>
+
 <style>
 
 body{
@@ -20,7 +160,7 @@ body{
 }
 
 .app{
-  max-width:1500px;
+  max-width:1600px;
   margin:auto;
   padding:20px;
 }
@@ -122,7 +262,7 @@ button{
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
   gap:15px;
 }
 
@@ -145,6 +285,11 @@ LIVE WETTKAMPF IMPORTER
 <div class="tabs">
 
 <div class="tab"
+onclick="showTab('competitionTab')">
+🏟 Wettbewerb
+</div>
+
+<div class="tab"
 onclick="showTab('pdfTab')">
 📄 PDF Import
 </div>
@@ -161,9 +306,48 @@ onclick="showTab('runnerTab')">
 
 </div>
 
+<!-- Wettbewerb -->
+
+<div id="competitionTab">
+
+<div class="card">
+
+<h2>🏟 Wettbewerb erstellen</h2>
+
+<input type="text"
+id="competitionName"
+placeholder="Wettbewerb">
+
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
+
+<label>Von</label>
+
+<input type="date"
+id="competitionFrom">
+
+<label>Bis</label>
+
+<input type="date"
+id="competitionTo">
+
+<button class="success"
+onclick="saveCompetition()">
+
+Wettbewerb speichern
+
+</button>
+
+<div id="competitionList"></div>
+
+</div>
+
+</div>
+
 <!-- PDF -->
 
-<div id="pdfTab">
+<div id="pdfTab" class="hidden">
 
 <div class="card">
 
@@ -174,7 +358,9 @@ id="pdfUpload"
 accept=".pdf">
 
 <button onclick="readPDF()">
+
 PDF analysieren
+
 </button>
 
 <div id="pdfInfo"></div>
@@ -191,6 +377,13 @@ PDF analysieren
 
 <h2>🕒 Kategorien bearbeiten</h2>
 
+<button class="success"
+onclick="addCategory()">
+
++ Kategorie hinzufügen
+
+</button>
+
 <div id="scheduleOutput"
 class="grid"></div>
 
@@ -205,6 +398,13 @@ class="grid"></div>
 <div class="card">
 
 <h2>👥 Läufer bearbeiten</h2>
+
+<button class="success"
+onclick="addRunner()">
+
++ Läufer hinzufügen
+
+</button>
 
 <div id="runnerOutput"
 class="grid"></div>
@@ -223,6 +423,7 @@ let importedRunners = [];
 function showTab(tabId){
 
 const tabs = [
+"competitionTab",
 "pdfTab",
 "scheduleTab",
 "runnerTab"
@@ -242,7 +443,7 @@ document
 
 }
 
-showTab("pdfTab");
+showTab("competitionTab");
 
 async function readPDF(){
 
@@ -361,32 +562,19 @@ const runners =
 
 runners.forEach(runner=>{
 
-const start = runner[1];
-
-const name = runner[2]
-.replace(/\s+/g," ")
-.trim();
-
-const club = runner[3]
-.replace(/\s+/g," ")
-.trim();
-
-if(
-name.length < 3 ||
-name.includes("Startfolge") ||
-name.includes("Kürpokal")
-){
-return;
-}
-
 importedRunners.push({
 
 id:Date.now()+Math.random(),
+
 categoryId,
+
 category,
-start,
-name,
-club
+
+start:runner[1],
+
+name:runner[2],
+
+club:runner[3]
 
 });
 
@@ -415,10 +603,6 @@ ${importedCategories.length}
 👥 Läufer:
 ${importedRunners.length}
 
-<br><br>
-
-ℹ Alles kann jetzt manuell bearbeitet werden.
-
 </div>
 
 `;
@@ -432,15 +616,13 @@ document.getElementById("scheduleOutput");
 
 output.innerHTML = "";
 
-importedCategories.forEach((cat,index)=>{
+importedCategories.forEach((cat)=>{
 
 output.innerHTML += `
 
 <div class="item schedule">
 
-<h3>
-Kategorie ${index+1}
-</h3>
+<label>Name</label>
 
 <input
 value="${cat.name}"
@@ -486,7 +668,7 @@ document.getElementById("runnerOutput");
 
 output.innerHTML = "";
 
-importedRunners.forEach((runner,index)=>{
+importedRunners.forEach((runner)=>{
 
 output.innerHTML += `
 
@@ -587,6 +769,42 @@ function deleteRunner(id){
 
 importedRunners =
 importedRunners.filter(r=>r.id!==id);
+
+renderRunners();
+
+}
+
+function addCategory(){
+
+importedCategories.push({
+
+id:Date.now(),
+name:"Neue Kategorie",
+begin:"",
+end:"",
+duration:"",
+warmup:"",
+groups:"",
+participants:""
+
+});
+
+renderCategories();
+
+}
+
+function addRunner(){
+
+importedRunners.push({
+
+id:Date.now()+Math.random(),
+categoryId:0,
+category:"Kategorie",
+start:"",
+name:"",
+club:""
+
+});
 
 renderRunners();
 
