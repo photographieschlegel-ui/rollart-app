@@ -377,12 +377,10 @@ let runners = [];
 let categories = [];
 
 let competition = {
-
 name:"",
 place:"",
 from:"",
 to:""
-
 };
 
 function showTab(tabId){
@@ -515,12 +513,12 @@ const cleanedText = text
 
 const blocks =
 cleanedText.match(
-/(\d{2}:\d{2}\s+\d{2}:\d{2}[\s\S]*?)(?=\d{2}:\d{2}\s+\d{2}:\d{2}|$)/g
+/(\d{2}:\d{2}\s+\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}\s+\d+\s+\d+[\s\S]*?)(?=\d{2}:\d{2}\s+\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}|$)/g
 );
 
 if(blocks){
 
-blocks.forEach((block,index)=>{
+blocks.forEach((block)=>{
 
 const timeMatch =
 block.match(
@@ -532,17 +530,17 @@ if(!timeMatch) return;
 const begin = timeMatch[1];
 const end = timeMatch[2];
 
-const participantMatch =
-block.match(
-/(\d+)\s+([A-Za-zÄÖÜäöüß0-9\s\.]+?)\s+\d+\s+[A-ZÄÖÜ]/
-);
-
 let categoryName = "";
 
-if(participantMatch){
+const categoryMatch =
+block.match(
+/\d+\s+\d+\s+([A-Za-zÄÖÜäöüß0-9\s\.]+?)\s+\d+\s+[A-ZÄÖÜ]/
+);
+
+if(categoryMatch){
 
 categoryName =
-participantMatch[2]
+categoryMatch[1]
 .replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
 .replace(/Startfolge Kür/gi,"")
 .replace(/Westhofener Kürpokal/gi,"")
@@ -552,10 +550,7 @@ participantMatch[2]
 
 }
 
-if(
-categoryName.length > 2 &&
-!categoryName.includes(":")
-){
+if(categoryName.length > 2){
 
 categories.push({
 
@@ -636,7 +631,6 @@ function addCategory(){
 categories.push({
 
 id:Date.now()+Math.random(),
-
 name:"",
 begin:"",
 end:""
@@ -699,12 +693,10 @@ function addRunner(){
 runners.push({
 
 id:Date.now()+Math.random(),
-
 start:"",
 name:"",
 club:"",
 category:"",
-
 technik:0,
 kunst:0,
 abzug:0,
@@ -878,21 +870,13 @@ const sorted =
 if(sorted[0]){
 
 podium.innerHTML += `
-
 <div class="place gold">
-
 🥇 1. Platz
-
 <br><br>
-
 ${sorted[0].name}
-
 <br>
-
 ${sorted[0].gesamt.toFixed(2)}
-
 </div>
-
 `;
 
 }
@@ -900,21 +884,13 @@ ${sorted[0].gesamt.toFixed(2)}
 if(sorted[1]){
 
 podium.innerHTML += `
-
 <div class="place silver">
-
 🥈 2. Platz
-
 <br><br>
-
 ${sorted[1].name}
-
 <br>
-
 ${sorted[1].gesamt.toFixed(2)}
-
 </div>
-
 `;
 
 }
@@ -922,21 +898,13 @@ ${sorted[1].gesamt.toFixed(2)}
 if(sorted[2]){
 
 podium.innerHTML += `
-
 <div class="place bronze">
-
 🥉 3. Platz
-
 <br><br>
-
 ${sorted[2].name}
-
 <br>
-
 ${sorted[2].gesamt.toFixed(2)}
-
 </div>
-
 `;
 
 }
@@ -947,41 +915,28 @@ output.innerHTML += `
 
 <div class="item">
 
-<h3>
-${index+1}. Platz
-</h3>
+<h3>${index+1}. Platz</h3>
 
 👤 ${runner.name}
-
 <br>
 
 🏢 ${runner.club}
-
 <br>
 
 📂 ${runner.category}
-
 <br><br>
 
-⭐ Technik:
-${runner.technik}
-
+⭐ Technik: ${runner.technik}
 <br>
 
-🎨 Kunst:
-${runner.kunst}
-
+🎨 Kunst: ${runner.kunst}
 <br>
 
-❌ Abzüge:
-${runner.abzug}
-
+❌ Abzüge: ${runner.abzug}
 <br><br>
 
 🏆 Gesamt:
-<strong>
-${runner.gesamt.toFixed(2)}
-</strong>
+<strong>${runner.gesamt.toFixed(2)}</strong>
 
 </div>
 
