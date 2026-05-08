@@ -6,6 +6,7 @@
   <title>RollArt Score Online</title>
 
   <style>
+
     body{
       font-family:Arial,sans-serif;
       background:#f4f6f8;
@@ -31,7 +32,7 @@
       color:#1d3557;
     }
 
-    input,button{
+    input,button,select{
       width:100%;
       padding:14px;
       margin-top:10px;
@@ -55,6 +56,7 @@
       border-radius:10px;
       margin-top:10px;
     }
+
   </style>
 </head>
 
@@ -80,9 +82,29 @@
 
   <div class="card">
 
-    <h2>Gespeicherte Wettbewerbe</h2>
+    <h2>Wettbewerb auswählen</h2>
 
-    <div id="competitionList"></div>
+    <select id="competitionSelect"></select>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Kategorie speichern</h2>
+
+    <input type="text" id="categoryName" placeholder="Kategorie">
+
+    <button onclick="saveCategory()">
+      Kategorie speichern
+    </button>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Kategorien</h2>
+
+    <div id="categoryList"></div>
 
   </div>
 
@@ -101,7 +123,8 @@ import {
   addDoc,
   getDocs,
   query,
-  orderBy
+  orderBy,
+  where
 
 }
 
@@ -175,11 +198,57 @@ window.saveCompetition = async function () {
 
 };
 
+window.saveCategory = async function(){
+
+  const competitionId = document.getElementById("competitionSelect").value;
+
+  const category = document.getElementById("categoryName").value;
+
+  if(!competitionId || !category){
+
+    alert("Bitte alles ausfüllen");
+
+    return;
+
+  }
+
+  try{
+
+    await addDoc(
+
+      collection(db,"categories"),
+
+      {
+        competitionId:competitionId,
+        category:category,
+        created:new Date().toISOString()
+      }
+
+    );
+
+    document.getElementById("categoryName").value = "";
+
+    loadCategories();
+
+    alert("Kategorie gespeichert");
+
+  }
+
+  catch(e){
+
+    console.error(e);
+
+    alert("Fehler");
+
+  }
+
+};
+
 async function loadCompetitions(){
 
-  const list = document.getElementById("competitionList");
+  const select = document.getElementById("competitionSelect");
 
-  list.innerHTML = "";
+  select.innerHTML = "";
 
   const q = query(
 
@@ -195,15 +264,53 @@ async function loadCompetitions(){
 
     const c = doc.data();
 
+    select.innerHTML += `
+
+      <option value="${doc.id}">
+
+        ${c.name} - ${c.place}
+
+      </option>
+
+    `;
+
+  });
+
+  loadCategories();
+
+}
+
+async function loadCategories(){
+
+  const competitionId = document.getElementById("competitionSelect").value;
+
+  const list = document.getElementById("categoryList");
+
+  list.innerHTML = "";
+
+  if(!competitionId) return;
+
+  const q = query(
+
+    collection(db,"categories"),
+
+    where("competitionId","==",competitionId),
+
+    orderBy("created","desc")
+
+  );
+
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach((doc) => {
+
+    const c = doc.data();
+
     list.innerHTML += `
 
       <div class="item">
 
-        <strong>${c.name}</strong><br>
-
-        ${c.place}<br>
-
-        ${c.created}
+        ${c.category}
 
       </div>
 
@@ -212,6 +319,10 @@ async function loadCompetitions(){
   });
 
 }
+
+document
+.getElementById("competitionSelect")
+.addEventListener("change",loadCategories);
 
 loadCompetitions();
 
