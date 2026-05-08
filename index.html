@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RollArt Score</title>
+  <title>RollArt Score Online</title>
 
   <style>
     body{
@@ -31,17 +31,29 @@
       color:#1d3557;
     }
 
-    button{
+    input,button{
       width:100%;
       padding:14px;
       margin-top:10px;
       border-radius:10px;
-      border:none;
+      border:1px solid #ccc;
+      font-size:16px;
+      box-sizing:border-box;
+    }
+
+    button{
       background:#1d3557;
       color:white;
-      font-size:16px;
+      border:none;
       font-weight:bold;
       cursor:pointer;
+    }
+
+    .item{
+      background:#eef4f8;
+      padding:12px;
+      border-radius:10px;
+      margin-top:10px;
     }
   </style>
 </head>
@@ -50,15 +62,27 @@
 
 <div class="app">
 
-  <h1>RollArt Score</h1>
+  <h1>RollArt Score Online</h1>
 
   <div class="card">
 
-    <h2>Firebase Test</h2>
+    <h2>Wettbewerb speichern</h2>
 
-    <button onclick="saveTest()">
-      Firebase Test speichern
+    <input type="text" id="competitionName" placeholder="Wettbewerb">
+
+    <input type="text" id="competitionPlace" placeholder="Ort">
+
+    <button onclick="saveCompetition()">
+      Wettbewerb speichern
     </button>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Gespeicherte Wettbewerbe</h2>
+
+    <div id="competitionList"></div>
 
   </div>
 
@@ -74,7 +98,10 @@ import {
 
   getFirestore,
   collection,
-  addDoc
+  addDoc,
+  getDocs,
+  query,
+  orderBy
 
 }
 
@@ -100,34 +127,93 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
-window.saveTest = async function () {
+window.saveCompetition = async function () {
+
+  const name = document.getElementById("competitionName").value;
+
+  const place = document.getElementById("competitionPlace").value;
+
+  if(!name || !place){
+
+    alert("Bitte alles ausfüllen");
+
+    return;
+
+  }
 
   try {
 
     await addDoc(
 
-      collection(db, "tests"),
+      collection(db,"competitions"),
 
       {
-        name: "RollArt Test",
-        zeit: new Date().toISOString()
+        name:name,
+        place:place,
+        created:new Date().toISOString()
       }
 
     );
 
-    alert("Firebase funktioniert!");
+    document.getElementById("competitionName").value = "";
+
+    document.getElementById("competitionPlace").value = "";
+
+    loadCompetitions();
+
+    alert("Wettbewerb gespeichert");
 
   }
 
-  catch (e) {
+  catch(e){
 
     console.error(e);
 
-    alert("Firebase Fehler");
+    alert("Fehler beim Speichern");
 
   }
 
 };
+
+async function loadCompetitions(){
+
+  const list = document.getElementById("competitionList");
+
+  list.innerHTML = "";
+
+  const q = query(
+
+    collection(db,"competitions"),
+
+    orderBy("created","desc")
+
+  );
+
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach((doc) => {
+
+    const c = doc.data();
+
+    list.innerHTML += `
+
+      <div class="item">
+
+        <strong>${c.name}</strong><br>
+
+        ${c.place}<br>
+
+        ${c.created}
+
+      </div>
+
+    `;
+
+  });
+
+}
+
+loadCompetitions();
 
 </script>
 
