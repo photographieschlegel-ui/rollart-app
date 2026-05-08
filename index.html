@@ -362,9 +362,7 @@ const element =
 document.getElementById(id);
 
 if(element){
-
 element.classList.add("hidden");
-
 }
 
 });
@@ -373,9 +371,7 @@ const active =
 document.getElementById(tabId);
 
 if(active){
-
 active.classList.remove("hidden");
-
 }
 
 }
@@ -485,6 +481,114 @@ function analyzePDF(text){
 runners = [];
 categories = [];
 
+const cleanedText = text
+.replace(/\n/g," ")
+.replace(/\s+/g," ")
+.trim();
+
+const categoryRegex =
+/([A-Za-zÄÖÜäöüß0-9\s\.\-]+?)\s+
+(\d{2}:\d{2})\s+
+(\d{2}:\d{2})\s+
+(\d{2}:\d{2}:\d{2})\s+
+(\d{2}:\d{2}:\d{2})\s+
+(\d+)\s+
+(\d+)/gx;
+
+const categoryMatches =
+[...cleanedText.matchAll(categoryRegex)];
+
+categoryMatches.forEach((match)=>{
+
+let categoryName =
+match[1]
+.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
+.replace(/Startfolge Kür/gi,"")
+.replace(/Westhofener Kürpokal/gi,"")
+.replace(/\d{2}\.\d{2}\.\d{4}/g,"")
+.replace(/\s+/g," ")
+.trim();
+
+if(categoryName.length < 3) return;
+
+categories.push({
+
+id:Date.now()+Math.random(),
+
+name:categoryName,
+
+begin:match[2],
+
+end:match[3],
+
+duration:match[4],
+
+warmup:match[5],
+
+groups:match[6],
+
+participants:match[7]
+
+});
+
+});
+
+const runnerRegex =
+/(\d+)\s+
+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)
+\s+
+(SSG\sRonsdorf|
+RRD\sWuppertal|
+Wattenscheider\sRSC|
+TG\sWesthofen|
+TV\sDatteln\s09|
+TV\sWalsum-Aldenrade\s07|
+TV\sWalsum\s-\sAldenrade)/gx;
+
+const runnerMatches =
+[...cleanedText.matchAll(runnerRegex)];
+
+let currentCategoryIndex = 0;
+let currentCount = 0;
+
+runnerMatches.forEach((runner)=>{
+
+if(
+categories[currentCategoryIndex] &&
+currentCount >= Number(categories[currentCategoryIndex].participants)
+){
+
+currentCategoryIndex++;
+currentCount = 0;
+
+}
+
+runners.push({
+
+id:Date.now()+Math.random(),
+
+start:runner[1],
+
+name:runner[2].trim(),
+
+club:runner[3].trim(),
+
+category:
+categories[currentCategoryIndex]
+? categories[currentCategoryIndex].name
+: "",
+
+technik:0,
+kunst:0,
+abzug:0,
+gesamt:0
+
+});
+
+currentCount++;
+
+});
+
 renderCategories();
 renderRunners();
 renderScores();
@@ -494,6 +598,16 @@ document.getElementById("pdfInfo").innerHTML = `
 <div class="item">
 
 ✅ PDF importiert
+
+<br><br>
+
+🕒 Kategorien:
+${categories.length}
+
+<br>
+
+👥 Läufer:
+${runners.length}
 
 </div>
 
@@ -539,13 +653,13 @@ onchange="updateCategory(${cat.id},'name',this.value)">
 <label>Beginn</label>
 
 <input
-value="${cat.begin}"
+value="${cat.begin || ''}"
 onchange="updateCategory(${cat.id},'begin',this.value)">
 
 <label>Ende</label>
 
 <input
-value="${cat.end}"
+value="${cat.end || ''}"
 onchange="updateCategory(${cat.id},'end',this.value)">
 
 <button class="danger"
@@ -829,17 +943,11 @@ const savedCompetition =
 localStorage.getItem("rollart_competition");
 
 if(savedRunners){
-
-runners =
-JSON.parse(savedRunners);
-
+runners = JSON.parse(savedRunners);
 }
 
 if(savedCategories){
-
-categories =
-JSON.parse(savedCategories);
-
+categories = JSON.parse(savedCategories);
 }
 
 if(savedCompetition){
@@ -858,24 +966,6 @@ competition.from || "";
 
 document.getElementById("competitionTo").value =
 competition.to || "";
-
-document.getElementById("competitionOutput").innerHTML = `
-
-<div class="item">
-
-<h3>
-🏆 ${competition.name}
-</h3>
-
-📍 ${competition.place}
-
-<br><br>
-
-📅 ${competition.from} bis ${competition.to}
-
-</div>
-
-`;
 
 }
 
