@@ -1,3 +1,4 @@
+```html id="n6v2fk"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -170,6 +171,16 @@ placeholder="Wettbewerbsname">
 
 <input type="text"
 placeholder="Ort">
+
+<label style="display:block;margin-top:15px;">
+Von:
+</label>
+
+<input type="date">
+
+<label style="display:block;margin-top:15px;">
+Bis:
+</label>
 
 <input type="date">
 
@@ -429,7 +440,7 @@ output.innerHTML = "";
 
 const lines = text
 .replace(/\s+/g," ")
-.match(/\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+/g);
+.match(/\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+/g);
 
 if(!lines){
 
@@ -447,16 +458,6 @@ return;
 
 }
 
-lines.forEach(line=>{
-
-line = line.trim();
-
-const parts = line.split(" ");
-
-const start = parts.shift();
-
-let clubIndex = -1;
-
 const clubWords = [
 
 "RSC",
@@ -469,6 +470,16 @@ const clubWords = [
 "SV"
 
 ];
+
+lines.forEach(line=>{
+
+line = line.trim();
+
+const parts = line.split(" ");
+
+const start = parts.shift();
+
+let clubIndex = -1;
 
 parts.forEach((word,index)=>{
 
@@ -560,3 +571,4 @@ scoreInfo.innerHTML = `
 
 </body>
 </html>
+```
