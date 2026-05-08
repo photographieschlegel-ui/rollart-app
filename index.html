@@ -33,7 +33,7 @@ body{
 
 .tabs{
   display:flex;
- gap:10px;
+  gap:10px;
   flex-wrap:wrap;
   margin-bottom:20px;
 }
@@ -336,6 +336,32 @@ return;
 
 try{
 
+const existing =
+await getDocs(collection(db,"competitions"));
+
+let duplicate = false;
+
+existing.forEach((d)=>{
+
+const c = d.data();
+
+if(
+c.name === name &&
+c.from === from
+){
+duplicate = true;
+}
+
+});
+
+if(duplicate){
+
+alert("Wettbewerb existiert bereits");
+
+return;
+
+}
+
 await addDoc(collection(db,"competitions"),{
 
 name,
@@ -351,18 +377,6 @@ document.getElementById("competitionSaved").innerHTML = `
 <div class="item">
 
 ✅ Wettbewerb gespeichert
-
-<br><br>
-
-🏆 ${name}
-
-<br>
-
-📍 ${place}
-
-<br>
-
-📅 ${from} bis ${to}
 
 </div>
 
@@ -535,7 +549,11 @@ category = category
 
 .replace(/\d+\s+[A-ZÄÖÜ].*/,"")
 
+.replace(/Westhofener Kürpokal/gi,"")
+
 .trim();
+
+if(category.length < 3) return;
 
 document
 .getElementById("scheduleOutput")
@@ -583,30 +601,14 @@ document
 .getElementById("runnerOutput")
 .innerHTML = "";
 
-const regex =
-/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+?)\s+(SSG\s+[A-Za-zÄÖÜäöüß\-]+|RRD\s+[A-Za-zÄÖÜäöüß\-]+|Wattenscheider\s+RSC|TV\s+[A-Za-zÄÖÜäöüß0-9\-]+|TG\s+[A-Za-zÄÖÜäöüß\-]+|ERC\s+[A-Za-zÄÖÜäöüß\-]+|REV\s+[A-Za-zÄÖÜäöüß\-]+|TuS\s+[A-Za-zÄÖÜäöüß\-]+|SC\s+[A-Za-zÄÖÜäöüß\-]+|SV\s+[A-Za-zÄÖÜäöüß\-]+)/g;
+const runnerRegex =
+/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+(?:\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+)+)\s+(SSG\s+[A-Za-zÄÖÜäöüß\-]+|RRD\s+[A-Za-zÄÖÜäöüß\-]+|Wattenscheider\s+RSC|TV\s+[A-Za-zÄÖÜäöüß0-9\-]+|TG\s+[A-Za-zÄÖÜäöüß\-]+|ERC\s+[A-Za-zÄÖÜäöüß\-]+|REV\s+[A-Za-zÄÖÜäöüß\-]+|TuS\s+[A-Za-zÄÖÜäöüß\-]+|SC\s+[A-Za-zÄÖÜäöüß\-]+|SV\s+[A-Za-zÄÖÜäöüß\-]+)/g;
 
-let matches = [...text.matchAll(regex)];
+let matches = [...text.matchAll(runnerRegex)];
 
-if(matches.length === 0){
+const unique = [];
 
-document
-.getElementById("runnerOutput")
-.innerHTML = `
-
-<div class="item">
-
-Keine Läufer erkannt.
-
-</div>
-
-`;
-
-return;
-
-}
-
-matches.forEach((match,index)=>{
+matches.forEach(match=>{
 
 const start = match[1];
 
@@ -618,15 +620,30 @@ const club = match[3]
 .replace(/\s+/g," ")
 .trim();
 
+if(
+
+name.includes("Westhofener Kürpokal") ||
+name.includes("Startfolge") ||
+name.length < 4
+
+){
+
+return;
+
+}
+
+const key =
+start + "-" + name + "-" + club;
+
+if(unique.includes(key)) return;
+
+unique.push(key);
+
 document
 .getElementById("runnerOutput")
 .innerHTML += `
 
 <div class="item runner">
-
-<h3>
-${index+1}. Läufer
-</h3>
 
 <strong>
 Start ${start}
@@ -655,7 +672,7 @@ document.getElementById("pdfInfo").innerHTML = `
 <br><br>
 
 👥 Läufer erkannt:
-${matches.length}
+${unique.length}
 
 </div>
 
