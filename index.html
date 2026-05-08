@@ -17,6 +17,7 @@ body{
   padding:0;
   background:#0f172a;
   color:white;
+  font-family:Arial;
 }
 
 .app{
@@ -223,7 +224,7 @@ PDF analysieren
 
 </div>
 
-<!-- Zeitplan -->
+<!-- ZEITPLAN -->
 
 <div id="scheduleTab" class="hidden">
 
@@ -237,7 +238,7 @@ PDF analysieren
 
 </div>
 
-<!-- Läufer -->
+<!-- LÄUFER -->
 
 <div id="runnerTab" class="hidden">
 
@@ -439,7 +440,7 @@ textContent.items
 .map(item=>item.str)
 .join(" ");
 
-fullText += " " + text;
+fullText += "\n" + text;
 
 }
 
@@ -466,7 +467,7 @@ document
 .innerHTML = "";
 
 const regex =
-/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+(.+?)(?=\d{2}:\d{2}|$)/gs;
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+([A-Za-zÄÖÜäöüß0-9\s\.\-]+)/g;
 
 const matches =
 [...text.matchAll(regex)];
@@ -483,9 +484,15 @@ const participants = match[6];
 let category = match[7];
 
 category = category
+
+.split(/\d+\s+[A-ZÄÖÜ]/)[0]
+
 .replace(/\s+/g," ")
-.replace(/Westhofener Kürpokal/gi,"")
+
 .replace(/Startfolge Kür/gi,"")
+
+.replace(/Westhofener Kürpokal/gi,"")
+
 .trim();
 
 document
@@ -530,7 +537,7 @@ document
 
 let runnerCount = 0;
 
-const clubNames = [
+const clubs = [
 
 "TV Datteln 09",
 "TV Walsum-Aldenrade 07",
@@ -542,21 +549,27 @@ const clubNames = [
 
 ];
 
-clubNames.forEach(club=>{
+const splitText =
+text.split(/(?=\d+\s+[A-ZÄÖÜ])/g);
 
-const escapedClub =
+splitText.forEach(part=>{
+
+clubs.forEach(club=>{
+
+if(!part.includes(club)) return;
+
+const escaped =
 club.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 
 const regex =
 new RegExp(
-"(\\d+)\\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\\- ]+?)\\s+" + escapedClub,
-"g"
+"(\\d+)\\s+(.+?)\\s+" + escaped
 );
 
-const matches =
-[...text.matchAll(regex)];
+const match =
+part.match(regex);
 
-matches.forEach(match=>{
+if(!match) return;
 
 const start = match[1];
 
@@ -565,33 +578,39 @@ const name = match[2]
 .trim();
 
 if(
-name.includes("Startfolge") ||
+name.length < 3 ||
 name.includes("Kürpokal") ||
-name.length < 3
+name.includes("Startfolge")
 ){
 return;
 }
 
-let category = "Unbekannt";
+let category = "Kategorie";
 
 const before =
 text.substring(
 0,
-match.index
+text.indexOf(part)
 );
 
-const catMatch =
+const catMatches =
 before.match(
-/([A-Za-zÄÖÜäöüß0-9\s\.\-]+)\s+\d+\s+\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜ]/g
+/([A-Za-zÄÖÜäöüß0-9\s\.\-]+)\s+\d+\s+\d+\s+[A-ZÄÖÜ]/g
 );
 
-if(catMatch){
+if(catMatches){
 
 category =
-catMatch[
-catMatch.length - 1
+catMatches[
+catMatches.length - 1
 ]
+
 .replace(/\s+/g," ")
+
+.replace(/Startfolge Kür/gi,"")
+
+.replace(/Westhofener Kürpokal/gi,"")
+
 .trim();
 
 }
