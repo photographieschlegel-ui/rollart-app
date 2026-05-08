@@ -1,257 +1,258 @@
-
-```html id="r4x8mt"
+```html id="f2m8vk"
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RollArt Score Online</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RollArt Score Online</title>
 
-  <style>
+<style>
 
-    body{
-      font-family:Arial,sans-serif;
-      background:#f4f6f8;
-      margin:0;
-      padding:0;
-    }
+body{
+  font-family:Arial,sans-serif;
+  background:#f4f6f8;
+  margin:0;
+  padding:0;
+}
 
-    .app{
-      max-width:900px;
-      margin:auto;
-      padding:20px;
-    }
+.app{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
 
-    .card{
-      background:white;
-      border-radius:14px;
-      padding:20px;
-      margin-top:20px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.08);
-    }
+.card{
+  background:white;
+  border-radius:14px;
+  padding:20px;
+  margin-top:20px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
 
-    h1,h2,h3{
-      color:#1d3557;
-    }
+h1,h2,h3{
+  color:#1d3557;
+}
 
-    input,button,select{
-      width:100%;
-      padding:14px;
-      margin-top:10px;
-      border-radius:10px;
-      border:1px solid #ccc;
-      font-size:16px;
-      box-sizing:border-box;
-    }
+input,button,select{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:16px;
+  box-sizing:border-box;
+}
 
-    button{
-      background:#1d3557;
-      color:white;
-      border:none;
-      font-weight:bold;
-      cursor:pointer;
-    }
+button{
+  background:#1d3557;
+  color:white;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+}
 
-    .danger{
-      background:#b00020 !important;
-    }
+.success{
+  background:#2e7d32 !important;
+}
 
-    .success{
-      background:#2e7d32 !important;
-    }
+.danger{
+  background:#b00020 !important;
+}
 
-    .item{
-      background:#eef4f8;
-      padding:12px;
-      border-radius:10px;
-      margin-top:10px;
-    }
+.item{
+  background:#eef4f8;
+  padding:12px;
+  border-radius:10px;
+  margin-top:10px;
+}
 
-    .judge{
-      background:#f8fafc;
-      border:1px solid #d9e2ec;
-      border-radius:12px;
-      padding:12px;
-      margin-top:12px;
-    }
+.judge{
+  background:#f8fafc;
+  border:1px solid #d9e2ec;
+  border-radius:12px;
+  padding:12px;
+  margin-top:12px;
+}
 
-  </style>
+</style>
 </head>
 
 <body>
 
 <div class="app">
 
-  <h1>RollArt Score Online</h1>
+<h1>RollArt Score Online</h1>
 
-  <div class="card">
+<div class="card">
 
-    <h2>Wettbewerb speichern</h2>
+<h2>Wettbewerb speichern</h2>
 
-    <input type="text"
-    id="competitionName"
-    placeholder="Wettbewerb">
+<input type="text"
+id="competitionName"
+placeholder="Wettbewerb">
 
-    <input type="text"
-    id="competitionPlace"
-    placeholder="Ort">
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
 
-    <label>Von:</label>
+<label>Von:</label>
 
-    <input type="date"
-    id="competitionDateFrom">
+<input type="date"
+id="competitionDateFrom">
 
-    <label>Bis:</label>
+<label>Bis:</label>
 
-    <input type="date"
-    id="competitionDateTo">
+<input type="date"
+id="competitionDateTo">
 
-    <button onclick="saveCompetition()">
-      Wettbewerb speichern
-    </button>
+<button onclick="saveCompetition()">
+Wettbewerb speichern
+</button>
 
-  </div>
+</div>
 
-  <div class="card">
+<div class="card">
 
-    <h2>Wettbewerb auswählen</h2>
+<h2>Wettbewerb auswählen</h2>
 
-    <select id="competitionSelect"></select>
+<select id="competitionSelect"></select>
 
-  </div>
+<div id="competitionList"></div>
 
-  <div class="card">
+</div>
 
-    <h2>Kategorie speichern</h2>
+<div class="card">
 
-    <input type="text"
-    id="categoryName"
-    placeholder="Kategorie">
+<h2>Kategorie speichern</h2>
 
-    <button onclick="saveCategory()">
-      Kategorie speichern
-    </button>
+<input type="text"
+id="categoryName"
+placeholder="Kategorie">
 
-  </div>
+<button onclick="saveCategory()">
+Kategorie speichern
+</button>
 
-  <div class="card">
+</div>
 
-    <h2>Kategorien</h2>
+<div class="card">
 
-    <div id="categoryList"></div>
+<h2>Kategorien</h2>
 
-  </div>
+<div id="categoryList"></div>
 
-  <div class="card">
+</div>
 
-    <h2>Läufer speichern</h2>
+<div class="card">
 
-    <select id="skaterCategory"></select>
+<h2>Läufer speichern</h2>
 
-    <input type="number"
-    id="skaterStart"
-    placeholder="Startnummer">
+<select id="skaterCategory"></select>
 
-    <input type="text"
-    id="skaterName"
-    placeholder="Name">
+<input type="number"
+id="skaterStart"
+placeholder="Startnummer">
 
-    <select id="clubSelect"></select>
+<input type="text"
+id="skaterName"
+placeholder="Name">
 
-    <input type="text"
-    id="skaterClub"
-    placeholder="Oder neuen Verein eingeben">
+<select id="clubSelect"></select>
 
-    <button onclick="saveSkater()">
-      Läufer speichern
-    </button>
+<input type="text"
+id="skaterClub"
+placeholder="Oder neuen Verein eingeben">
 
-  </div>
+<button onclick="saveSkater()">
+Läufer speichern
+</button>
 
-  <div class="card">
+</div>
 
-    <h2>Läufer</h2>
+<div class="card">
 
-    <div id="skaterList"></div>
+<h2>Läufer</h2>
 
-  </div>
+<div id="skaterList"></div>
 
-  <div class="card">
+</div>
 
-    <h2>Wertung</h2>
+<div class="card">
 
-    <select id="scoreSkater"></select>
+<h2>Wertung</h2>
 
-    <div class="judge">
+<select id="scoreSkater"></select>
 
-      <h3>Richter 1</h3>
+<div class="judge">
 
-      <input type="number"
-      step="0.1"
-      id="a1"
-      placeholder="Note A">
+<h3>Richter 1</h3>
 
-      <input type="number"
-      step="0.1"
-      id="b1"
-      placeholder="Note B">
+<input type="number"
+step="0.1"
+id="a1"
+placeholder="Note A">
 
-      <select id="d1"></select>
+<input type="number"
+step="0.1"
+id="b1"
+placeholder="Note B">
 
-    </div>
+<select id="d1"></select>
 
-    <div class="judge">
+</div>
 
-      <h3>Richter 2</h3>
+<div class="judge">
 
-      <input type="number"
-      step="0.1"
-      id="a2"
-      placeholder="Note A">
+<h3>Richter 2</h3>
 
-      <input type="number"
-      step="0.1"
-      id="b2"
-      placeholder="Note B">
+<input type="number"
+step="0.1"
+id="a2"
+placeholder="Note A">
 
-      <select id="d2"></select>
+<input type="number"
+step="0.1"
+id="b2"
+placeholder="Note B">
 
-    </div>
+<select id="d2"></select>
 
-    <div class="judge">
+</div>
 
-      <h3>Richter 3</h3>
+<div class="judge">
 
-      <input type="number"
-      step="0.1"
-      id="a3"
-      placeholder="Note A">
+<h3>Richter 3</h3>
 
-      <input type="number"
-      step="0.1"
-      id="b3"
-      placeholder="Note B">
+<input type="number"
+step="0.1"
+id="a3"
+placeholder="Note A">
 
-      <select id="d3"></select>
+<input type="number"
+step="0.1"
+id="b3"
+placeholder="Note B">
 
-    </div>
+<select id="d3"></select>
 
-    <button class="success"
-    onclick="saveScore()">
+</div>
 
-      Wertung speichern
+<button class="success"
+onclick="saveScore()">
 
-    </button>
+Wertung speichern
 
-  </div>
+</button>
 
-  <div class="card">
+</div>
 
-    <h2>Ergebnisse</h2>
+<div class="card">
 
-    <div id="resultList"></div>
+<h2>Ergebnisse</h2>
 
-  </div>
+<div id="resultList"></div>
+
+</div>
 
 </div>
 
@@ -263,15 +264,14 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
 
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  orderBy,
-  where,
-  deleteDoc,
-  doc
+getFirestore,
+collection,
+addDoc,
+getDocs,
+query,
+where,
+deleteDoc,
+doc
 
 }
 
@@ -279,17 +279,17 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 
-  apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
 
-  authDomain: "rollart-score-5319a.firebaseapp.com",
+authDomain: "rollart-score-5319a.firebaseapp.com",
 
-  projectId: "rollart-score-5319a",
+projectId: "rollart-score-5319a",
 
-  storageBucket: "rollart-score-5319a.firebasestorage.app",
+storageBucket: "rollart-score-5319a.firebasestorage.app",
 
-  messagingSenderId: "658963624980",
+messagingSenderId: "658963624980",
 
-  appId: "1:658963624980:web:2e4d153f5df087c4f42301"
+appId: "1:658963624980:web:2e4d153f5df087c4f42301"
 
 };
 
@@ -299,516 +299,481 @@ const db = getFirestore(app);
 
 const deductions = {
 
-  0:{
-    text:"Kein Abzug",
-    value:0.0
-  },
-
-  1:{
-    text:"Knien oder Liegen",
-    value:0.3
-  },
-
-  2:{
-    text:"Kostümverstoß",
-    value:0.2
-  },
-
-  3:{
-    text:"Make-up Verstoß",
-    value:0.3
-  },
-
-  4:{
-    text:"Programmfehler",
-    value:0.2
-  },
-
-  5:{
-    text:"Programmbeginn zu spät",
-    value:0.3
-  },
-
-  6:{
-    text:"Zeitlimit Einlauf/Ausgang",
-    value:0.3
-  },
-
-  7:{
-    text:"Musikverstoß",
-    value:0.3
-  },
-
-  8:{
-    text:"Fläche verlassen",
-    value:0.3
-  },
-
-  9:{
-    text:"Fehlendes Element",
-    value:0.5
-  },
-
-  10:{
-    text:"Unterbrechung Programm",
-    value:0.5
-  },
-
-  11:{
-    text:"Falsche Musik",
-    value:0.5
-  },
-
-  12:{
-    text:"Zu lange Kür",
-    value:0.5
-  },
-
-  13:{
-    text:"Zu kurze Kür",
-    value:0.5
-  },
-
-  14:{
-    text:"Unsportliches Verhalten",
-    value:1.0
-  },
-
-  15:{
-    text:"Verbotenes Element",
-    value:0.5
-  }
+0:{text:"Kein Abzug",value:0.0},
+1:{text:"Knien oder Liegen",value:0.3},
+2:{text:"Kostümverstoß",value:0.2},
+3:{text:"Make-up Verstoß",value:0.3},
+4:{text:"Programmfehler",value:0.2},
+5:{text:"Programmbeginn zu spät",value:0.3},
+6:{text:"Zeitlimit Einlauf/Ausgang",value:0.3},
+7:{text:"Musikverstoß",value:0.3},
+8:{text:"Fläche verlassen",value:0.3},
+9:{text:"Fehlendes Element",value:0.5},
+10:{text:"Unterbrechung Programm",value:0.5},
+11:{text:"Falsche Musik",value:0.5},
+12:{text:"Zu lange Kür",value:0.5},
+13:{text:"Zu kurze Kür",value:0.5},
+14:{text:"Unsportliches Verhalten",value:1.0},
+15:{text:"Verbotenes Element",value:0.5}
 
 };
 
 function fillDeductionDropdowns(){
 
-  ["d1","d2","d3"].forEach(id => {
+["d1","d2","d3"].forEach(id=>{
 
-    const el = document.getElementById(id);
+const el=document.getElementById(id);
 
-    el.innerHTML = "";
+el.innerHTML="";
 
-    Object.keys(deductions).forEach(k => {
+Object.keys(deductions).forEach(k=>{
 
-      el.innerHTML += `
+el.innerHTML += `
 
-        <option value="${k}">
+<option value="${k}">
+${k} - ${deductions[k].text}
+(-${deductions[k].value})
+</option>
 
-          ${k} - ${deductions[k].text}
-          (-${deductions[k].value})
+`;
 
-        </option>
+});
 
-      `;
-
-    });
-
-  });
+});
 
 }
 
 window.saveCompetition = async function(){
 
-  const name =
-  document.getElementById("competitionName").value;
+const name =
+document.getElementById("competitionName").value;
 
-  const place =
-  document.getElementById("competitionPlace").value;
+const place =
+document.getElementById("competitionPlace").value;
 
-  const from =
-  document.getElementById("competitionDateFrom").value;
+const from =
+document.getElementById("competitionDateFrom").value;
 
-  const to =
-  document.getElementById("competitionDateTo").value;
+const to =
+document.getElementById("competitionDateTo").value;
 
-  if(!name || !place || !from || !to){
+if(!name || !place || !from || !to){
 
-    alert("Bitte alles ausfüllen");
+alert("Bitte alles ausfüllen");
+return;
 
-    return;
+}
 
-  }
+await addDoc(
 
-  await addDoc(
+collection(db,"competitions"),
 
-    collection(db,"competitions"),
+{
+name,
+place,
+from,
+to
+}
 
-    {
-      name,
-      place,
-      from,
-      to,
-      created:new Date().toISOString()
-    }
+);
 
-  );
+loadCompetitions();
 
-  loadCompetitions();
+};
+
+window.deleteCompetition = async function(id){
+
+if(!confirm("Wettbewerb löschen?")) return;
+
+await deleteDoc(doc(db,"competitions",id));
+
+loadCompetitions();
 
 };
 
 window.saveCategory = async function(){
 
-  const competitionId =
-  document.getElementById("competitionSelect").value;
+const competitionId =
+document.getElementById("competitionSelect").value;
 
-  const category =
-  document.getElementById("categoryName").value;
+const category =
+document.getElementById("categoryName").value;
 
-  if(!competitionId || !category){
+if(!competitionId || !category){
 
-    alert("Bitte alles ausfüllen");
+alert("Bitte alles ausfüllen");
+return;
 
-    return;
+}
 
-  }
+await addDoc(
 
-  await addDoc(
+collection(db,"categories"),
 
-    collection(db,"categories"),
+{
+competitionId,
+category
+}
 
-    {
-      competitionId,
-      category,
-      created:new Date().toISOString()
-    }
+);
 
-  );
-
-  loadCategories();
+loadCategories();
 
 };
 
 window.saveSkater = async function(){
 
-  const competitionId =
-  document.getElementById("competitionSelect").value;
+const competitionId =
+document.getElementById("competitionSelect").value;
 
-  const category =
-  document.getElementById("skaterCategory").value;
+const category =
+document.getElementById("skaterCategory").value;
 
-  const start =
-  document.getElementById("skaterStart").value;
+const start =
+document.getElementById("skaterStart").value;
 
-  const name =
-  document.getElementById("skaterName").value;
+const name =
+document.getElementById("skaterName").value;
 
-  let club =
-  document.getElementById("clubSelect").value;
+let club =
+document.getElementById("clubSelect").value;
 
-  const newClub =
-  document.getElementById("skaterClub").value;
+const newClub =
+document.getElementById("skaterClub").value;
 
-  if(newClub){
+if(newClub){
 
-    club = newClub;
+club = newClub;
 
-    await addDoc(
+await addDoc(
 
-      collection(db,"clubs"),
+collection(db,"clubs"),
 
-      {name:newClub}
+{
+name:newClub
+}
 
-    );
+);
 
-  }
+}
 
-  if(!competitionId || !category || !start || !name || !club){
+if(!competitionId || !category || !start || !name || !club){
 
-    alert("Bitte alles ausfüllen");
+alert("Bitte alles ausfüllen");
+return;
 
-    return;
+}
 
-  }
+await addDoc(
 
-  await addDoc(
+collection(db,"skaters"),
 
-    collection(db,"skaters"),
+{
+competitionId,
+category,
+start,
+name,
+club
+}
 
-    {
-      competitionId,
-      category,
-      start,
-      name,
-      club,
-      created:new Date().toISOString()
-    }
+);
 
-  );
+loadSkaters();
 
-  loadSkaters();
+};
+
+window.deleteSkater = async function(id){
+
+if(!confirm("Läufer löschen?")) return;
+
+await deleteDoc(doc(db,"skaters",id));
+
+loadSkaters();
 
 };
 
 window.saveScore = async function(){
 
-  const skater =
-  document.getElementById("scoreSkater").value;
+const skater =
+document.getElementById("scoreSkater").value;
 
-  if(!skater){
+const total =
 
-    alert("Bitte Läufer auswählen");
+(+a1.value + +b1.value
+- deductions[d1.value].value)
 
-    return;
++
 
-  }
+(+a2.value + +b2.value
+- deductions[d2.value].value)
 
-  const total =
++
 
-  (+a1.value + +b1.value
-  - deductions[d1.value].value)
+(+a3.value + +b3.value
+- deductions[d3.value].value);
 
-  +
+await addDoc(
 
-  (+a2.value + +b2.value
-  - deductions[d2.value].value)
+collection(db,"scores"),
 
-  +
+{
+skater,
+total:Number(total.toFixed(2))
+}
 
-  (+a3.value + +b3.value
-  - deductions[d3.value].value);
+);
 
-  await addDoc(
-
-    collection(db,"scores"),
-
-    {
-      skater,
-      total:total.toFixed(2),
-      created:new Date().toISOString()
-    }
-
-  );
-
-  loadResults();
-
-  alert("Wertung gespeichert");
+loadResults();
 
 };
 
 async function loadCompetitions(){
 
-  const select =
-  document.getElementById("competitionSelect");
+const select =
+document.getElementById("competitionSelect");
 
-  select.innerHTML = "";
+const list =
+document.getElementById("competitionList");
 
-  const q = query(
+select.innerHTML="";
+list.innerHTML="";
 
-    collection(db,"competitions"),
+const snapshot =
+await getDocs(collection(db,"competitions"));
 
-    orderBy("created","desc")
+snapshot.forEach((d)=>{
 
-  );
+const c=d.data();
 
-  const snapshot = await getDocs(q);
+select.innerHTML += `
 
-  snapshot.forEach((d)=>{
+<option value="${d.id}">
+${c.name} |
+${c.place}
+</option>
 
-    const c = d.data();
+`;
 
-    select.innerHTML += `
+list.innerHTML += `
 
-      <option value="${d.id}">
+<div class="item">
 
-        ${c.name} |
-        ${c.place} |
-        ${c.from} bis ${c.to}
+<strong>${c.name}</strong>
 
-      </option>
+<br>
 
-    `;
+${c.place}
 
-  });
+<br>
 
-  loadCategories();
+${c.from} bis ${c.to}
 
-  loadSkaters();
+<br><br>
+
+<button class="danger"
+onclick="deleteCompetition('${d.id}')">
+
+Wettbewerb löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+loadCategories();
+loadSkaters();
 
 }
 
 async function loadCategories(){
 
-  const competitionId =
-  document.getElementById("competitionSelect").value;
+const competitionId =
+document.getElementById("competitionSelect").value;
 
-  const list =
-  document.getElementById("categoryList");
+const list =
+document.getElementById("categoryList");
 
-  const select =
-  document.getElementById("skaterCategory");
+const select =
+document.getElementById("skaterCategory");
 
-  list.innerHTML = "";
+list.innerHTML="";
+select.innerHTML="";
 
-  select.innerHTML = "";
+const q = query(
 
-  const q = query(
+collection(db,"categories"),
 
-    collection(db,"categories"),
+where("competitionId","==",competitionId)
 
-    where("competitionId","==",competitionId)
+);
 
-  );
+const snapshot = await getDocs(q);
 
-  const snapshot = await getDocs(q);
+snapshot.forEach((d)=>{
 
-  snapshot.forEach((d)=>{
+const c=d.data();
 
-    const c = d.data();
+list.innerHTML += `
 
-    list.innerHTML += `
+<div class="item">
+${c.category}
+</div>
 
-      <div class="item">
+`;
 
-        ${c.category}
+select.innerHTML += `
 
-      </div>
+<option value="${c.category}">
+${c.category}
+</option>
 
-    `;
+`;
 
-    select.innerHTML += `
-
-      <option value="${c.category}">
-
-        ${c.category}
-
-      </option>
-
-    `;
-
-  });
+});
 
 }
 
 async function loadSkaters(){
 
-  const competitionId =
-  document.getElementById("competitionSelect").value;
+const competitionId =
+document.getElementById("competitionSelect").value;
 
-  const list =
-  document.getElementById("skaterList");
+const list =
+document.getElementById("skaterList");
 
-  const select =
-  document.getElementById("scoreSkater");
+const select =
+document.getElementById("scoreSkater");
 
-  list.innerHTML = "";
+list.innerHTML="";
+select.innerHTML="";
 
-  select.innerHTML = "";
+const q = query(
 
-  const q = query(
+collection(db,"skaters"),
 
-    collection(db,"skaters"),
+where("competitionId","==",competitionId)
 
-    where("competitionId","==",competitionId)
+);
 
-  );
+const snapshot = await getDocs(q);
 
-  const snapshot = await getDocs(q);
+snapshot.forEach((d)=>{
 
-  snapshot.forEach((d)=>{
+const s=d.data();
 
-    const s = d.data();
+list.innerHTML += `
 
-    list.innerHTML += `
+<div class="item">
 
-      <div class="item">
+${s.start}<br>
+${s.name}<br>
+${s.club}<br>
+${s.category}
 
-        ${s.start}<br>
+<br><br>
 
-        ${s.name}<br>
+<button class="danger"
+onclick="deleteSkater('${d.id}')">
 
-        ${s.club}<br>
+Läufer löschen
 
-        ${s.category}
+</button>
 
-      </div>
+</div>
 
-    `;
+`;
 
-    select.innerHTML += `
+select.innerHTML += `
 
-      <option value="${s.name}">
+<option value="${s.name}">
+${s.start} - ${s.name}
+</option>
 
-        ${s.start} - ${s.name}
+`;
 
-      </option>
-
-    `;
-
-  });
+});
 
 }
 
 async function loadResults(){
 
-  const list =
-  document.getElementById("resultList");
+const list =
+document.getElementById("resultList");
 
-  list.innerHTML = "";
+list.innerHTML="";
 
-  const q = query(
+const snapshot =
+await getDocs(collection(db,"scores"));
 
-    collection(db,"scores"),
+let results=[];
 
-    orderBy("created","desc")
+snapshot.forEach((d)=>{
 
-  );
+results.push(d.data());
 
-  const snapshot = await getDocs(q);
+});
 
-  snapshot.forEach((d)=>{
+results.sort((a,b)=>b.total-a.total);
 
-    const r = d.data();
+results.forEach((r,i)=>{
 
-    list.innerHTML += `
+list.innerHTML += `
 
-      <div class="item">
+<div class="item">
 
-        ${r.skater}<br>
+<strong>
+Platz ${i+1}
+</strong>
 
-        Gesamt:
-        ${r.total}
+<br><br>
 
-      </div>
+${r.skater}
 
-    `;
+<br>
 
-  });
+Gesamt:
+${r.total}
+
+</div>
+
+`;
+
+});
 
 }
 
 async function loadClubs(){
 
-  const select =
-  document.getElementById("clubSelect");
+const select =
+document.getElementById("clubSelect");
 
-  select.innerHTML = `
+select.innerHTML=`
 
-    <option value="">
-      Verein auswählen
-    </option>
+<option value="">
+Verein auswählen
+</option>
 
-  `;
+`;
 
-  const snapshot =
-  await getDocs(collection(db,"clubs"));
+const snapshot =
+await getDocs(collection(db,"clubs"));
 
-  snapshot.forEach((d)=>{
+snapshot.forEach((d)=>{
 
-    const c = d.data();
+const c=d.data();
 
-    select.innerHTML += `
+select.innerHTML += `
 
-      <option value="${c.name}">
+<option value="${c.name}">
+${c.name}
+</option>
 
-        ${c.name}
+`;
 
-      </option>
-
-    `;
-
-  });
+});
 
 }
 
@@ -816,9 +781,8 @@ document
 .getElementById("competitionSelect")
 .addEventListener("change",()=>{
 
-  loadCategories();
-
-  loadSkaters();
+loadCategories();
+loadSkaters();
 
 });
 
