@@ -87,10 +87,6 @@ border-left:5px solid #3b82f6;
 border-left:5px solid #f59e0b;
 }
 
-.hidden{
-display:none !important;
-}
-
 button,input,select{
 width:100%;
 padding:14px;
@@ -217,7 +213,7 @@ onclick="saveCompetition()">
 
 <!-- PDF -->
 
-<div id="pdfTab" class="hidden">
+<div id="pdfTab" style="display:none;">
 
 <div class="card">
 
@@ -246,7 +242,7 @@ onclick="saveImportedData()">
 
 <!-- Kategorien -->
 
-<div id="categoryTab" class="hidden">
+<div id="categoryTab" style="display:none;">
 
 <div class="card">
 
@@ -268,7 +264,7 @@ class="grid"></div>
 
 <!-- Läufer -->
 
-<div id="runnerTab" class="hidden">
+<div id="runnerTab" style="display:none;">
 
 <div class="card">
 
@@ -290,7 +286,7 @@ class="grid"></div>
 
 <!-- Wertung -->
 
-<div id="scoreTab" class="hidden">
+<div id="scoreTab" style="display:none;">
 
 <div class="card">
 
@@ -305,7 +301,7 @@ class="grid"></div>
 
 <!-- Ergebnisse -->
 
-<div id="resultTab" class="hidden">
+<div id="resultTab" style="display:none;">
 
 <div class="card">
 
@@ -356,22 +352,22 @@ const tabs = [
 "resultTab"
 ];
 
-tabs.forEach(id=>{
+for(let i=0;i<tabs.length;i++){
 
-const element =
-document.getElementById(id);
+const el =
+document.getElementById(tabs[i]);
 
-if(element){
-element.classList.add("hidden");
+if(el){
+el.style.display = "none";
 }
 
-});
+}
 
 const active =
 document.getElementById(tabId);
 
 if(active){
-active.classList.remove("hidden");
+active.style.display = "block";
 }
 
 }
@@ -420,6 +416,8 @@ document.getElementById("competitionOutput").innerHTML = `
 </div>
 
 `;
+
+alert("✅ Wettbewerb gespeichert");
 
 }
 
@@ -481,118 +479,6 @@ function analyzePDF(text){
 runners = [];
 categories = [];
 
-const cleanedText = text
-.replace(/\n/g," ")
-.replace(/\s+/g," ")
-.trim();
-
-const categoryRegex =
-/([A-Za-zÄÖÜäöüß0-9\s\.\-]+?)\s+
-(\d{2}:\d{2})\s+
-(\d{2}:\d{2})\s+
-(\d{2}:\d{2}:\d{2})\s+
-(\d{2}:\d{2}:\d{2})\s+
-(\d+)\s+
-(\d+)/gx;
-
-const categoryMatches =
-[...cleanedText.matchAll(categoryRegex)];
-
-categoryMatches.forEach((match)=>{
-
-let categoryName =
-match[1]
-.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
-.replace(/Startfolge Kür/gi,"")
-.replace(/Westhofener Kürpokal/gi,"")
-.replace(/\d{2}\.\d{2}\.\d{4}/g,"")
-.replace(/\s+/g," ")
-.trim();
-
-if(categoryName.length < 3) return;
-
-categories.push({
-
-id:Date.now()+Math.random(),
-
-name:categoryName,
-
-begin:match[2],
-
-end:match[3],
-
-duration:match[4],
-
-warmup:match[5],
-
-groups:match[6],
-
-participants:match[7]
-
-});
-
-});
-
-const runnerRegex =
-/(\d+)\s+
-([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)
-\s+
-(SSG\sRonsdorf|
-RRD\sWuppertal|
-Wattenscheider\sRSC|
-TG\sWesthofen|
-TV\sDatteln\s09|
-TV\sWalsum-Aldenrade\s07|
-TV\sWalsum\s-\sAldenrade)/gx;
-
-const runnerMatches =
-[...cleanedText.matchAll(runnerRegex)];
-
-let currentCategoryIndex = 0;
-let currentCount = 0;
-
-runnerMatches.forEach((runner)=>{
-
-if(
-categories[currentCategoryIndex] &&
-currentCount >= Number(categories[currentCategoryIndex].participants)
-){
-
-currentCategoryIndex++;
-currentCount = 0;
-
-}
-
-runners.push({
-
-id:Date.now()+Math.random(),
-
-start:runner[1],
-
-name:runner[2].trim(),
-
-club:runner[3].trim(),
-
-category:
-categories[currentCategoryIndex]
-? categories[currentCategoryIndex].name
-: "",
-
-technik:0,
-kunst:0,
-abzug:0,
-gesamt:0
-
-});
-
-currentCount++;
-
-});
-
-renderCategories();
-renderRunners();
-renderScores();
-
 document.getElementById("pdfInfo").innerHTML = `
 
 <div class="item">
@@ -601,17 +487,15 @@ document.getElementById("pdfInfo").innerHTML = `
 
 <br><br>
 
-🕒 Kategorien:
-${categories.length}
-
-<br>
-
-👥 Läufer:
-${runners.length}
+⚠ PDF Parser aktivieren
 
 </div>
 
 `;
+
+renderCategories();
+renderRunners();
+renderScores();
 
 }
 
@@ -933,22 +817,14 @@ alert("✅ Import gespeichert");
 
 window.onload = function(){
 
+const savedCompetition =
+localStorage.getItem("rollart_competition");
+
 const savedRunners =
 localStorage.getItem("rollart_runners");
 
 const savedCategories =
 localStorage.getItem("rollart_categories");
-
-const savedCompetition =
-localStorage.getItem("rollart_competition");
-
-if(savedRunners){
-runners = JSON.parse(savedRunners);
-}
-
-if(savedCategories){
-categories = JSON.parse(savedCategories);
-}
 
 if(savedCompetition){
 
@@ -969,13 +845,21 @@ competition.to || "";
 
 }
 
+if(savedRunners){
+runners = JSON.parse(savedRunners);
+}
+
+if(savedCategories){
+categories = JSON.parse(savedCategories);
+}
+
 renderCategories();
 renderRunners();
 renderScores();
 
 showTab("competitionTab");
 
-}
+};
 
 function updateCategory(id,field,value){
 
