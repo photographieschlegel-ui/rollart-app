@@ -12,7 +12,6 @@
 <style>
 
 body{
-  font-family:Arial,sans-serif;
   margin:0;
   padding:0;
   background:#0f172a;
@@ -86,7 +85,7 @@ body{
   display:none;
 }
 
-input,button{
+button,input{
   width:100%;
   padding:14px;
   margin-top:10px;
@@ -100,23 +99,15 @@ input,button{
 
 button{
   background:linear-gradient(135deg,#2563eb,#7c3aed);
-  font-weight:bold;
   cursor:pointer;
-}
-
-.success{
-  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
-}
-
-.danger{
-  background:linear-gradient(135deg,#dc2626,#ef4444)!important;
+  font-weight:bold;
 }
 
 .categoryLabel{
   background:#2563eb;
+  display:inline-block;
   padding:6px 10px;
   border-radius:10px;
-  display:inline-block;
   margin-bottom:10px;
   font-size:14px;
 }
@@ -140,18 +131,13 @@ LIVE WETTKAMPF IMPORTER
 <div class="tabs">
 
 <div class="tab"
-onclick="showTab('competitionTab')">
-🏟 Wettbewerb
-</div>
-
-<div class="tab"
 onclick="showTab('pdfTab')">
 📄 PDF Import
 </div>
 
 <div class="tab"
 onclick="showTab('scheduleTab')">
-🕒 Zeitplan
+🕒 Kategorien
 </div>
 
 <div class="tab"
@@ -161,50 +147,9 @@ onclick="showTab('runnerTab')">
 
 </div>
 
-<!-- Wettbewerb -->
-
-<div id="competitionTab">
-
-<div class="card">
-
-<h2>🏟 Wettbewerb erstellen</h2>
-
-<input type="text"
-id="competitionName"
-placeholder="Wettbewerb">
-
-<input type="text"
-id="competitionPlace"
-placeholder="Ort">
-
-<label style="display:block;margin-top:15px;">
-Von:
-</label>
-
-<input type="date"
-id="competitionFrom">
-
-<label style="display:block;margin-top:15px;">
-Bis:
-</label>
-
-<input type="date"
-id="competitionTo">
-
-<button class="success"
-onclick="saveCompetition()">
-Wettbewerb speichern
-</button>
-
-<div id="competitionList"></div>
-
-</div>
-
-</div>
-
 <!-- PDF -->
 
-<div id="pdfTab" class="hidden">
+<div id="pdfTab">
 
 <div class="card">
 
@@ -224,13 +169,13 @@ PDF analysieren
 
 </div>
 
-<!-- ZEITPLAN -->
+<!-- Kategorien -->
 
 <div id="scheduleTab" class="hidden">
 
 <div class="card">
 
-<h2>🕒 Erkannte Kategorien</h2>
+<h2>🕒 Erkannte Wettbewerbe</h2>
 
 <div id="scheduleOutput"></div>
 
@@ -238,7 +183,7 @@ PDF analysieren
 
 </div>
 
-<!-- LÄUFER -->
+<!-- Läufer -->
 
 <div id="runnerTab" class="hidden">
 
@@ -254,40 +199,11 @@ PDF analysieren
 
 </div>
 
-<script type="module">
+<script>
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-addDoc,
-getDocs,
-deleteDoc,
-doc
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-
-apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-authDomain: "rollart-score-5319a.firebaseapp.com",
-projectId: "rollart-score-5319a",
-storageBucket: "rollart-score-5319a.firebasestorage.app",
-messagingSenderId: "658963624980",
-appId: "1:658963624980:web:2e4d153f5df087c4f42301"
-
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-
-window.showTab = function(tabId){
+function showTab(tabId){
 
 const tabs = [
-"competitionTab",
 "pdfTab",
 "scheduleTab",
 "runnerTab"
@@ -305,101 +221,11 @@ document
 .getElementById(tabId)
 .classList.remove("hidden");
 
-};
-
-showTab("competitionTab");
-
-window.saveCompetition = async function(){
-
-const name =
-document.getElementById("competitionName").value;
-
-const place =
-document.getElementById("competitionPlace").value;
-
-const from =
-document.getElementById("competitionFrom").value;
-
-const to =
-document.getElementById("competitionTo").value;
-
-if(
-!name ||
-!place ||
-!from ||
-!to
-){
-alert("Bitte alles ausfüllen");
-return;
 }
 
-await addDoc(collection(db,"competitions"),{
-name,
-place,
-from,
-to
-});
+showTab("pdfTab");
 
-loadCompetitions();
-
-};
-
-async function loadCompetitions(){
-
-const list =
-document.getElementById("competitionList");
-
-list.innerHTML = "";
-
-const snapshot =
-await getDocs(collection(db,"competitions"));
-
-snapshot.forEach((d)=>{
-
-const c = d.data();
-
-list.innerHTML += `
-
-<div class="item">
-
-<strong>${c.name}</strong>
-
-<br><br>
-
-📍 ${c.place}
-
-<br>
-
-📅 ${c.from} bis ${c.to}
-
-<br><br>
-
-<button class="danger"
-onclick="deleteCompetition('${d.id}')">
-
-Löschen
-
-</button>
-
-</div>
-
-`;
-
-});
-
-}
-
-window.deleteCompetition = async function(id){
-
-await deleteDoc(doc(db,"competitions",id));
-
-loadCompetitions();
-
-};
-
-loadCompetitions();
-
-window.readPDF = async function(){
+async function readPDF(){
 
 const file =
 document.getElementById("pdfUpload").files[0];
@@ -450,44 +276,48 @@ analyzePDF(fullText);
 
 reader.readAsArrayBuffer(file);
 
-};
-
-function analyzePDF(text){
-
-analyzeSchedules(text);
-
-analyzeRunners(text);
-
 }
 
-function analyzeSchedules(text){
+function analyzePDF(text){
 
 document
 .getElementById("scheduleOutput")
 .innerHTML = "";
 
-const regex =
-/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+([A-Za-zÄÖÜäöüß0-9\s\.\-]+)/g;
+document
+.getElementById("runnerOutput")
+.innerHTML = "";
 
-const matches =
-[...text.matchAll(regex)];
+const blockRegex =
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+([\s\S]*?)(?=\d{2}:\d{2}\s+\d{2}:\d{2}|$)/g;
 
-matches.forEach((match,index)=>{
+const blocks =
+[...text.matchAll(blockRegex)];
 
-const begin = match[1];
-const end = match[2];
-const duration = match[3];
-const warmup = match[4];
-const groups = match[5];
-const participants = match[6];
+let runnerCount = 0;
 
-let category = match[7];
+blocks.forEach((block,index)=>{
 
-category = category
+const begin = block[1];
+const end = block[2];
+const duration = block[3];
+const warmup = block[4];
+const groups = block[5];
+const participants = block[6];
 
-.split(/\d+\s+[A-ZÄÖÜ]/)[0]
-
+let content = block[7]
 .replace(/\s+/g," ")
+.trim();
+
+const categoryMatch =
+content.match(
+/^(.*?)(?=\d+\s+[A-ZÄÖÜ])/
+);
+
+if(!categoryMatch) return;
+
+let category =
+categoryMatch[1]
 
 .replace(/Startfolge Kür/gi,"")
 
@@ -501,118 +331,66 @@ document
 
 <div class="item schedule">
 
-<h3>${index+1}. ${category}</h3>
+<h3>
+${category}
+</h3>
 
-🕒 ${begin} - ${end}
-
-<br>
-
-⏱ Dauer: ${duration}
-
-<br>
-
-🔥 Einlauf: ${warmup}
+🕒 Beginn:
+${begin}
 
 <br>
 
-👥 Gruppen: ${groups}
+🕒 Ende:
+${end}
 
 <br>
 
-🏃 Teilnehmer: ${participants}
+⏱ Dauer:
+${duration}
+
+<br>
+
+🔥 Einlaufzeit:
+${warmup}
+
+<br>
+
+👥 Einlaufgruppen:
+${groups}
+
+<br>
+
+🏃 Teilnehmer:
+${participants}
 
 </div>
 
 `;
 
-});
+const runnerRegex =
+/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+(SSG\sRonsdorf|RRD\sWuppertal|Wattenscheider\sRSC|TG\sWesthofen|TV\sDatteln\s09|TV\sWalsum-Aldenrade\s07|TV\sWalsum\s-\sAldenrade)/g;
 
-}
+const runners =
+[...content.matchAll(runnerRegex)];
 
-function analyzeRunners(text){
+runners.forEach(runner=>{
 
-document
-.getElementById("runnerOutput")
-.innerHTML = "";
+const start = runner[1];
 
-let runnerCount = 0;
+const name = runner[2]
+.replace(/\s+/g," ")
+.trim();
 
-const clubs = [
-
-"TV Datteln 09",
-"TV Walsum-Aldenrade 07",
-"TV Walsum - Aldenrade",
-"Wattenscheider RSC",
-"RRD Wuppertal",
-"SSG Ronsdorf",
-"TG Westhofen"
-
-];
-
-const splitText =
-text.split(/(?=\d+\s+[A-ZÄÖÜ])/g);
-
-splitText.forEach(part=>{
-
-clubs.forEach(club=>{
-
-if(!part.includes(club)) return;
-
-const escaped =
-club.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-
-const regex =
-new RegExp(
-"(\\d+)\\s+(.+?)\\s+" + escaped
-);
-
-const match =
-part.match(regex);
-
-if(!match) return;
-
-const start = match[1];
-
-const name = match[2]
+const club = runner[3]
 .replace(/\s+/g," ")
 .trim();
 
 if(
 name.length < 3 ||
-name.includes("Kürpokal") ||
-name.includes("Startfolge")
+name.includes("Startfolge") ||
+name.includes("Kürpokal")
 ){
 return;
-}
-
-let category = "Kategorie";
-
-const before =
-text.substring(
-0,
-text.indexOf(part)
-);
-
-const catMatches =
-before.match(
-/([A-Za-zÄÖÜäöüß0-9\s\.\-]+)\s+\d+\s+\d+\s+[A-ZÄÖÜ]/g
-);
-
-if(catMatches){
-
-category =
-catMatches[
-catMatches.length - 1
-]
-
-.replace(/\s+/g," ")
-
-.replace(/Startfolge Kür/gi,"")
-
-.replace(/Westhofener Kürpokal/gi,"")
-
-.trim();
-
 }
 
 runnerCount++;
@@ -649,7 +427,9 @@ Start ${start}
 
 });
 
-document.getElementById("pdfInfo").innerHTML = `
+document
+.getElementById("pdfInfo")
+.innerHTML = `
 
 <div class="item">
 
@@ -657,7 +437,12 @@ document.getElementById("pdfInfo").innerHTML = `
 
 <br><br>
 
-👥 Läufer erkannt:
+🕒 Wettbewerbe:
+${blocks.length}
+
+<br>
+
+👥 Läufer:
 ${runnerCount}
 
 </div>
