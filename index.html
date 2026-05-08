@@ -195,8 +195,6 @@ onclick="saveCompetition()">
 Wettbewerb speichern
 </button>
 
-<div id="competitionSaved"></div>
-
 <div id="competitionList"></div>
 
 </div>
@@ -338,8 +336,7 @@ await addDoc(collection(db,"competitions"),{
 name,
 place,
 from,
-to,
-created:new Date()
+to
 });
 
 loadCompetitions();
@@ -364,9 +361,7 @@ list.innerHTML += `
 
 <div class="item">
 
-<strong>
-${c.name}
-</strong>
+<strong>${c.name}</strong>
 
 <br><br>
 
@@ -429,8 +424,8 @@ await pdfjsLib
 
 let fullText = "";
 
-for(let pageNum = 1;
-pageNum <= pdf.numPages;
+for(let pageNum=1;
+pageNum<=pdf.numPages;
 pageNum++){
 
 const page =
@@ -441,7 +436,7 @@ await page.getTextContent();
 
 const text =
 textContent.items
-.map(item => item.str)
+.map(item=>item.str)
 .join(" ");
 
 fullText += " " + text;
@@ -473,7 +468,8 @@ document
 const regex =
 /(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+(.+?)(?=\d{2}:\d{2}|$)/gs;
 
-let matches = [...text.matchAll(regex)];
+const matches =
+[...text.matchAll(regex)];
 
 matches.forEach((match,index)=>{
 
@@ -487,16 +483,10 @@ const participants = match[6];
 let category = match[7];
 
 category = category
-
 .replace(/\s+/g," ")
-
 .replace(/Westhofener Kürpokal/gi,"")
-
-.replace(/\d+\s+[A-ZÄÖÜ].*/,"")
-
+.replace(/Startfolge Kür/gi,"")
 .trim();
-
-if(category.length < 3) return;
 
 document
 .getElementById("scheduleOutput")
@@ -504,31 +494,25 @@ document
 
 <div class="item schedule">
 
-<h3>
-${index+1}. ${category}
-</h3>
+<h3>${index+1}. ${category}</h3>
 
 🕒 ${begin} - ${end}
 
 <br>
 
-⏱ Dauer:
-${duration}
+⏱ Dauer: ${duration}
 
 <br>
 
-🔥 Einlauf:
-${warmup}
+🔥 Einlauf: ${warmup}
 
 <br>
 
-👥 Gruppen:
-${groups}
+👥 Gruppen: ${groups}
 
 <br>
 
-🏃 Teilnehmer:
-${participants}
+🏃 Teilnehmer: ${participants}
 
 </div>
 
@@ -546,39 +530,33 @@ document
 
 let runnerCount = 0;
 
-const categories =
-text.match(/.+?\d{2}:\d{2}\s+\d{2}:\d{2}/gs);
+const clubNames = [
 
-if(!categories) return;
+"TV Datteln 09",
+"TV Walsum-Aldenrade 07",
+"TV Walsum - Aldenrade",
+"Wattenscheider RSC",
+"RRD Wuppertal",
+"SSG Ronsdorf",
+"TG Westhofen"
 
-categories.forEach(block=>{
+];
 
-const categoryNameMatch =
-block.match(
-/([A-Za-zÄÖÜäöüß0-9\s\.•\-]+?)\s+\d+\s+[A-ZÄÖÜ]/);
+clubNames.forEach(club=>{
 
-if(!categoryNameMatch) return;
+const escapedClub =
+club.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 
-let category =
-categoryNameMatch[1]
-.replace(/\s+/g," ")
-.replace(/Westhofener Kürpokal/gi,"")
-.trim();
+const regex =
+new RegExp(
+"(\\d+)\\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\\- ]+?)\\s+" + escapedClub,
+"g"
+);
 
-const runnerLines =
-block.match(
-/\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+\s+(?:TV|SSG|RRD|TG|ERC|REV|TuS|SC|SV|Wattenscheider)\s+[A-Za-zÄÖÜäöüß0-9\- ]+/g);
+const matches =
+[...text.matchAll(regex)];
 
-if(!runnerLines) return;
-
-runnerLines.forEach(line=>{
-
-const runnerRegex =
-/(\d+)\s+(.+?)\s+(TV\s+[A-Za-zÄÖÜäöüß0-9\- ]+|SSG\s+[A-Za-zÄÖÜäöüß\- ]+|RRD\s+[A-Za-zÄÖÜäöüß\- ]+|TG\s+[A-Za-zÄÖÜäöüß\- ]+|ERC\s+[A-Za-zÄÖÜäöüß\- ]+|REV\s+[A-Za-zÄÖÜäöüß\- ]+|TuS\s+[A-Za-zÄÖÜäöüß\- ]+|SC\s+[A-Za-zÄÖÜäöüß\- ]+|SV\s+[A-Za-zÄÖÜäöüß\- ]+|Wattenscheider\sRSC)$/;
-
-const match = line.match(runnerRegex);
-
-if(!match) return;
+matches.forEach(match=>{
 
 const start = match[1];
 
@@ -586,16 +564,36 @@ const name = match[2]
 .replace(/\s+/g," ")
 .trim();
 
-const club = match[3]
-.replace(/\s+/g," ")
-.trim();
-
 if(
-name.includes("Kürpokal") ||
 name.includes("Startfolge") ||
+name.includes("Kürpokal") ||
 name.length < 3
 ){
 return;
+}
+
+let category = "Unbekannt";
+
+const before =
+text.substring(
+0,
+match.index
+);
+
+const catMatch =
+before.match(
+/([A-Za-zÄÖÜäöüß0-9\s\.\-]+)\s+\d+\s+\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜ]/g
+);
+
+if(catMatch){
+
+category =
+catMatch[
+catMatch.length - 1
+]
+.replace(/\s+/g," ")
+.trim();
+
 }
 
 runnerCount++;
