@@ -139,6 +139,11 @@ LIVE WETTKAMPF IMPORTER
 <div class="tabs">
 
 <div class="tab"
+onclick="showTab('competitionTab')">
+🏟 Wettbewerb
+</div>
+
+<div class="tab"
 onclick="showTab('pdfTab')">
 📄 PDF Import
 </div>
@@ -155,9 +160,52 @@ onclick="showTab('runnerTab')">
 
 </div>
 
+<!-- Wettbewerb -->
+
+<div id="competitionTab">
+
+<div class="card">
+
+<h2>🏟 Wettbewerb erstellen</h2>
+
+<input type="text"
+id="competitionName"
+placeholder="Wettbewerb">
+
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
+
+<label style="display:block;margin-top:15px;">
+Von:
+</label>
+
+<input type="date"
+id="competitionFrom">
+
+<label style="display:block;margin-top:15px;">
+Bis:
+</label>
+
+<input type="date"
+id="competitionTo">
+
+<button class="success"
+onclick="saveCompetition()">
+Wettbewerb speichern
+</button>
+
+<div id="competitionSaved"></div>
+
+<div id="competitionList"></div>
+
+</div>
+
+</div>
+
 <!-- PDF -->
 
-<div id="pdfTab">
+<div id="pdfTab" class="hidden">
 
 <div class="card">
 
@@ -207,11 +255,40 @@ PDF analysieren
 
 </div>
 
-<script>
+<script type="module">
 
-function showTab(tabId){
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+doc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+authDomain: "rollart-score-5319a.firebaseapp.com",
+projectId: "rollart-score-5319a",
+storageBucket: "rollart-score-5319a.firebasestorage.app",
+messagingSenderId: "658963624980",
+appId: "1:658963624980:web:2e4d153f5df087c4f42301"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+window.showTab = function(tabId){
 
 const tabs = [
+"competitionTab",
 "pdfTab",
 "scheduleTab",
 "runnerTab"
@@ -229,11 +306,131 @@ document
 .getElementById(tabId)
 .classList.remove("hidden");
 
+};
+
+showTab("competitionTab");
+
+window.saveCompetition = async function(){
+
+const name =
+document.getElementById("competitionName").value;
+
+const place =
+document.getElementById("competitionPlace").value;
+
+const from =
+document.getElementById("competitionFrom").value;
+
+const to =
+document.getElementById("competitionTo").value;
+
+if(
+!name ||
+!place ||
+!from ||
+!to
+){
+alert("Bitte alles ausfüllen");
+return;
 }
 
-showTab("pdfTab");
+await addDoc(collection(db,"competitions"),{
+name,
+place,
+from,
+to,
+created:new Date()
+});
 
-async function readPDF(){
+document.getElementById("competitionSaved").innerHTML = `
+
+<div class="item">
+
+✅ Wettbewerb gespeichert
+
+<br><br>
+
+🏆 ${name}
+
+<br>
+
+📍 ${place}
+
+<br>
+
+📅 ${from} bis ${to}
+
+</div>
+
+`;
+
+document.getElementById("competitionName").value="";
+document.getElementById("competitionPlace").value="";
+document.getElementById("competitionFrom").value="";
+document.getElementById("competitionTo").value="";
+
+loadCompetitions();
+
+};
+
+async function loadCompetitions(){
+
+const list =
+document.getElementById("competitionList");
+
+list.innerHTML = "";
+
+const snapshot =
+await getDocs(collection(db,"competitions"));
+
+snapshot.forEach((d)=>{
+
+const c = d.data();
+
+list.innerHTML += `
+
+<div class="item">
+
+<strong>
+${c.name}
+</strong>
+
+<br><br>
+
+📍 ${c.place}
+
+<br>
+
+📅 ${c.from} bis ${c.to}
+
+<br><br>
+
+<button class="danger"
+onclick="deleteCompetition('${d.id}')">
+
+Löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+window.deleteCompetition = async function(id){
+
+await deleteDoc(doc(db,"competitions",id));
+
+loadCompetitions();
+
+};
+
+loadCompetitions();
+
+window.readPDF = async function(){
 
 const file =
 document.getElementById("pdfUpload").files[0];
@@ -274,7 +471,7 @@ textContent.items
 .map(item => item.str)
 .join(" ");
 
-fullText += text + "\n";
+fullText += " " + text;
 
 }
 
@@ -284,7 +481,7 @@ analyzePDF(fullText);
 
 reader.readAsArrayBuffer(file);
 
-}
+};
 
 function analyzePDF(text){
 
@@ -317,9 +514,13 @@ const participants = match[6];
 let category = match[7];
 
 category = category
+
 .replace(/\s+/g," ")
-.replace(/\d+\s+[A-ZÄÖÜ].*/,"")
+
 .replace(/Westhofener Kürpokal/gi,"")
+
+.replace(/\d+\s+[A-ZÄÖÜ].*/,"")
+
 .trim();
 
 if(category.length < 3) return;
@@ -370,33 +571,39 @@ document
 .getElementById("runnerOutput")
 .innerHTML = "";
 
-const blocks =
-text.split(/(?=\d{2}:\d{2}\s+\d{2}:\d{2})/g);
-
 let runnerCount = 0;
 
-blocks.forEach(block=>{
+const categoryRegex =
+/(\d{2}:\d{2}\s+\d{2}:\d{2}.*?)(?=\d{2}:\d{2}\s+\d{2}:\d{2}|$)/gs;
 
-const categoryMatch =
-block.match(/([A-Za-zÄÖÜäöüß0-9\s\.]+)\s+\d+\s+[A-ZÄÖÜ]/);
+const blocks =
+[...text.matchAll(categoryRegex)];
 
-if(!categoryMatch) return;
+blocks.forEach(blockMatch=>{
+
+const block = blockMatch[1];
 
 let category =
-categoryMatch[1]
+block
 .replace(/\s+/g," ")
+.match(/(\d+\s+\d+\s+)(.*?)(?=\d+\s+[A-ZÄÖÜ])/);
+
+if(!category) return;
+
+category = category[2]
 .replace(/Westhofener Kürpokal/gi,"")
 .trim();
 
-const splitRunners =
-block.split(/\s(?=\d+\s+[A-ZÄÖÜ])/g);
+const runnerLines =
+block.match(/\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?(?=(\d+\s+[A-ZÄÖÜ]|$))/g);
 
-splitRunners.forEach(line=>{
+if(!runnerLines) return;
 
-const runnerRegex =
-/(\d+)\s+(.+?)\s+(SSG\s.+|RRD\s.+|Wattenscheider\sRSC|TV\s.+|TG\s.+|ERC\s.+|REV\s.+|TuS\s.+|SC\s.+|SV\s.+)$/;
+runnerLines.forEach(line=>{
 
-const match = line.match(runnerRegex);
+const match =
+line.match(
+/(\d+)\s+(.+?)\s+(SSG\s.+|RRD\s.+|Wattenscheider\sRSC|TV\s.+|TG\s.+|ERC\s.+|REV\s.+|TuS\s.+|SC\s.+|SV\s.+)$/);
 
 if(!match) return;
 
@@ -411,8 +618,8 @@ const club = match[3]
 .trim();
 
 if(
-name.includes("Startfolge") ||
 name.includes("Kürpokal") ||
+name.includes("Startfolge") ||
 name.length < 3
 ){
 return;
