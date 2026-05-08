@@ -1,11 +1,16 @@
+```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>RollArt Score Pro</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <style>
 
@@ -47,7 +52,6 @@ body{
   padding:12px 20px;
   border-radius:14px;
   cursor:pointer;
-  transition:0.3s;
 }
 
 .tab:hover{
@@ -75,10 +79,6 @@ body{
   border-radius:20px;
   padding:20px;
   margin-top:20px;
-}
-
-h1,h2,h3{
-  color:white;
 }
 
 input,button,select{
@@ -146,6 +146,7 @@ button{
 }
 
 </style>
+
 </head>
 
 <body>
@@ -166,24 +167,39 @@ LIVE WETTKAMPF SYSTEM
 
 <div class="tabs">
 
-<div class="tab" onclick="showTab('competitionsTab')">
+<div class="tab"
+onclick="showTab('competitionsTab')">
+
 🏟 Wettbewerbe
+
 </div>
 
-<div class="tab" onclick="showTab('skaterTab')">
+<div class="tab"
+onclick="showTab('skaterTab')">
+
 👥 Läufer
+
 </div>
 
-<div class="tab" onclick="showTab('scoreTab')">
+<div class="tab"
+onclick="showTab('scoreTab')">
+
 📊 Wertung
+
 </div>
 
-<div class="tab" onclick="showTab('resultTab')">
+<div class="tab"
+onclick="showTab('resultTab')">
+
 🏆 Ergebnisse
+
 </div>
 
-<div class="tab" onclick="showTab('scheduleTab')">
+<div class="tab"
+onclick="showTab('scheduleTab')">
+
 🕒 Zeitplan
+
 </div>
 
 </div>
@@ -192,17 +208,24 @@ LIVE WETTKAMPF SYSTEM
 
 <div>
 
-<div class="card" id="competitionsTab">
+<div class="card"
+id="competitionsTab">
 
 <h2>Wettbewerb</h2>
 
-<input type="text" id="competitionName" placeholder="Wettbewerb">
+<input type="text"
+id="competitionName"
+placeholder="Wettbewerb">
 
-<input type="text" id="competitionPlace" placeholder="Ort">
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
 
-<input type="date" id="competitionDateFrom">
+<input type="date"
+id="competitionDateFrom">
 
-<input type="date" id="competitionDateTo">
+<input type="date"
+id="competitionDateTo">
 
 <button onclick="saveCompetition()">
 Wettbewerb speichern
@@ -214,23 +237,36 @@ Wettbewerb speichern
 
 </div>
 
-<div class="card" id="skaterTab">
+<div class="card"
+id="skaterTab">
 
 <h2>Kategorie + Zeitplan</h2>
 
-<input type="text" id="categoryName" placeholder="Kategorie">
+<input type="text"
+id="categoryName"
+placeholder="Kategorie">
 
-<input type="time" id="scheduleBegin">
+<input type="time"
+id="scheduleBegin">
 
-<input type="time" id="scheduleEnd">
+<input type="time"
+id="scheduleEnd">
 
-<input type="text" id="scheduleDuration" placeholder="Dauer">
+<input type="text"
+id="scheduleDuration"
+placeholder="Dauer">
 
-<input type="text" id="scheduleWarmup" placeholder="Einlaufzeit">
+<input type="text"
+id="scheduleWarmup"
+placeholder="Einlaufzeit">
 
-<input type="number" id="scheduleGroups" placeholder="Einlaufgruppen">
+<input type="number"
+id="scheduleGroups"
+placeholder="Einlaufgruppen">
 
-<input type="number" id="scheduleParticipants" placeholder="Teilnehmer">
+<input type="number"
+id="scheduleParticipants"
+placeholder="Teilnehmer">
 
 <button onclick="saveCategory();saveSchedule();">
 Kategorie speichern
@@ -244,13 +280,19 @@ Kategorie speichern
 
 <select id="skaterCategory"></select>
 
-<input type="number" id="skaterStart" placeholder="Startnummer">
+<input type="number"
+id="skaterStart"
+placeholder="Startnummer">
 
-<input type="text" id="skaterName" placeholder="Name">
+<input type="text"
+id="skaterName"
+placeholder="Name">
 
 <select id="clubSelect"></select>
 
-<input type="text" id="skaterClub" placeholder="Neuer Verein">
+<input type="text"
+id="skaterClub"
+placeholder="Neuer Verein">
 
 <button onclick="saveSkater()">
 Läufer speichern
@@ -264,7 +306,8 @@ Läufer speichern
 
 <div>
 
-<div class="card" id="scoreTab">
+<div class="card"
+id="scoreTab">
 
 <h2>Wertung</h2>
 
@@ -272,29 +315,51 @@ Läufer speichern
 
 <h3>Richter 1</h3>
 
-<input type="number" step="0.1" id="a1">
-<input type="number" step="0.1" id="b1">
+<input type="number"
+step="0.1"
+id="a1">
+
+<input type="number"
+step="0.1"
+id="b1">
+
 <select id="d1"></select>
 
 <h3>Richter 2</h3>
 
-<input type="number" step="0.1" id="a2">
-<input type="number" step="0.1" id="b2">
+<input type="number"
+step="0.1"
+id="a2">
+
+<input type="number"
+step="0.1"
+id="b2">
+
 <select id="d2"></select>
 
 <h3>Richter 3</h3>
 
-<input type="number" step="0.1" id="a3">
-<input type="number" step="0.1" id="b3">
+<input type="number"
+step="0.1"
+id="a3">
+
+<input type="number"
+step="0.1"
+id="b3">
+
 <select id="d3"></select>
 
-<button class="success" onclick="saveScore()">
+<button class="success"
+onclick="saveScore()">
+
 Wertung speichern
+
 </button>
 
 </div>
 
-<div class="card" id="resultTab">
+<div class="card"
+id="resultTab">
 
 <h2>🏆 Live Ergebnisse</h2>
 
@@ -308,19 +373,41 @@ PDF Ergebnisliste
 
 </div>
 
-<div class="card" id="scheduleTab">
+<div class="card"
+id="scheduleTab">
 
 <h2>🕒 Live Zeitplan</h2>
 
-<div id="liveNow" class="live-banner">
+<div id="liveNow"
+class="live-banner">
+
 Wettkampf startet...
+
 </div>
 
-<div id="nextSkater" class="item"></div>
+<div id="nextSkater"
+class="item"></div>
 
-<div id="countdownBox" class="item"></div>
+<div id="countdownBox"
+class="item"></div>
 
 <div id="scheduleList"></div>
+
+</div>
+
+<div class="card">
+
+<h2>📄 Wettkampf PDF importieren</h2>
+
+<input type="file"
+id="pdfUpload"
+accept=".pdf">
+
+<button onclick="readPDF()">
+PDF auslesen
+</button>
+
+<div id="pdfOutput"></div>
 
 </div>
 
@@ -852,6 +939,136 @@ doc.save("RollArt-Ergebnisse.pdf");
 
 };
 
+window.readPDF = async function(){
+
+const file =
+document.getElementById("pdfUpload").files[0];
+
+if(!file){
+
+alert("Bitte PDF auswählen");
+
+return;
+
+}
+
+const reader = new FileReader();
+
+reader.onload = async function(){
+
+const typedarray =
+new Uint8Array(this.result);
+
+const pdf =
+await pdfjsLib.getDocument(typedarray).promise;
+
+let fullText = "";
+
+for(let pageNum = 1;
+pageNum <= pdf.numPages;
+pageNum++){
+
+const page =
+await pdf.getPage(pageNum);
+
+const textContent =
+await page.getTextContent();
+
+const text =
+textContent.items
+.map(item => item.str)
+.join(" ");
+
+fullText += text + "\n";
+
+}
+
+analyzePDF(fullText);
+
+};
+
+reader.readAsArrayBuffer(file);
+
+};
+
+function analyzePDF(text){
+
+const output =
+document.getElementById("pdfOutput");
+
+output.innerHTML = "";
+
+const regex =
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+([A-Za-zÄÖÜäöüß0-9\s]+)/g;
+
+let matches = [...text.matchAll(regex)];
+
+if(matches.length === 0){
+
+output.innerHTML = `
+
+<div class="item">
+
+Keine Wettkampfzeilen erkannt.
+
+</div>
+
+`;
+
+return;
+
+}
+
+matches.forEach(match=>{
+
+const begin = match[1];
+const end = match[2];
+const duration = match[3];
+const warmup = match[4];
+const groups = match[5];
+const participants = match[6];
+const category = match[7];
+
+output.innerHTML += `
+
+<div class="item">
+
+<strong>
+${category}
+</strong>
+
+<br><br>
+
+🕒 ${begin} - ${end}
+
+<br>
+
+⏱ Dauer:
+${duration}
+
+<br>
+
+🔥 Einlauf:
+${warmup}
+
+<br>
+
+👥 Gruppen:
+${groups}
+
+<br>
+
+🏃 Teilnehmer:
+${participants}
+
+</div>
+
+`;
+
+});
+
+}
+
 async function loadClubs(){
 
 clubSelect.innerHTML=`
@@ -902,3 +1119,4 @@ showTab("competitionsTab");
 
 </body>
 </html>
+```
