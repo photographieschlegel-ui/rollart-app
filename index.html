@@ -588,6 +588,13 @@ ${runnerCount}
 
 </div>
 
+<button class="success"
+onclick="insertRunnerIntoCategory(${cat.id})">
+
++ Läufer DIREKT in diese Kategorie
+
+</button>
+
 <button class="danger"
 onclick="deleteCategory(${cat.id})">
 
@@ -675,13 +682,6 @@ ${cat.name}
 
 </select>
 
-<button class="success"
-onclick="insertRunnerIntoCategory(${runner.categoryId})">
-
-+ Läufer in diese Kategorie
-
-</button>
-
 <button class="danger"
 onclick="deleteRunner(${runner.id})">
 
@@ -755,37 +755,55 @@ renderRunners();
 
 function addCategory(){
 
-importedCategories.push({
+const newCategory = {
 
 id:Date.now(),
+
 name:"Neue Kategorie",
+
 begin:"",
 end:"",
 participants:""
 
-});
+};
+
+importedCategories.push(newCategory);
 
 renderCategories();
+renderRunners();
 
 }
 
-function addRunner(){
+function addRunner(categoryId=null){
 
-const firstCategory =
+let selectedCategory = null;
+
+if(categoryId){
+
+selectedCategory =
+importedCategories.find(c=>c.id===categoryId);
+
+}
+
+if(!selectedCategory){
+
+selectedCategory =
 importedCategories.length > 0
 ? importedCategories[0]
 : null;
+
+}
 
 importedRunners.push({
 
 id:Date.now()+Math.random(),
 
-categoryId:firstCategory
-? firstCategory.id
+categoryId:selectedCategory
+? selectedCategory.id
 : 0,
 
-category:firstCategory
-? firstCategory.name
+category:selectedCategory
+? selectedCategory.name
 : "Keine Kategorie",
 
 start:"",
@@ -800,26 +818,7 @@ renderRunners();
 
 function insertRunnerIntoCategory(categoryId){
 
-const cat =
-importedCategories.find(c=>c.id===categoryId);
-
-if(!cat) return;
-
-importedRunners.push({
-
-id:Date.now()+Math.random(),
-
-categoryId:cat.id,
-
-category:cat.name,
-
-start:"",
-name:"",
-club:""
-
-});
-
-renderRunners();
+addRunner(categoryId);
 
 }
 
