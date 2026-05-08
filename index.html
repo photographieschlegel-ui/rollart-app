@@ -9,6 +9,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 
 body{
@@ -345,6 +347,13 @@ onclick="calculateRanking()">
 
 </button>
 
+<button class="success"
+onclick="exportPDF()">
+
+📄 Ergebnisse als PDF speichern
+
+</button>
+
 <div id="podium"
 class="podium"></div>
 
@@ -493,34 +502,6 @@ function analyzePDF(text){
 runners = [];
 categories = [];
 
-const categoryRegex =
-/([A-Za-zÄÖÜäöüß0-9\s\.]+)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})/g;
-
-const foundCategories =
-[...text.matchAll(categoryRegex)];
-
-foundCategories.forEach(cat=>{
-
-const categoryName =
-cat[1]
-.replace(/\s+/g," ")
-.trim();
-
-if(categoryName.length < 3) return;
-
-categories.push({
-
-id:Date.now()+Math.random(),
-
-name:categoryName,
-
-begin:cat[2],
-end:cat[3]
-
-});
-
-});
-
 const runnerRegex =
 /(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+(SSG\sRonsdorf|RRD\sWuppertal|Wattenscheider\sRSC|TG\sWesthofen|TV\sDatteln\s09|TV\sWalsum-Aldenrade\s07|TV\sWalsum\s-\sAldenrade)/g;
 
@@ -564,12 +545,7 @@ document
 
 <br><br>
 
-🕒 Kategorien:
-${categories.length}
-
-<br>
-
-👥 Läufer:
+👥 Erkannte Läufer:
 ${runners.length}
 
 </div>
@@ -591,6 +567,7 @@ end:""
 });
 
 renderCategories();
+renderRunners();
 
 }
 
@@ -934,6 +911,69 @@ ${runner.gesamt.toFixed(2)}
 `;
 
 });
+
+}
+
+function exportPDF(){
+
+const { jsPDF } = window.jspdf;
+
+const doc = new jsPDF();
+
+let y = 20;
+
+doc.setFontSize(18);
+
+doc.text(
+competition.name || "RollArt Wettbewerb",
+20,
+y
+);
+
+y += 10;
+
+doc.setFontSize(12);
+
+doc.text(
+competition.place || "",
+20,
+y
+);
+
+y += 10;
+
+doc.text(
+`${competition.from} bis ${competition.to}`,
+20,
+y
+);
+
+y += 20;
+
+const sorted =
+[...runners]
+.sort((a,b)=>b.gesamt-a.gesamt);
+
+sorted.forEach((runner,index)=>{
+
+doc.text(
+`${index+1}. ${runner.name} - ${runner.gesamt.toFixed(2)} Punkte`,
+20,
+y
+);
+
+y += 10;
+
+if(y > 270){
+
+doc.addPage();
+y = 20;
+
+}
+
+});
+
+doc.save("RollArt-Ergebnisse.pdf");
 
 }
 
