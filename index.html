@@ -77,10 +77,6 @@ body{
   border-left:5px solid #22c55e;
 }
 
-.schedule{
-  border-left:5px solid #3b82f6;
-}
-
 .score{
   border-left:5px solid #f59e0b;
 }
@@ -177,6 +173,11 @@ LIVE WERTUNG + PDF IMPORT
 <div class="tabs">
 
 <div class="tab"
+onclick="showTab('pdfTab')">
+📄 PDF Import
+</div>
+
+<div class="tab"
 onclick="showTab('runnerTab')">
 👥 Läufer
 </div>
@@ -193,9 +194,33 @@ onclick="showTab('resultTab')">
 
 </div>
 
+<!-- PDF -->
+
+<div id="pdfTab">
+
+<div class="card">
+
+<h2>📄 PDF Import</h2>
+
+<input type="file"
+id="pdfUpload"
+accept=".pdf">
+
+<button onclick="readPDF()">
+
+PDF analysieren
+
+</button>
+
+<div id="pdfInfo"></div>
+
+</div>
+
+</div>
+
 <!-- Läufer -->
 
-<div id="runnerTab">
+<div id="runnerTab" class="hidden">
 
 <div class="card">
 
@@ -263,6 +288,7 @@ let runners = [];
 function showTab(tabId){
 
 const tabs = [
+"pdfTab",
 "runnerTab",
 "scoreTab",
 "resultTab"
@@ -282,7 +308,115 @@ document
 
 }
 
-showTab("runnerTab");
+showTab("pdfTab");
+
+async function readPDF(){
+
+const file =
+document.getElementById("pdfUpload").files[0];
+
+if(!file){
+
+alert("Bitte PDF auswählen");
+return;
+
+}
+
+const reader = new FileReader();
+
+reader.onload = async function(){
+
+const typedarray =
+new Uint8Array(this.result);
+
+const pdf =
+await pdfjsLib
+.getDocument(typedarray)
+.promise;
+
+let fullText = "";
+
+for(let pageNum=1;
+pageNum<=pdf.numPages;
+pageNum++){
+
+const page =
+await pdf.getPage(pageNum);
+
+const textContent =
+await page.getTextContent();
+
+const text =
+textContent.items
+.map(item=>item.str)
+.join(" ");
+
+fullText += " " + text;
+
+}
+
+analyzePDF(fullText);
+
+};
+
+reader.readAsArrayBuffer(file);
+
+}
+
+function analyzePDF(text){
+
+runners = [];
+
+const runnerRegex =
+/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+(SSG\sRonsdorf|RRD\sWuppertal|Wattenscheider\sRSC|TG\sWesthofen|TV\sDatteln\s09|TV\sWalsum-Aldenrade\s07|TV\sWalsum\s-\sAldenrade)/g;
+
+const found =
+[...text.matchAll(runnerRegex)];
+
+found.forEach((runner)=>{
+
+runners.push({
+
+id:Date.now()+Math.random(),
+
+start:runner[1],
+
+name:runner[2],
+
+club:runner[3],
+
+category:"",
+
+technik:0,
+kunst:0,
+abzug:0,
+gesamt:0
+
+});
+
+});
+
+renderRunners();
+renderScores();
+
+document
+.getElementById("pdfInfo")
+.innerHTML = `
+
+<div class="item">
+
+✅ PDF importiert
+
+<br><br>
+
+👥 Erkannte Läufer:
+${runners.length}
+
+</div>
+
+`;
+
+}
 
 function addRunner(){
 
@@ -290,10 +424,9 @@ runners.push({
 
 id:Date.now()+Math.random(),
 
+start:"",
 name:"",
-
 club:"",
-
 category:"",
 
 technik:0,
@@ -320,6 +453,12 @@ runners.forEach((runner)=>{
 output.innerHTML += `
 
 <div class="item runner">
+
+<label>Startnummer</label>
+
+<input
+value="${runner.start}"
+onchange="updateRunner(${runner.id},'start',this.value)">
 
 <label>Name</label>
 
@@ -441,12 +580,7 @@ podium.innerHTML = "";
 
 const sorted =
 [...runners]
-
-.sort((a,b)=>
-
-b.gesamt - a.gesamt
-
-);
+.sort((a,b)=>b.gesamt-a.gesamt);
 
 if(sorted[0]){
 
