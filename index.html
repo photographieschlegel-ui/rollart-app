@@ -1,3 +1,4 @@
+```html id="m8r2fa"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -8,7 +9,6 @@
 <title>RollArt Score Pro</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <style>
@@ -981,15 +981,9 @@ category = category
 .replace(/\s+/g," ")
 .trim();
 
-const words = category.split(" ");
-
-if(words.length > 4){
-
-category = words
-.slice(0,4)
-.join(" ");
-
-}
+category = category
+.replace(/[A-ZÄÖÜ][a-zäöüß]+\s[A-ZÄÖÜ][a-zäöüß]+$/,"")
+.trim();
 
 output.innerHTML += `
 
@@ -1081,3 +1075,4 @@ showTab("competitionsTab");
 
 </body>
 </html>
+```
