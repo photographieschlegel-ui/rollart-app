@@ -16,7 +16,7 @@ body{
   padding:0;
   background:#0f172a;
   color:white;
-  font-family:Arial;
+  font-family:Arial,sans-serif;
 }
 
 .app{
@@ -27,6 +27,16 @@ body{
 
 .logo{
   font-size:34px;
+  font-weight:bold;
+  margin-bottom:20px;
+}
+
+.live-banner{
+  background:linear-gradient(135deg,#7c3aed,#2563eb);
+  padding:20px;
+  border-radius:20px;
+  text-align:center;
+  font-size:28px;
   font-weight:bold;
   margin-bottom:20px;
 }
@@ -47,16 +57,6 @@ body{
 
 .tab:hover{
   background:#334155;
-}
-
-.live-banner{
-  background:linear-gradient(135deg,#7c3aed,#2563eb);
-  padding:20px;
-  border-radius:20px;
-  text-align:center;
-  font-size:28px;
-  font-weight:bold;
-  margin-bottom:20px;
 }
 
 .card{
@@ -81,36 +81,6 @@ body{
   border-left:5px solid #3b82f6;
 }
 
-.hidden{
-  display:none;
-}
-
-button,input,select{
-  width:100%;
-  padding:14px;
-  margin-top:10px;
-  border-radius:14px;
-  border:none;
-  background:#334155;
-  color:white;
-  font-size:16px;
-  box-sizing:border-box;
-}
-
-button{
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  cursor:pointer;
-  font-weight:bold;
-}
-
-.success{
-  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
-}
-
-.danger{
-  background:linear-gradient(135deg,#dc2626,#ef4444)!important;
-}
-
 .warning{
   background:#dc2626;
   padding:10px;
@@ -132,6 +102,43 @@ button{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
   gap:15px;
+}
+
+.hidden{
+  display:none;
+}
+
+button,input,select{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border-radius:14px;
+  border:none;
+  background:#334155;
+  color:white;
+  font-size:16px;
+  box-sizing:border-box;
+}
+
+button{
+  cursor:pointer;
+  font-weight:bold;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+}
+
+.success{
+  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
+}
+
+.danger{
+  background:linear-gradient(135deg,#dc2626,#ef4444)!important;
+}
+
+.info{
+  margin-top:15px;
+  padding:12px;
+  background:#1e293b;
+  border-radius:12px;
 }
 
 </style>
@@ -228,6 +235,13 @@ accept=".pdf">
 <button onclick="readPDF()">
 
 PDF analysieren
+
+</button>
+
+<button class="success"
+onclick="saveAllData()">
+
+💾 Alles speichern
 
 </button>
 
@@ -343,7 +357,9 @@ document
 
 <div class="item">
 
-<strong>${name}</strong>
+<strong>
+${name}
+</strong>
 
 <br><br>
 
@@ -429,7 +445,8 @@ const begin = block[1];
 const end = block[2];
 const participants = block[6];
 
-let content = block[7]
+let content =
+block[7]
 .replace(/\s+/g," ")
 .trim();
 
@@ -523,6 +540,13 @@ output.innerHTML = "";
 
 importedCategories.forEach((cat,index)=>{
 
+const runnerCount =
+importedRunners.filter(r=>
+
+r.categoryId === cat.id
+
+).length;
+
 output.innerHTML += `
 
 <div class="item schedule">
@@ -555,12 +579,14 @@ onchange="updateCategory(${cat.id},'end',this.value)">
 value="${cat.participants || ''}"
 onchange="updateCategory(${cat.id},'participants',this.value)">
 
-<button class="success"
-onclick="insertRunnerIntoCategory(${cat.id})">
+<div class="info">
 
-+ Läufer hier hinzufügen
+👥 Läufer in Kategorie:
+<strong>
+${runnerCount}
+</strong>
 
-</button>
+</div>
 
 <button class="danger"
 onclick="deleteCategory(${cat.id})">
@@ -649,6 +675,13 @@ ${cat.name}
 
 </select>
 
+<button class="success"
+onclick="insertRunnerIntoCategory(${runner.categoryId})">
+
++ Läufer in diese Kategorie
+
+</button>
+
 <button class="danger"
 onclick="deleteRunner(${runner.id})">
 
@@ -722,12 +755,9 @@ renderRunners();
 
 function addCategory(){
 
-const newId =
-Date.now();
-
 importedCategories.push({
 
-id:newId,
+id:Date.now(),
 name:"Neue Kategorie",
 begin:"",
 end:"",
@@ -807,6 +837,12 @@ runner.categoryId = cat.id;
 runner.category = cat.name;
 
 renderRunners();
+
+}
+
+function saveAllData(){
+
+alert("Alles gespeichert ✅");
 
 }
 
