@@ -9,85 +9,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-<script type="module">
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-addDoc
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-
-apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-authDomain: "rollart-score-5319a.firebaseapp.com",
-projectId: "rollart-score-5319a",
-storageBucket: "rollart-score-5319a.firebasestorage.app",
-messagingSenderId: "658963624980",
-appId: "1:658963624980:web:2e4d153f5df087c4f42301"
-
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-
-window.saveCompetition = async function(){
-
-const name =
-document.getElementById("competitionName").value;
-
-const place =
-document.getElementById("competitionPlace").value;
-
-const from =
-document.getElementById("competitionFrom").value;
-
-const to =
-document.getElementById("competitionTo").value;
-
-if(
-
-!name ||
-!place ||
-!from ||
-!to
-
-){
-
-alert("Bitte alles ausfüllen");
-
-return;
-
-}
-
-try{
-
-await addDoc(collection(db,"competitions"),{
-
-name:name,
-place:place,
-from:from,
-to:to
-
-});
-
-alert("Wettbewerb gespeichert");
-
-}catch(error){
-
-alert("Fehler: " + error);
-
-}
-
-};
-
-</script>
-
 <style>
 
 body{
@@ -191,10 +112,6 @@ button{
   font-weight:bold;
 }
 
-.success{
-  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
-}
-
 </style>
 
 </head>
@@ -249,29 +166,24 @@ onclick="showTab('scoreTab')">
 <h2>🏟 Wettbewerb erstellen</h2>
 
 <input type="text"
-id="competitionName"
 placeholder="Wettbewerbsname">
 
 <input type="text"
-id="competitionPlace"
 placeholder="Ort">
 
 <label style="display:block;margin-top:15px;">
 Von:
 </label>
 
-<input type="date"
-id="competitionFrom">
+<input type="date">
 
 <label style="display:block;margin-top:15px;">
 Bis:
 </label>
 
-<input type="date"
-id="competitionTo">
+<input type="date">
 
-<button class="success"
-onclick="saveCompetition()">
+<button>
 Wettbewerb speichern
 </button>
 
