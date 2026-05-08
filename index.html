@@ -348,7 +348,7 @@ window.saveSkater = async function(){
       {
         competitionId:competitionId,
         category:category,
-        start:Number(start),
+        start:start,
         name:name,
         club:club,
         created:new Date().toISOString()
@@ -589,9 +589,7 @@ async function loadSkaters(){
 
     collection(db,"skaters"),
 
-    where("competitionId","==",competitionId),
-
-    orderBy("start","asc")
+    where("competitionId","==",competitionId)
 
   );
 
