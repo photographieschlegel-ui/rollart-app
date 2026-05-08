@@ -131,6 +131,11 @@ LIVE WETTKAMPF SYSTEM
 <div class="tabs">
 
 <div class="tab"
+onclick="showTab('competitionTab')">
+🏟 Wettbewerb
+</div>
+
+<div class="tab"
 onclick="showTab('pdfTab')">
 📄 PDF Import
 </div>
@@ -152,9 +157,33 @@ onclick="showTab('scoreTab')">
 
 </div>
 
+<!-- Wettbewerb -->
+
+<div id="competitionTab">
+
+<div class="card">
+
+<h2>🏟 Wettbewerb erstellen</h2>
+
+<input type="text"
+placeholder="Wettbewerbsname">
+
+<input type="text"
+placeholder="Ort">
+
+<input type="date">
+
+<button>
+Wettbewerb speichern
+</button>
+
+</div>
+
+</div>
+
 <!-- PDF IMPORT -->
 
-<div id="pdfTab">
+<div id="pdfTab" class="hidden">
 
 <div class="card">
 
@@ -230,6 +259,7 @@ function showTab(tabId){
 
 const tabs = [
 
+"competitionTab",
 "pdfTab",
 "scheduleTab",
 "runnerTab",
@@ -251,7 +281,7 @@ document
 
 }
 
-showTab("pdfTab");
+showTab("competitionTab");
 
 async function readPDF(){
 
@@ -397,12 +427,11 @@ document.getElementById("runnerOutput");
 
 output.innerHTML = "";
 
-const regex =
-/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\s\-]+?)\s+([A-ZÄÖÜa-zäöüß0-9\s\-]+?)(?=\s+\d+\s+[A-ZÄÖÜ]|$)/g;
+const lines = text
+.replace(/\s+/g," ")
+.match(/\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+/g);
 
-let matches = [...text.matchAll(regex)];
-
-if(matches.length === 0){
+if(!lines){
 
 output.innerHTML = `
 
@@ -418,28 +447,48 @@ return;
 
 }
 
-matches.forEach(match=>{
+lines.forEach(line=>{
 
-const start = match[1];
+line = line.trim();
 
-let full = match[2]
-.replace(/\s+/g," ")
-.trim();
+const parts = line.split(" ");
 
-let club = match[3]
-.replace(/\s+/g," ")
-.trim();
+const start = parts.shift();
 
-if(
+let clubIndex = -1;
 
-full.length < 3 ||
-club.length < 2
+const clubWords = [
 
-){
+"RSC",
+"ERC",
+"REV",
+"TV",
+"TuS",
+"SSG",
+"SC",
+"SV"
 
-return;
+];
+
+parts.forEach((word,index)=>{
+
+if(clubWords.includes(word)){
+
+clubIndex = index;
 
 }
+
+});
+
+if(clubIndex === -1) return;
+
+const name = parts
+.slice(0,clubIndex)
+.join(" ");
+
+const club = parts
+.slice(clubIndex)
+.join(" ");
 
 output.innerHTML += `
 
@@ -451,7 +500,7 @@ Start ${start}
 
 <br><br>
 
-👤 ${full}
+👤 ${name}
 
 <br>
 
