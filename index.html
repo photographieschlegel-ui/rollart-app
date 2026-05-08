@@ -508,20 +508,54 @@ function analyzePDF(text){
 runners = [];
 categories = [];
 
-const categoryRegex =
-/([A-Za-zÄÖÜäöüß0-9\s\.]+)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})/g;
-
-const foundCategories =
-[...text.matchAll(categoryRegex)];
-
-foundCategories.forEach(cat=>{
-
-const categoryName =
-cat[1]
+const cleanedText = text
+.replace(/\n/g," ")
 .replace(/\s+/g," ")
 .trim();
 
-if(categoryName.length < 3) return;
+const blocks =
+cleanedText.match(
+/(\d{2}:\d{2}\s+\d{2}:\d{2}[\s\S]*?)(?=\d{2}:\d{2}\s+\d{2}:\d{2}|$)/g
+);
+
+if(blocks){
+
+blocks.forEach((block,index)=>{
+
+const timeMatch =
+block.match(
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})/
+);
+
+if(!timeMatch) return;
+
+const begin = timeMatch[1];
+const end = timeMatch[2];
+
+const participantMatch =
+block.match(
+/(\d+)\s+([A-Za-zÄÖÜäöüß0-9\s\.]+?)\s+\d+\s+[A-ZÄÖÜ]/
+);
+
+let categoryName = "";
+
+if(participantMatch){
+
+categoryName =
+participantMatch[2]
+.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
+.replace(/Startfolge Kür/gi,"")
+.replace(/Westhofener Kürpokal/gi,"")
+.replace(/\d{2}\.\d{2}\.\d{4}/g,"")
+.replace(/\s+/g," ")
+.trim();
+
+}
+
+if(
+categoryName.length > 2 &&
+!categoryName.includes(":")
+){
 
 categories.push({
 
@@ -529,20 +563,18 @@ id:Date.now()+Math.random(),
 
 name:categoryName,
 
-begin:cat[2],
-end:cat[3]
-
-});
+begin,
+end
 
 });
 
 const runnerRegex =
 /(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+(SSG\sRonsdorf|RRD\sWuppertal|Wattenscheider\sRSC|TG\sWesthofen|TV\sDatteln\s09|TV\sWalsum-Aldenrade\s07|TV\sWalsum\s-\sAldenrade)/g;
 
-const found =
-[...text.matchAll(runnerRegex)];
+const foundRunners =
+[...block.matchAll(runnerRegex)];
 
-found.forEach((runner)=>{
+foundRunners.forEach(runner=>{
 
 runners.push({
 
@@ -554,7 +586,7 @@ name:runner[2],
 
 club:runner[3],
 
-category:"",
+category:categoryName,
 
 technik:0,
 kunst:0,
@@ -564,6 +596,12 @@ gesamt:0
 });
 
 });
+
+}
+
+});
+
+}
 
 renderCategories();
 renderRunners();
@@ -695,19 +733,19 @@ output.innerHTML += `
 <label>Startnummer</label>
 
 <input
-value="${runner.start}"
+value="${runner.start || ''}"
 onchange="updateRunner(${runner.id},'start',this.value)">
 
 <label>Name</label>
 
 <input
-value="${runner.name}"
+value="${runner.name || ''}"
 onchange="updateRunner(${runner.id},'name',this.value)">
 
 <label>Verein</label>
 
 <input
-value="${runner.club}"
+value="${runner.club || ''}"
 onchange="updateRunner(${runner.id},'club',this.value)">
 
 <label>Kategorie</label>
@@ -723,7 +761,7 @@ ${categories.map(cat=>`
 
 <option
 value="${cat.name}"
-${runner.category===cat.name ? "selected" : ""}>
+${runner.category === cat.name ? "selected" : ""}>
 
 ${cat.name}
 
