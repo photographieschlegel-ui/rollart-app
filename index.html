@@ -9,6 +9,146 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+doc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+authDomain: "rollart-score-5319a.firebaseapp.com",
+projectId: "rollart-score-5319a",
+storageBucket: "rollart-score-5319a.firebasestorage.app",
+messagingSenderId: "658963624980",
+appId: "1:658963624980:web:2e4d153f5df087c4f42301"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+window.saveCompetition = async function(){
+
+const name =
+document.getElementById("competitionName").value;
+
+const place =
+document.getElementById("competitionPlace").value;
+
+const from =
+document.getElementById("competitionFrom").value;
+
+const to =
+document.getElementById("competitionTo").value;
+
+if(
+!name ||
+!place ||
+!from ||
+!to
+){
+alert("Bitte alles ausfüllen");
+return;
+}
+
+await addDoc(collection(db,"competitions"),{
+
+name,
+place,
+from,
+to,
+created:new Date()
+
+});
+
+document.getElementById("competitionName").value="";
+document.getElementById("competitionPlace").value="";
+document.getElementById("competitionFrom").value="";
+document.getElementById("competitionTo").value="";
+
+loadCompetitions();
+
+};
+
+window.deleteCompetition = async function(id){
+
+await deleteDoc(
+doc(db,"competitions",id)
+);
+
+loadCompetitions();
+
+};
+
+window.loadCompetitions = async function(){
+
+const list =
+document.getElementById("competitionList");
+
+list.innerHTML = "";
+
+const snapshot =
+await getDocs(
+collection(db,"competitions")
+);
+
+snapshot.forEach((d)=>{
+
+const c = d.data();
+
+list.innerHTML += `
+
+<div class="item">
+
+<strong>
+${c.name}
+</strong>
+
+<br><br>
+
+📍 ${c.place}
+
+<br>
+
+📅 ${c.from} bis ${c.to}
+
+<br><br>
+
+<button class="danger"
+onclick="deleteCompetition('${d.id}')">
+
+Löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+};
+
+window.onload = ()=>{
+
+loadCompetitions();
+
+};
+
+</script>
+
 <style>
 
 body{
@@ -103,6 +243,14 @@ button{
   font-weight:bold;
 }
 
+.success{
+  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
+}
+
+.danger{
+  background:linear-gradient(135deg,#dc2626,#ef4444)!important;
+}
+
 .categoryLabel{
   background:#2563eb;
   display:inline-block;
@@ -131,6 +279,11 @@ LIVE WETTKAMPF IMPORTER
 <div class="tabs">
 
 <div class="tab"
+onclick="showTab('competitionTab')">
+🏟 Wettbewerb
+</div>
+
+<div class="tab"
 onclick="showTab('pdfTab')">
 📄 PDF Import
 </div>
@@ -147,9 +300,52 @@ onclick="showTab('runnerTab')">
 
 </div>
 
+<!-- Wettbewerb -->
+
+<div id="competitionTab">
+
+<div class="card">
+
+<h2>🏟 Wettbewerb erstellen</h2>
+
+<input type="text"
+id="competitionName"
+placeholder="Wettbewerb">
+
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
+
+<label style="display:block;margin-top:15px;">
+Von:
+</label>
+
+<input type="date"
+id="competitionFrom">
+
+<label style="display:block;margin-top:15px;">
+Bis:
+</label>
+
+<input type="date"
+id="competitionTo">
+
+<button class="success"
+onclick="saveCompetition()">
+
+Wettbewerb speichern
+
+</button>
+
+<div id="competitionList"></div>
+
+</div>
+
+</div>
+
 <!-- PDF -->
 
-<div id="pdfTab">
+<div id="pdfTab" class="hidden">
 
 <div class="card">
 
@@ -204,6 +400,7 @@ PDF analysieren
 function showTab(tabId){
 
 const tabs = [
+"competitionTab",
 "pdfTab",
 "scheduleTab",
 "runnerTab"
@@ -223,7 +420,7 @@ document
 
 }
 
-showTab("pdfTab");
+showTab("competitionTab");
 
 async function readPDF(){
 
@@ -444,6 +641,10 @@ ${blocks.length}
 
 👥 Läufer:
 ${runnerCount}
+
+<br><br>
+
+ℹ Fehlende Läufer können später manuell ergänzt werden.
 
 </div>
 
