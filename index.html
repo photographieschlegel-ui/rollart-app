@@ -9,45 +9,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-<script type="module">
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-addDoc,
-getDocs,
-deleteDoc,
-doc
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-
-apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-authDomain: "rollart-score-5319a.firebaseapp.com",
-projectId: "rollart-score-5319a",
-storageBucket: "rollart-score-5319a.firebasestorage.app",
-messagingSenderId: "658963624980",
-appId: "1:658963624980:web:2e4d153f5df087c4f42301"
-
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-
-window.db = db;
-window.collection = collection;
-window.addDoc = addDoc;
-window.getDocs = getDocs;
-window.deleteDoc = deleteDoc;
-window.doc = doc;
-
-</script>
-
 <style>
 
 body{
@@ -246,12 +207,6 @@ Wettbewerb speichern
 
 </button>
 
-<h3>
-📋 Aktiver Wettbewerb
-</h3>
-
-<select id="activeCompetition"></select>
-
 <div id="competitionList"></div>
 
 </div>
@@ -273,13 +228,6 @@ accept=".pdf">
 <button onclick="readPDF()">
 
 PDF analysieren
-
-</button>
-
-<button class="success"
-onclick="saveAllData()">
-
-💾 Alles speichern
 
 </button>
 
@@ -365,7 +313,7 @@ document
 
 showTab("competitionTab");
 
-async function saveCompetition(){
+function saveCompetition(){
 
 const name =
 document.getElementById("competitionName").value;
@@ -389,94 +337,27 @@ alert("Bitte alles ausfüllen");
 return;
 }
 
-await addDoc(collection(db,"competitions"),{
-
-name,
-place,
-from,
-to,
-created:new Date()
-
-});
-
-loadCompetitions();
-
-}
-
-async function loadCompetitions(){
-
-const list =
-document.getElementById("competitionList");
-
-const select =
-document.getElementById("activeCompetition");
-
-list.innerHTML = "";
-select.innerHTML = "";
-
-const snapshot =
-await getDocs(collection(db,"competitions"));
-
-snapshot.forEach((d)=>{
-
-const c = d.data();
-
-list.innerHTML += `
+document
+.getElementById("competitionList")
+.innerHTML += `
 
 <div class="item">
 
-<strong>
-${c.name}
-</strong>
+<strong>${name}</strong>
 
 <br><br>
 
-📍 ${c.place}
+📍 ${place}
 
 <br>
 
-📅 ${c.from} bis ${c.to}
-
-<br><br>
-
-<button class="danger"
-onclick="deleteCompetition('${d.id}')">
-
-Löschen
-
-</button>
+📅 ${from} bis ${to}
 
 </div>
 
 `;
 
-select.innerHTML += `
-
-<option value="${d.id}">
-${c.name}
-</option>
-
-`;
-
-});
-
 }
-
-async function deleteCompetition(id){
-
-await deleteDoc(
-doc(db,"competitions",id)
-);
-
-loadCompetitions();
-
-}
-
-window.onload = ()=>{
-
-loadCompetitions();
-
-};
 
 async function readPDF(){
 
@@ -546,9 +427,6 @@ blocks.forEach((block,index)=>{
 
 const begin = block[1];
 const end = block[2];
-const duration = block[3];
-const warmup = block[4];
-const groups = block[5];
 const participants = block[6];
 
 let content = block[7]
@@ -577,9 +455,6 @@ id:categoryId,
 name:category,
 begin,
 end,
-duration,
-warmup,
-groups,
 participants
 
 });
@@ -595,10 +470,15 @@ runners.forEach(runner=>{
 importedRunners.push({
 
 id:Date.now()+Math.random(),
+
 categoryId,
+
 category,
+
 start:runner[1],
+
 name:runner[2],
+
 club:runner[3]
 
 });
@@ -641,35 +521,46 @@ document.getElementById("scheduleOutput");
 
 output.innerHTML = "";
 
-importedCategories.forEach((cat)=>{
+importedCategories.forEach((cat,index)=>{
 
 output.innerHTML += `
 
 <div class="item schedule">
 
+<h3>
+Kategorie ${index+1}
+</h3>
+
 <label>Name</label>
 
 <input
-value="${cat.name}"
-oninput="updateCategory(${cat.id},'name',this.value)">
+value="${cat.name || ''}"
+onchange="updateCategory(${cat.id},'name',this.value)">
 
 <label>Beginn</label>
 
 <input
-value="${cat.begin}"
-oninput="updateCategory(${cat.id},'begin',this.value)">
+value="${cat.begin || ''}"
+onchange="updateCategory(${cat.id},'begin',this.value)">
 
 <label>Ende</label>
 
 <input
-value="${cat.end}"
-oninput="updateCategory(${cat.id},'end',this.value)">
+value="${cat.end || ''}"
+onchange="updateCategory(${cat.id},'end',this.value)">
 
 <label>Teilnehmer</label>
 
 <input
-value="${cat.participants}"
-oninput="updateCategory(${cat.id},'participants',this.value)">
+value="${cat.participants || ''}"
+onchange="updateCategory(${cat.id},'participants',this.value)">
+
+<button class="success"
+onclick="insertRunnerIntoCategory(${cat.id})">
+
++ Läufer hier hinzufügen
+
+</button>
 
 <button class="danger"
 onclick="deleteCategory(${cat.id})">
@@ -683,8 +574,6 @@ Kategorie löschen
 `;
 
 });
-
-renderRunners();
 
 }
 
@@ -700,6 +589,8 @@ importedRunners.forEach((runner)=>{
 const duplicate =
 importedRunners.filter(r=>
 
+r.name &&
+runner.name &&
 r.name.trim().toLowerCase() ===
 runner.name.trim().toLowerCase()
 
@@ -710,7 +601,7 @@ output.innerHTML += `
 <div class="item runner">
 
 <div class="categoryLabel">
-${runner.category}
+${runner.category || 'Keine Kategorie'}
 </div>
 
 ${duplicate ? `
@@ -724,31 +615,31 @@ ${duplicate ? `
 <label>Startnummer</label>
 
 <input
-value="${runner.start}"
-oninput="updateRunner(${runner.id},'start',this.value)">
+value="${runner.start || ''}"
+onchange="updateRunner(${runner.id},'start',this.value)">
 
 <label>Name</label>
 
 <input
-value="${runner.name}"
-oninput="updateRunner(${runner.id},'name',this.value)">
+value="${runner.name || ''}"
+onchange="updateRunner(${runner.id},'name',this.value)">
 
 <label>Verein</label>
 
 <input
-value="${runner.club}"
-oninput="updateRunner(${runner.id},'club',this.value)">
+value="${runner.club || ''}"
+onchange="updateRunner(${runner.id},'club',this.value)">
 
 <label>Kategorie</label>
 
 <select
-onchange="updateRunner(${runner.id},'category',this.value)">
+onchange="changeRunnerCategory(${runner.id},this.value)">
 
 ${importedCategories.map(cat=>`
 
 <option
-value="${cat.name}"
-${runner.category===cat.name ? "selected" : ""}>
+value="${cat.id}"
+${runner.categoryId===cat.id ? "selected" : ""}>
 
 ${cat.name}
 
@@ -778,18 +669,15 @@ function updateCategory(id,field,value){
 const cat =
 importedCategories.find(c=>c.id===id);
 
-if(cat){
+if(!cat) return;
 
 cat[field] = value;
-
-}
 
 importedRunners.forEach(runner=>{
 
 if(runner.categoryId === id){
 
-runner.category =
-cat.name;
+runner.category = cat.name;
 
 }
 
@@ -804,9 +692,9 @@ function updateRunner(id,field,value){
 const runner =
 importedRunners.find(r=>r.id===id);
 
-if(runner){
-runner[field]=value;
-}
+if(!runner) return;
+
+runner[field] = value;
 
 }
 
@@ -843,9 +731,6 @@ id:newId,
 name:"Neue Kategorie",
 begin:"",
 end:"",
-duration:"",
-warmup:"",
-groups:"",
 participants:""
 
 });
@@ -865,11 +750,13 @@ importedRunners.push({
 
 id:Date.now()+Math.random(),
 
-categoryId:firstCategory ? firstCategory.id : 0,
+categoryId:firstCategory
+? firstCategory.id
+: 0,
 
 category:firstCategory
 ? firstCategory.name
-: "Neue Kategorie",
+: "Keine Kategorie",
 
 start:"",
 name:"",
@@ -881,43 +768,45 @@ renderRunners();
 
 }
 
-async function saveAllData(){
+function insertRunnerIntoCategory(categoryId){
 
-const competitionId =
-document.getElementById("activeCompetition").value;
+const cat =
+importedCategories.find(c=>c.id===categoryId);
 
-if(!competitionId){
+if(!cat) return;
 
-alert("Bitte Wettbewerb auswählen");
-return;
+importedRunners.push({
 
-}
+id:Date.now()+Math.random(),
 
-for(const cat of importedCategories){
+categoryId:cat.id,
 
-await addDoc(
-collection(db,"categories"),
-{
-competitionId,
-...cat
-}
-);
+category:cat.name,
 
-}
+start:"",
+name:"",
+club:""
 
-for(const runner of importedRunners){
+});
 
-await addDoc(
-collection(db,"runners"),
-{
-competitionId,
-...runner
-}
-);
+renderRunners();
 
 }
 
-alert("Alles gespeichert ✅");
+function changeRunnerCategory(runnerId,categoryId){
+
+const runner =
+importedRunners.find(r=>r.id===runnerId);
+
+const cat =
+importedCategories.find(c=>c.id==categoryId);
+
+if(!runner || !cat) return;
+
+runner.categoryId = cat.id;
+runner.category = cat.name;
+
+renderRunners();
 
 }
 
@@ -925,4 +814,3 @@ alert("Alles gespeichert ✅");
 
 </body>
 </html>
-```
