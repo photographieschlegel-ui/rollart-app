@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -53,7 +52,6 @@ body{
 
 .tab:hover{
   background:#334155;
-  transform:translateY(-2px);
 }
 
 .live-banner{
@@ -61,16 +59,9 @@ body{
   padding:20px;
   border-radius:20px;
   text-align:center;
-  font-size:30px;
+  font-size:28px;
   font-weight:bold;
   margin-bottom:20px;
-  animation:pulse 2s infinite;
-}
-
-@keyframes pulse{
-  0%{transform:scale(1);}
-  50%{transform:scale(1.01);}
-  100%{transform:scale(1);}
 }
 
 .grid{
@@ -84,7 +75,6 @@ body{
   border-radius:20px;
   padding:20px;
   margin-top:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 
 h1,h2,h3{
@@ -106,6 +96,7 @@ input,button,select{
 button{
   background:linear-gradient(135deg,#2563eb,#7c3aed);
   font-weight:bold;
+  cursor:pointer;
 }
 
 .success{
@@ -142,19 +133,16 @@ button{
 .gold{
   background:linear-gradient(135deg,#facc15,#eab308);
   height:260px;
-  font-size:30px;
 }
 
 .silver{
   background:linear-gradient(135deg,#cbd5e1,#94a3b8);
   height:220px;
-  font-size:24px;
 }
 
 .bronze{
   background:linear-gradient(135deg,#fb923c,#ea580c);
   height:190px;
-  font-size:22px;
 }
 
 </style>
@@ -178,11 +166,25 @@ LIVE WETTKAMPF SYSTEM
 
 <div class="tabs">
 
-<div class="tab">🏟 Wettbewerbe</div>
-<div class="tab">👥 Läufer</div>
-<div class="tab">📊 Wertung</div>
-<div class="tab">🏆 Ergebnisse</div>
-<div class="tab">🕒 Zeitplan</div>
+<div class="tab" onclick="showTab('competitionsTab')">
+🏟 Wettbewerbe
+</div>
+
+<div class="tab" onclick="showTab('skaterTab')">
+👥 Läufer
+</div>
+
+<div class="tab" onclick="showTab('scoreTab')">
+📊 Wertung
+</div>
+
+<div class="tab" onclick="showTab('resultTab')">
+🏆 Ergebnisse
+</div>
+
+<div class="tab" onclick="showTab('scheduleTab')">
+🕒 Zeitplan
+</div>
 
 </div>
 
@@ -190,7 +192,7 @@ LIVE WETTKAMPF SYSTEM
 
 <div>
 
-<div class="card">
+<div class="card" id="competitionsTab">
 
 <h2>Wettbewerb</h2>
 
@@ -212,35 +214,23 @@ Wettbewerb speichern
 
 </div>
 
-<div class="card">
+<div class="card" id="skaterTab">
 
 <h2>Kategorie + Zeitplan</h2>
 
-<input type="text"
-id="categoryName"
-placeholder="Kategorie">
+<input type="text" id="categoryName" placeholder="Kategorie">
 
-<input type="time"
-id="scheduleBegin">
+<input type="time" id="scheduleBegin">
 
-<input type="time"
-id="scheduleEnd">
+<input type="time" id="scheduleEnd">
 
-<input type="text"
-id="scheduleDuration"
-placeholder="Dauer">
+<input type="text" id="scheduleDuration" placeholder="Dauer">
 
-<input type="text"
-id="scheduleWarmup"
-placeholder="Einlaufzeit">
+<input type="text" id="scheduleWarmup" placeholder="Einlaufzeit">
 
-<input type="number"
-id="scheduleGroups"
-placeholder="Einlaufgruppen">
+<input type="number" id="scheduleGroups" placeholder="Einlaufgruppen">
 
-<input type="number"
-id="scheduleParticipants"
-placeholder="Teilnehmer">
+<input type="number" id="scheduleParticipants" placeholder="Teilnehmer">
 
 <button onclick="saveCategory();saveSchedule();">
 Kategorie speichern
@@ -248,27 +238,19 @@ Kategorie speichern
 
 <div id="categoryList"></div>
 
-</div>
-
-<div class="card">
+<hr>
 
 <h2>Läufer</h2>
 
 <select id="skaterCategory"></select>
 
-<input type="number"
-id="skaterStart"
-placeholder="Startnummer">
+<input type="number" id="skaterStart" placeholder="Startnummer">
 
-<input type="text"
-id="skaterName"
-placeholder="Name">
+<input type="text" id="skaterName" placeholder="Name">
 
 <select id="clubSelect"></select>
 
-<input type="text"
-id="skaterClub"
-placeholder="Neuer Verein">
+<input type="text" id="skaterClub" placeholder="Neuer Verein">
 
 <button onclick="saveSkater()">
 Läufer speichern
@@ -282,7 +264,7 @@ Läufer speichern
 
 <div>
 
-<div class="card">
+<div class="card" id="scoreTab">
 
 <h2>Wertung</h2>
 
@@ -306,16 +288,13 @@ Läufer speichern
 <input type="number" step="0.1" id="b3">
 <select id="d3"></select>
 
-<button class="success"
-onclick="saveScore()">
-
+<button class="success" onclick="saveScore()">
 Wertung speichern
-
 </button>
 
 </div>
 
-<div class="card">
+<div class="card" id="resultTab">
 
 <h2>🏆 Live Ergebnisse</h2>
 
@@ -329,7 +308,7 @@ PDF Ergebnisliste
 
 </div>
 
-<div class="card">
+<div class="card" id="scheduleTab">
 
 <h2>🕒 Live Zeitplan</h2>
 
@@ -364,7 +343,9 @@ collection,
 addDoc,
 getDocs,
 query,
-where
+where,
+deleteDoc,
+doc
 
 }
 
@@ -427,6 +408,28 @@ ${deductions[k].text}
 
 }
 
+window.showTab = function(tabId){
+
+const tabs=[
+
+"competitionsTab",
+"skaterTab",
+"scoreTab",
+"resultTab",
+"scheduleTab"
+
+];
+
+tabs.forEach(id=>{
+
+document.getElementById(id).style.display="none";
+
+});
+
+document.getElementById(tabId).style.display="block";
+
+};
+
 window.saveCompetition = async function(){
 
 await addDoc(collection(db,"competitions"),{
@@ -437,6 +440,16 @@ from:competitionDateFrom.value,
 to:competitionDateTo.value
 
 });
+
+loadCompetitions();
+
+};
+
+window.deleteCompetition = async function(id){
+
+if(!confirm("Wettbewerb löschen?")) return;
+
+await deleteDoc(doc(db,"competitions",id));
 
 loadCompetitions();
 
@@ -561,6 +574,15 @@ ${c.place}
 
 ${c.from} bis ${c.to}
 
+<br><br>
+
+<button class="danger"
+onclick="deleteCompetition('${d.id}')">
+
+Wettbewerb löschen
+
+</button>
+
 </div>
 
 `;
@@ -661,6 +683,30 @@ async function loadResults(){
 resultList.innerHTML="";
 podium.innerHTML="";
 
+const competitionId =
+competitionSelect.value;
+
+if(!competitionId) return;
+
+const skaterQuery=query(
+
+collection(db,"skaters"),
+
+where("competitionId","==",competitionId)
+
+);
+
+const skaterSnapshot =
+await getDocs(skaterQuery);
+
+let skaterNames=[];
+
+skaterSnapshot.forEach((d)=>{
+
+skaterNames.push(d.data().name);
+
+});
+
 const scoreSnapshot =
 await getDocs(collection(db,"scores"));
 
@@ -668,7 +714,13 @@ let results=[];
 
 scoreSnapshot.forEach((d)=>{
 
-results.push(d.data());
+const r=d.data();
+
+if(skaterNames.includes(r.skater)){
+
+results.push(r);
+
+}
 
 });
 
@@ -738,36 +790,9 @@ where("competitionId","==",competitionSelect.value)
 
 const snapshot=await getDocs(q);
 
-let schedules=[];
-
 snapshot.forEach((d)=>{
 
-schedules.push(d.data());
-
-});
-
-schedules.sort((a,b)=>
-a.begin.localeCompare(b.begin)
-);
-
-const now = new Date();
-
-const currentTime =
-now.toTimeString().slice(0,5);
-
-let current=null;
-let next=null;
-
-schedules.forEach((s,index)=>{
-
-if(currentTime >= s.begin &&
-currentTime <= s.end){
-
-current=s;
-
-next=schedules[index+1];
-
-}
+const s=d.data();
 
 scheduleList.innerHTML += `
 
@@ -781,8 +806,7 @@ scheduleList.innerHTML += `
 
 <br>
 
-⏱ Dauer:
-${s.duration}
+⏱ ${s.duration}
 
 <br>
 
@@ -794,71 +818,11 @@ ${s.groups}
 🏃 Teilnehmer:
 ${s.participants}
 
-<br>
-
-🔥 Einlauf:
-${s.warmup}
-
 </div>
 
 `;
 
 });
-
-if(current){
-
-liveNow.innerHTML = `
-
-▶ Jetzt läuft:
-
-<br><br>
-
-${current.category}
-
-`;
-
-}
-
-if(next){
-
-nextSkater.innerHTML = `
-
-⏭ Als nächstes:
-
-<br><br>
-
-${next.category}
-
-<br>
-
-${next.begin}
-
-`;
-
-const target = new Date();
-
-target.setHours(next.begin.split(":")[0]);
-target.setMinutes(next.begin.split(":")[1]);
-
-const diff = target - now;
-
-const minutes =
-Math.floor(diff/60000);
-
-const seconds =
-Math.floor((diff%60000)/1000);
-
-countdownBox.innerHTML = `
-
-⏱ Countdown:
-
-<br><br>
-
-${minutes}m ${seconds}s
-
-`;
-
-}
 
 }
 
@@ -932,18 +896,9 @@ loadCompetitions();
 
 loadClubs();
 
-loadResults();
-
-loadSchedule();
-
-setInterval(()=>{
-
-loadSchedule();
-
-},1000);
+showTab("competitionsTab");
 
 </script>
 
 </body>
 </html>
-```
