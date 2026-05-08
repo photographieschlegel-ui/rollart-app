@@ -71,7 +71,11 @@ border-left:5px solid #22c55e;
 border-left:5px solid #3b82f6;
 }
 
-button,input{
+.score{
+border-left:5px solid #f59e0b;
+}
+
+button,input,select{
 width:100%;
 padding:14px;
 margin-top:10px;
@@ -93,10 +97,23 @@ background:linear-gradient(135deg,#2563eb,#7c3aed);
 background:linear-gradient(135deg,#16a34a,#22c55e)!important;
 }
 
+.danger{
+background:linear-gradient(135deg,#dc2626,#ef4444)!important;
+}
+
 .grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
 gap:15px;
+}
+
+.categoryLabel{
+background:#2563eb;
+display:inline-block;
+padding:6px 10px;
+border-radius:10px;
+margin-bottom:10px;
+font-size:14px;
 }
 
 </style>
@@ -131,6 +148,11 @@ onclick="showTab('categoryTab')">
 <div class="tab"
 onclick="showTab('runnerTab')">
 👥 Läufer
+</div>
+
+<div class="tab"
+onclick="showTab('scoreTab')">
+⭐ Wertung
 </div>
 
 </div>
@@ -236,6 +258,22 @@ class="grid"></div>
 
 </div>
 
+<!-- Wertung -->
+
+<div id="scoreTab"
+style="display:none;">
+
+<div class="card">
+
+<h2>⭐ Punkte & Abzüge</h2>
+
+<div id="scoreOutput"
+class="grid"></div>
+
+</div>
+
+</div>
+
 </div>
 
 <script>
@@ -256,7 +294,8 @@ const tabs = [
 "competitionTab",
 "pdfTab",
 "categoryTab",
-"runnerTab"
+"runnerTab",
+"scoreTab"
 ];
 
 tabs.forEach(id=>{
@@ -386,59 +425,79 @@ text
 .replace(/\s+/g," ")
 .trim();
 
-const categoryRegex =
-/([A-Za-zÄÖÜäöüß0-9\s\.]+?)\s(\d{2}:\d{2})\s(\d{2}:\d{2})\s(\d{2}:\d{2}:\d{2})/g;
+const categoryBlockRegex =
+/([A-Za-zÄÖÜäöüß0-9\s\.\-]+?)\s+
+(\d{2}:\d{2})\s+
+(\d{2}:\d{2})\s+
+(\d{2}:\d{2}:\d{2})\s+
+(\d{2}:\d{2}:\d{2})\s+
+(\d+)\s+
+(\d+)
+([\s\S]*?)
+(?=
+[A-Za-zÄÖÜäöüß0-9\s\.\-]+?\s+\d{2}:\d{2}\s+\d{2}:\d{2}
+|$)/gx;
 
-const categoryMatches =
-[...cleaned.matchAll(categoryRegex)];
+const blocks =
+[...cleaned.matchAll(categoryBlockRegex)];
 
-categoryMatches.forEach(cat=>{
+blocks.forEach(block=>{
 
-let name =
-cat[1]
-.replace(/30\.04\.2026/gi,"")
+let categoryName =
+block[1]
+
 .replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
 .replace(/Startfolge Kür/gi,"")
 .replace(/Westhofener Kürpokal/gi,"")
+.replace(/\d{2}\.\d{2}\.\d{4}/g,"")
 .replace(/\s+/g," ")
 .trim();
 
-if(name.length < 3) return;
+if(
+categoryName.length < 3
+) return;
 
-categories.push({
+const category = {
 
 id:Date.now()+Math.random(),
 
-name:name,
+name:categoryName,
 
-begin:cat[2],
+begin:block[2],
 
-end:cat[3]
+end:block[3],
 
-});
+duration:block[4],
 
-});
+warmup:block[5],
+
+groups:block[6],
+
+participants:block[7]
+
+};
+
+categories.push(category);
+
+const runnerText =
+block[8];
 
 const runnerRegex =
-/(\d+)\s([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s(SSG Ronsdorf|RRD Wuppertal|Wattenscheider RSC|TG Westhofen|TV Datteln 09|TV Walsum-Aldenrade 07)/g;
+/(\d+)\s+
+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)
+\s+
+(SSG\sRonsdorf|
+RRD\sWuppertal|
+Wattenscheider\sRSC|
+TG\sWesthofen|
+TV\sDatteln\s09|
+TV\sWalsum-Aldenrade\s07|
+TV\sWalsum\s-\sAldenrade)/gx;
 
-const foundRunners =
-[...cleaned.matchAll(runnerRegex)];
+const runnerMatches =
+[...runnerText.matchAll(runnerRegex)];
 
-let currentCategory = 0;
-let count = 0;
-
-foundRunners.forEach(runner=>{
-
-if(
-categories[currentCategory] &&
-count >= 8
-){
-
-currentCategory++;
-count = 0;
-
-}
+runnerMatches.forEach(runner=>{
 
 runners.push({
 
@@ -446,23 +505,26 @@ id:Date.now()+Math.random(),
 
 start:runner[1],
 
-name:runner[2],
+name:runner[2].trim(),
 
-club:runner[3],
+club:runner[3].trim(),
 
-category:
-categories[currentCategory]
-? categories[currentCategory].name
-: "Keine Kategorie"
+category:categoryName,
+
+technik:0,
+kunst:0,
+abzug:0,
+gesamt:0
 
 });
 
-count++;
+});
 
 });
 
 renderCategories();
 renderRunners();
+renderScores();
 
 document
 .getElementById("pdfInfo")
@@ -507,6 +569,26 @@ ${cat.name}
 
 🕒 ${cat.begin} - ${cat.end}
 
+<br><br>
+
+⏱ Dauer:
+${cat.duration}
+
+<br>
+
+🔥 Einlauf:
+${cat.warmup}
+
+<br>
+
+👥 Gruppen:
+${cat.groups}
+
+<br>
+
+🏃 Teilnehmer:
+${cat.participants}
+
 </div>
 
 `;
@@ -547,6 +629,85 @@ Start ${runner.start}
 `;
 
 });
+
+}
+
+function renderScores(){
+
+const output =
+document.getElementById("scoreOutput");
+
+output.innerHTML = "";
+
+runners.forEach(runner=>{
+
+runner.gesamt =
+(
+Number(runner.technik || 0) +
+Number(runner.kunst || 0)
+) -
+Number(runner.abzug || 0);
+
+output.innerHTML += `
+
+<div class="item score">
+
+<div class="categoryLabel">
+${runner.category}
+</div>
+
+<h3>
+${runner.name}
+</h3>
+
+🏢 ${runner.club}
+
+<label>⭐ Technik</label>
+
+<input type="number"
+step="0.1"
+value="${runner.technik}"
+onchange="updateRunner(${runner.id},'technik',this.value)">
+
+<label>🎨 Kunst</label>
+
+<input type="number"
+step="0.1"
+value="${runner.kunst}"
+onchange="updateRunner(${runner.id},'kunst',this.value)">
+
+<label>❌ Abzüge</label>
+
+<input type="number"
+step="0.1"
+value="${runner.abzug}"
+onchange="updateRunner(${runner.id},'abzug',this.value)">
+
+<div class="item">
+
+🏆 Gesamt:
+${runner.gesamt.toFixed(2)}
+
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+function updateRunner(id,field,value){
+
+const runner =
+runners.find(r=>r.id===id);
+
+if(!runner) return;
+
+runner[field] = value;
+
+renderScores();
 
 }
 
@@ -612,6 +773,7 @@ JSON.parse(savedCategories);
 
 renderCategories();
 renderRunners();
+renderScores();
 
 showTab("competitionTab");
 
