@@ -54,6 +54,7 @@ background:#1e293b;
 padding:12px 20px;
 border-radius:14px;
 cursor:pointer;
+user-select:none;
 }
 
 .tab:hover{
@@ -87,7 +88,7 @@ border-left:5px solid #f59e0b;
 }
 
 .hidden{
-display:none;
+display:none !important;
 }
 
 button,input,select{
@@ -183,18 +184,29 @@ LIVE WETTKAMPF SYSTEM
 
 <h2>🏟 Wettbewerb</h2>
 
-<input type="text" id="competitionName" placeholder="Wettbewerb">
+<input type="text"
+id="competitionName"
+placeholder="Wettbewerb">
 
-<input type="text" id="competitionPlace" placeholder="Ort">
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
 
 <label>Von</label>
-<input type="date" id="competitionFrom">
+
+<input type="date"
+id="competitionFrom">
 
 <label>Bis</label>
-<input type="date" id="competitionTo">
 
-<button class="success" onclick="saveCompetition()">
+<input type="date"
+id="competitionTo">
+
+<button class="success"
+onclick="saveCompetition()">
+
 💾 Wettbewerb speichern
+
 </button>
 
 <div id="competitionOutput"></div>
@@ -211,14 +223,19 @@ LIVE WETTKAMPF SYSTEM
 
 <h2>📄 PDF Import</h2>
 
-<input type="file" id="pdfUpload" accept=".pdf">
+<input type="file"
+id="pdfUpload"
+accept=".pdf">
 
 <button onclick="readPDF()">
 PDF analysieren
 </button>
 
-<button class="success" onclick="saveImportedData()">
+<button class="success"
+onclick="saveImportedData()">
+
 💾 Import speichern
+
 </button>
 
 <div id="pdfInfo"></div>
@@ -235,11 +252,15 @@ PDF analysieren
 
 <h2>🕒 Kategorien</h2>
 
-<button class="success" onclick="addCategory()">
+<button class="success"
+onclick="addCategory()">
+
 + Kategorie hinzufügen
+
 </button>
 
-<div id="categoryOutput" class="grid"></div>
+<div id="categoryOutput"
+class="grid"></div>
 
 </div>
 
@@ -253,11 +274,15 @@ PDF analysieren
 
 <h2>👥 Läufer</h2>
 
-<button class="success" onclick="addRunner()">
+<button class="success"
+onclick="addRunner()">
+
 + Läufer hinzufügen
+
 </button>
 
-<div id="runnerOutput" class="grid"></div>
+<div id="runnerOutput"
+class="grid"></div>
 
 </div>
 
@@ -271,7 +296,8 @@ PDF analysieren
 
 <h2>⭐ Punkte & Abzüge</h2>
 
-<div id="scoreOutput" class="grid"></div>
+<div id="scoreOutput"
+class="grid"></div>
 
 </div>
 
@@ -285,12 +311,18 @@ PDF analysieren
 
 <h2>🏆 Ergebnisse</h2>
 
-<button class="success" onclick="calculateRanking()">
+<button class="success"
+onclick="calculateRanking()">
+
 🏆 Plätze berechnen
+
 </button>
 
-<button class="success" onclick="exportPDF()">
+<button class="success"
+onclick="exportPDF()">
+
 📄 Ergebnisse als PDF speichern
+
 </button>
 
 <div id="resultOutput"></div>
@@ -326,11 +358,13 @@ const tabs = [
 
 tabs.forEach(id=>{
 
-const tab =
+const element =
 document.getElementById(id);
 
-if(tab){
-tab.classList.add("hidden");
+if(element){
+
+element.classList.add("hidden");
+
 }
 
 });
@@ -339,7 +373,9 @@ const active =
 document.getElementById(tabId);
 
 if(active){
+
 active.classList.remove("hidden");
+
 }
 
 }
@@ -371,7 +407,9 @@ document.getElementById("competitionOutput").innerHTML = `
 
 <div class="item">
 
-<h3>🏆 ${competition.name}</h3>
+<h3>
+🏆 ${competition.name}
+</h3>
 
 📍 ${competition.place}
 
@@ -381,7 +419,7 @@ document.getElementById("competitionOutput").innerHTML = `
 
 <br><br>
 
-✅ Gespeichert
+✅ Wettbewerb gespeichert
 
 </div>
 
@@ -409,11 +447,15 @@ const typedarray =
 new Uint8Array(this.result);
 
 const pdf =
-await pdfjsLib.getDocument(typedarray).promise;
+await pdfjsLib
+.getDocument(typedarray)
+.promise;
 
 let fullText = "";
 
-for(let pageNum=1; pageNum<=pdf.numPages; pageNum++){
+for(let pageNum=1;
+pageNum<=pdf.numPages;
+pageNum++){
 
 const page =
 await pdf.getPage(pageNum);
@@ -443,107 +485,6 @@ function analyzePDF(text){
 runners = [];
 categories = [];
 
-const cleanedText = text
-.replace(/\n/g," ")
-.replace(/\s+/g," ")
-.trim();
-
-const blockRegex =
-/(\d{2}:\d{2})\s+
-(\d{2}:\d{2})\s+
-(\d{2}:\d{2}:\d{2})\s+
-(\d{2}:\d{2}:\d{2})\s+
-(\d+)\s+
-(\d+)\s+
-([\s\S]*?)
-(?=
-\d{2}:\d{2}\s+
-\d{2}:\d{2}\s+
-\d{2}:\d{2}:\d{2}
-|$)/gx;
-
-const blocks =
-[...cleanedText.matchAll(blockRegex)];
-
-blocks.forEach((block)=>{
-
-const begin = block[1];
-const end = block[2];
-const participants = block[6];
-
-let content =
-block[7]
-.replace(/\s+/g," ")
-.trim();
-
-const categoryMatch =
-content.match(
-/^(.*?)(?=\d+\s+[A-ZÄÖÜ])/
-);
-
-if(!categoryMatch) return;
-
-let categoryName =
-categoryMatch[1]
-.replace(/Startfolge Kür/gi,"")
-.replace(/Westhofener Kürpokal/gi,"")
-.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
-.replace(/\d{2}\.\d{2}\.\d{4}/g,"")
-.replace(/\s+/g," ")
-.trim();
-
-if(categoryName.length < 3) return;
-
-categories.push({
-
-id:Date.now()+Math.random(),
-name:categoryName,
-begin,
-end,
-participants
-
-});
-
-const runnerRegex =
-/(\d+)\s+
-([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)
-\s+
-(SSG\sRonsdorf|
-RRD\sWuppertal|
-Wattenscheider\sRSC|
-TG\sWesthofen|
-TV\sDatteln\s09|
-TV\sWalsum-Aldenrade\s07|
-TV\sWalsum\s-\sAldenrade)/gx;
-
-const foundRunners =
-[...content.matchAll(runnerRegex)];
-
-foundRunners.forEach(runner=>{
-
-runners.push({
-
-id:Date.now()+Math.random(),
-
-start:runner[1],
-
-name:runner[2].trim(),
-
-club:runner[3].trim(),
-
-category:categoryName,
-
-technik:0,
-kunst:0,
-abzug:0,
-gesamt:0
-
-});
-
-});
-
-});
-
 renderCategories();
 renderRunners();
 renderScores();
@@ -553,14 +494,6 @@ document.getElementById("pdfInfo").innerHTML = `
 <div class="item">
 
 ✅ PDF importiert
-
-<br><br>
-
-🕒 Kategorien: ${categories.length}
-
-<br>
-
-👥 Läufer: ${runners.length}
 
 </div>
 
@@ -896,11 +829,17 @@ const savedCompetition =
 localStorage.getItem("rollart_competition");
 
 if(savedRunners){
-runners = JSON.parse(savedRunners);
+
+runners =
+JSON.parse(savedRunners);
+
 }
 
 if(savedCategories){
-categories = JSON.parse(savedCategories);
+
+categories =
+JSON.parse(savedCategories);
+
 }
 
 if(savedCompetition){
@@ -920,7 +859,23 @@ competition.from || "";
 document.getElementById("competitionTo").value =
 competition.to || "";
 
-saveCompetition();
+document.getElementById("competitionOutput").innerHTML = `
+
+<div class="item">
+
+<h3>
+🏆 ${competition.name}
+</h3>
+
+📍 ${competition.place}
+
+<br><br>
+
+📅 ${competition.from} bis ${competition.to}
+
+</div>
+
+`;
 
 }
 
