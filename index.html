@@ -142,9 +142,11 @@
     id="skaterName"
     placeholder="Name">
 
+    <select id="clubSelect"></select>
+
     <input type="text"
     id="skaterClub"
-    placeholder="Verein">
+    placeholder="Oder neuen Verein eingeben">
 
     <button onclick="saveSkater()">
       Läufer speichern
@@ -328,8 +330,27 @@ window.saveSkater = async function(){
   const name =
   document.getElementById("skaterName").value;
 
-  const club =
+  let club =
+  document.getElementById("clubSelect").value;
+
+  const newClub =
   document.getElementById("skaterClub").value;
+
+  if(newClub){
+
+    club = newClub;
+
+    await addDoc(
+
+      collection(db,"clubs"),
+
+      {
+        name:newClub
+      }
+
+    );
+
+  }
 
   if(!competitionId || !category || !start || !name || !club){
 
@@ -363,6 +384,8 @@ window.saveSkater = async function(){
     document.getElementById("skaterClub").value = "";
 
     loadSkaters();
+
+    loadClubs();
 
     alert("Läufer gespeichert");
 
@@ -628,6 +651,40 @@ async function loadSkaters(){
 
 }
 
+async function loadClubs(){
+
+  const select =
+  document.getElementById("clubSelect");
+
+  select.innerHTML = `
+
+    <option value="">
+      Verein auswählen
+    </option>
+
+  `;
+
+  const snapshot =
+  await getDocs(collection(db,"clubs"));
+
+  snapshot.forEach((d) => {
+
+    const c = d.data();
+
+    select.innerHTML += `
+
+      <option value="${c.name}">
+
+        ${c.name}
+
+      </option>
+
+    `;
+
+  });
+
+}
+
 document
 .getElementById("competitionSelect")
 .addEventListener("change", () => {
@@ -639,6 +696,8 @@ document
 });
 
 loadCompetitions();
+
+loadClubs();
 
 </script>
 
