@@ -128,6 +128,38 @@
 
   </div>
 
+  <div class="card">
+
+    <h2>Läufer speichern</h2>
+
+    <select id="skaterCategory"></select>
+
+    <input type="number"
+    id="skaterStart"
+    placeholder="Startnummer">
+
+    <input type="text"
+    id="skaterName"
+    placeholder="Name">
+
+    <input type="text"
+    id="skaterClub"
+    placeholder="Verein">
+
+    <button onclick="saveSkater()">
+      Läufer speichern
+    </button>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Läufer</h2>
+
+    <div id="skaterList"></div>
+
+  </div>
+
 </div>
 
 <script type="module">
@@ -236,25 +268,15 @@ window.saveCompetition = async function () {
 
 window.saveCategory = async function(){
 
-  const select =
-  document.getElementById("competitionSelect");
-
-  const competitionId = select.value;
+  const competitionId =
+  document.getElementById("competitionSelect").value;
 
   const category =
   document.getElementById("categoryName").value;
 
-  if(select.selectedIndex === -1){
+  if(!competitionId || !category){
 
-    alert("Bitte Wettbewerb auswählen");
-
-    return;
-
-  }
-
-  if(!category){
-
-    alert("Bitte Kategorie eingeben");
+    alert("Bitte alles ausfüllen");
 
     return;
 
@@ -286,7 +308,71 @@ window.saveCategory = async function(){
 
     console.error(e);
 
-    alert("Fehler beim Speichern");
+    alert("Fehler");
+
+  }
+
+};
+
+window.saveSkater = async function(){
+
+  const competitionId =
+  document.getElementById("competitionSelect").value;
+
+  const category =
+  document.getElementById("skaterCategory").value;
+
+  const start =
+  document.getElementById("skaterStart").value;
+
+  const name =
+  document.getElementById("skaterName").value;
+
+  const club =
+  document.getElementById("skaterClub").value;
+
+  if(!competitionId || !category || !start || !name || !club){
+
+    alert("Bitte alles ausfüllen");
+
+    return;
+
+  }
+
+  try{
+
+    await addDoc(
+
+      collection(db,"skaters"),
+
+      {
+        competitionId:competitionId,
+        category:category,
+        start:Number(start),
+        name:name,
+        club:club,
+        created:new Date().toISOString()
+      }
+
+    );
+
+    document.getElementById("skaterStart").value = "";
+
+    document.getElementById("skaterName").value = "";
+
+    document.getElementById("skaterClub").value = "";
+
+    loadSkaters();
+
+    alert("Läufer gespeichert");
+
+  }
+
+  catch(e){
+
+    console.error(e);
+
+    alert("Fehler");
 
   }
 
@@ -309,6 +395,16 @@ window.deleteCategory = async function(id){
   await deleteDoc(doc(db,"categories",id));
 
   loadCategories();
+
+};
+
+window.deleteSkater = async function(id){
+
+  if(!confirm("Läufer löschen?")) return;
+
+  await deleteDoc(doc(db,"skaters",id));
+
+  loadSkaters();
 
 };
 
@@ -350,6 +446,8 @@ async function loadCompetitions(){
   loadCompetitionList();
 
   loadCategories();
+
+  loadSkaters();
 
 }
 
@@ -419,7 +517,12 @@ async function loadCategories(){
   const list =
   document.getElementById("categoryList");
 
+  const select =
+  document.getElementById("skaterCategory");
+
   list.innerHTML = "";
+
+  select.innerHTML = "";
 
   if(!competitionId) return;
 
@@ -456,13 +559,86 @@ async function loadCategories(){
 
     `;
 
+    select.innerHTML += `
+
+      <option value="${c.category}">
+
+        ${c.category}
+
+      </option>
+
+    `;
+
+  });
+
+}
+
+async function loadSkaters(){
+
+  const competitionId =
+  document.getElementById("competitionSelect").value;
+
+  const list =
+  document.getElementById("skaterList");
+
+  list.innerHTML = "";
+
+  if(!competitionId) return;
+
+  const q = query(
+
+    collection(db,"skaters"),
+
+    where("competitionId","==",competitionId),
+
+    orderBy("start","asc")
+
+  );
+
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach((d) => {
+
+    const s = d.data();
+
+    list.innerHTML += `
+
+      <div class="item">
+
+        <strong>${s.start}</strong><br>
+
+        ${s.name}<br>
+
+        ${s.club}<br>
+
+        ${s.category}
+
+        <br><br>
+
+        <button class="danger"
+        onclick="deleteSkater('${d.id}')">
+
+          Läufer löschen
+
+        </button>
+
+      </div>
+
+    `;
+
   });
 
 }
 
 document
 .getElementById("competitionSelect")
-.addEventListener("change",loadCategories);
+.addEventListener("change", () => {
+
+  loadCategories();
+
+  loadSkaters();
+
+});
 
 loadCompetitions();
 
