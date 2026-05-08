@@ -399,29 +399,43 @@ output.innerHTML = "";
 
 const lines = text.split("\n");
 
-const runnerRegex =
-/(\d+)\s+([A-ZÄÖÜ][a-zäöüßA-ZÄÖÜ\s\-]+)\s+([A-ZÄÖÜa-zäöüß0-9\s\-]+)/;
-
 lines.forEach(line=>{
 
-const match = line.match(runnerRegex);
+line = line
+.replace(/\s+/g," ")
+.trim();
+
+const match = line.match(
+
+/^(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+?)\s+([A-ZÄÖÜ]{2,}.*)$/
+
+);
 
 if(match){
 
 const start = match[1];
 
-const name = match[2]
-.trim();
+const name = match[2].trim();
 
-const club = match[3]
-.trim();
+const club = match[3].trim();
+
+if(
+
+name.length < 3 ||
+club.length < 2
+
+){
+
+return;
+
+}
 
 output.innerHTML += `
 
 <div class="item runner">
 
 <strong>
-${start}
+Start ${start}
 </strong>
 
 <br><br>
