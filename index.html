@@ -8,7 +8,6 @@
 <title>RollArt Score Pro</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -267,6 +266,13 @@ PDF analysieren
 
 </button>
 
+<button class="success"
+onclick="saveImportedData()">
+
+💾 Import speichern
+
+</button>
+
 <div id="pdfInfo"></div>
 
 </div>
@@ -502,6 +508,34 @@ function analyzePDF(text){
 runners = [];
 categories = [];
 
+const categoryRegex =
+/([A-Za-zÄÖÜäöüß0-9\s\.]+)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})/g;
+
+const foundCategories =
+[...text.matchAll(categoryRegex)];
+
+foundCategories.forEach(cat=>{
+
+const categoryName =
+cat[1]
+.replace(/\s+/g," ")
+.trim();
+
+if(categoryName.length < 3) return;
+
+categories.push({
+
+id:Date.now()+Math.random(),
+
+name:categoryName,
+
+begin:cat[2],
+end:cat[3]
+
+});
+
+});
+
 const runnerRegex =
 /(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+(SSG\sRonsdorf|RRD\sWuppertal|Wattenscheider\sRSC|TG\sWesthofen|TV\sDatteln\s09|TV\sWalsum-Aldenrade\s07|TV\sWalsum\s-\sAldenrade)/g;
 
@@ -545,7 +579,12 @@ document
 
 <br><br>
 
-👥 Erkannte Läufer:
+🕒 Kategorien:
+${categories.length}
+
+<br>
+
+👥 Läufer:
 ${runners.length}
 
 </div>
@@ -974,6 +1013,79 @@ y = 20;
 });
 
 doc.save("RollArt-Ergebnisse.pdf");
+
+}
+
+function saveImportedData(){
+
+localStorage.setItem(
+"rollart_runners",
+JSON.stringify(runners)
+);
+
+localStorage.setItem(
+"rollart_categories",
+JSON.stringify(categories)
+);
+
+localStorage.setItem(
+"rollart_competition",
+JSON.stringify(competition)
+);
+
+alert("✅ Wettbewerb gespeichert");
+
+}
+
+window.onload = function(){
+
+const savedRunners =
+localStorage.getItem("rollart_runners");
+
+const savedCategories =
+localStorage.getItem("rollart_categories");
+
+const savedCompetition =
+localStorage.getItem("rollart_competition");
+
+if(savedRunners){
+
+runners =
+JSON.parse(savedRunners);
+
+}
+
+if(savedCategories){
+
+categories =
+JSON.parse(savedCategories);
+
+}
+
+if(savedCompetition){
+
+competition =
+JSON.parse(savedCompetition);
+
+document.getElementById("competitionName").value =
+competition.name || "";
+
+document.getElementById("competitionPlace").value =
+competition.place || "";
+
+document.getElementById("competitionFrom").value =
+competition.from || "";
+
+document.getElementById("competitionTo").value =
+competition.to || "";
+
+saveCompetition();
+
+}
+
+renderCategories();
+renderRunners();
+renderScores();
 
 }
 
