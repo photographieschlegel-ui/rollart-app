@@ -342,33 +342,6 @@ to,
 created:new Date()
 });
 
-document.getElementById("competitionSaved").innerHTML = `
-
-<div class="item">
-
-✅ Wettbewerb gespeichert
-
-<br><br>
-
-🏆 ${name}
-
-<br>
-
-📍 ${place}
-
-<br>
-
-📅 ${from} bis ${to}
-
-</div>
-
-`;
-
-document.getElementById("competitionName").value="";
-document.getElementById("competitionPlace").value="";
-document.getElementById("competitionFrom").value="";
-document.getElementById("competitionTo").value="";
-
 loadCompetitions();
 
 };
@@ -573,37 +546,37 @@ document
 
 let runnerCount = 0;
 
-const categoryRegex =
-/(\d{2}:\d{2}\s+\d{2}:\d{2}.*?)(?=\d{2}:\d{2}\s+\d{2}:\d{2}|$)/gs;
+const categories =
+text.match(/.+?\d{2}:\d{2}\s+\d{2}:\d{2}/gs);
 
-const blocks =
-[...text.matchAll(categoryRegex)];
+if(!categories) return;
 
-blocks.forEach(blockMatch=>{
+categories.forEach(block=>{
 
-const block = blockMatch[1];
+const categoryNameMatch =
+block.match(
+/([A-Za-zÄÖÜäöüß0-9\s\.•\-]+?)\s+\d+\s+[A-ZÄÖÜ]/);
+
+if(!categoryNameMatch) return;
 
 let category =
-block
+categoryNameMatch[1]
 .replace(/\s+/g," ")
-.match(/(\d+\s+\d+\s+)(.*?)(?=\d+\s+[A-ZÄÖÜ])/);
-
-if(!category) return;
-
-category = category[2]
 .replace(/Westhofener Kürpokal/gi,"")
 .trim();
 
 const runnerLines =
-block.match(/\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?(?=(\d+\s+[A-ZÄÖÜ]|$))/g);
+block.match(
+/\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+\s+(?:TV|SSG|RRD|TG|ERC|REV|TuS|SC|SV|Wattenscheider)\s+[A-Za-zÄÖÜäöüß0-9\- ]+/g);
 
 if(!runnerLines) return;
 
 runnerLines.forEach(line=>{
 
-const match =
-line.match(
-/(\d+)\s+(.+?)\s+(SSG\s.+|RRD\s.+|Wattenscheider\sRSC|TV\s.+|TG\s.+|ERC\s.+|REV\s.+|TuS\s.+|SC\s.+|SV\s.+)$/);
+const runnerRegex =
+/(\d+)\s+(.+?)\s+(TV\s+[A-Za-zÄÖÜäöüß0-9\- ]+|SSG\s+[A-Za-zÄÖÜäöüß\- ]+|RRD\s+[A-Za-zÄÖÜäöüß\- ]+|TG\s+[A-Za-zÄÖÜäöüß\- ]+|ERC\s+[A-Za-zÄÖÜäöüß\- ]+|REV\s+[A-Za-zÄÖÜäöüß\- ]+|TuS\s+[A-Za-zÄÖÜäöüß\- ]+|SC\s+[A-Za-zÄÖÜäöüß\- ]+|SV\s+[A-Za-zÄÖÜäöüß\- ]+|Wattenscheider\sRSC)$/;
+
+const match = line.match(runnerRegex);
 
 if(!match) return;
 
