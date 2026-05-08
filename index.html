@@ -15,7 +15,7 @@ body{
   font-family:Arial,sans-serif;
   margin:0;
   padding:0;
- background:#0f172a;
+  background:#0f172a;
   color:white;
 }
 
@@ -103,6 +103,10 @@ button{
   cursor:pointer;
 }
 
+.success{
+  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
+}
+
 .warning{
   background:#f59e0b;
   color:black;
@@ -110,6 +114,10 @@ button{
   border-radius:12px;
   margin-top:15px;
   font-weight:bold;
+}
+
+h3{
+  margin-top:30px;
 }
 
 </style>
@@ -125,7 +133,7 @@ button{
 </div>
 
 <div class="live-banner">
-LIVE WETTKAMPF SYSTEM
+LIVE WETTKAMPF IMPORTER
 </div>
 
 <div class="tabs">
@@ -150,11 +158,6 @@ onclick="showTab('runnerTab')">
 👥 Läufer
 </div>
 
-<div class="tab"
-onclick="showTab('scoreTab')">
-📊 Wertung
-</div>
-
 </div>
 
 <!-- Wettbewerb -->
@@ -163,61 +166,70 @@ onclick="showTab('scoreTab')">
 
 <div class="card">
 
-<h2>🏟 Wettbewerb erstellen</h2>
+<h2>🏟 Wettbewerb</h2>
 
 <input type="text"
-placeholder="Wettbewerbsname">
+id="competitionName"
+placeholder="Wettbewerb">
 
 <input type="text"
+id="competitionPlace"
 placeholder="Ort">
 
 <label style="display:block;margin-top:15px;">
 Von:
 </label>
 
-<input type="date">
+<input type="date"
+id="competitionFrom">
 
 <label style="display:block;margin-top:15px;">
 Bis:
 </label>
 
-<input type="date">
+<input type="date"
+id="competitionTo">
 
-<button>
+<button class="success"
+onclick="saveCompetition()">
 Wettbewerb speichern
 </button>
 
-</div>
+<div id="competitionSaved"></div>
 
 </div>
 
-<!-- PDF IMPORT -->
+</div>
+
+<!-- PDF -->
 
 <div id="pdfTab" class="hidden">
 
 <div class="card">
 
-<h2>📄 Wettkampf PDF importieren</h2>
+<h2>📄 PDF Import</h2>
 
 <input type="file"
 id="pdfUpload"
 accept=".pdf">
 
 <button onclick="readPDF()">
-PDF auslesen
+PDF analysieren
 </button>
 
-</div>
+<div id="pdfInfo"></div>
 
 </div>
 
-<!-- ZEITPLAN -->
+</div>
+
+<!-- Zeitplan -->
 
 <div id="scheduleTab" class="hidden">
 
 <div class="card">
 
-<h2>🕒 Erkannte Zeitpläne</h2>
+<h2>🕒 Erkannte Kategorien</h2>
 
 <div id="scheduleOutput"></div>
 
@@ -225,7 +237,7 @@ PDF auslesen
 
 </div>
 
-<!-- LÄUFER -->
+<!-- Läufer -->
 
 <div id="runnerTab" class="hidden">
 
@@ -239,39 +251,43 @@ PDF auslesen
 
 </div>
 
-<!-- WERTUNG -->
-
-<div id="scoreTab" class="hidden">
-
-<div class="card">
-
-<h2>📊 Wertung</h2>
-
-<div class="warning">
-
-Wertungen erst ab Figurenläufer aktiv.
-
 </div>
 
-<div id="scoreInfo"></div>
+<script type="module">
 
-</div>
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-</div>
+import {
+getFirestore,
+collection,
+addDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-</div>
+const firebaseConfig = {
 
-<script>
+apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+authDomain: "rollart-score-5319a.firebaseapp.com",
+projectId: "rollart-score-5319a",
+storageBucket: "rollart-score-5319a.firebasestorage.app",
+messagingSenderId: "658963624980",
+appId: "1:658963624980:web:2e4d153f5df087c4f42301"
 
-function showTab(tabId){
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+window.showTab = function(tabId){
 
 const tabs = [
 
 "competitionTab",
 "pdfTab",
 "scheduleTab",
-"runnerTab",
-"scoreTab"
+"runnerTab"
 
 ];
 
@@ -287,11 +303,80 @@ document
 .getElementById(tabId)
 .classList.remove("hidden");
 
-}
+};
 
 showTab("competitionTab");
 
-async function readPDF(){
+window.saveCompetition = async function(){
+
+const name =
+document.getElementById("competitionName").value;
+
+const place =
+document.getElementById("competitionPlace").value;
+
+const from =
+document.getElementById("competitionFrom").value;
+
+const to =
+document.getElementById("competitionTo").value;
+
+if(
+!name ||
+!place ||
+!from ||
+!to
+){
+
+alert("Bitte alles ausfüllen");
+
+return;
+
+}
+
+try{
+
+await addDoc(collection(db,"competitions"),{
+
+name,
+place,
+from,
+to,
+created:new Date()
+
+});
+
+document.getElementById("competitionSaved").innerHTML = `
+
+<div class="item">
+
+✅ Wettbewerb gespeichert
+
+<br><br>
+
+🏆 ${name}
+
+<br>
+
+📍 ${place}
+
+<br>
+
+📅 ${from} bis ${to}
+
+</div>
+
+`;
+
+}catch(error){
+
+alert(error.message);
+
+}
+
+};
+
+window.readPDF = async function(){
 
 const file =
 document.getElementById("pdfUpload").files[0];
@@ -303,6 +388,14 @@ alert("Bitte PDF auswählen");
 return;
 
 }
+
+document.getElementById("pdfInfo").innerHTML = `
+
+<div class="item">
+📄 PDF wird analysiert...
+</div>
+
+`;
 
 const reader = new FileReader();
 
@@ -316,7 +409,7 @@ await pdfjsLib
 .getDocument(typedarray)
 .promise;
 
-let fullText = "";
+let pages = [];
 
 for(let pageNum = 1;
 pageNum <= pdf.numPages;
@@ -333,39 +426,35 @@ textContent.items
 .map(item => item.str)
 .join(" ");
 
-fullText += text + "\n";
+pages.push(text);
 
 }
 
-analyzePDF(fullText);
+analyzePDF(pages);
 
 };
 
 reader.readAsArrayBuffer(file);
 
-}
+};
 
-function analyzePDF(text){
+function analyzePDF(pages){
 
-analyzeSchedules(text);
+document.getElementById("scheduleOutput").innerHTML = "";
+document.getElementById("runnerOutput").innerHTML = "";
 
-analyzeRunners(text);
+let categoryCounter = 0;
+let runnerCounter = 0;
 
-}
+pages.forEach(pageText=>{
 
-function analyzeSchedules(text){
+const categoryRegex =
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+([A-Za-zÄÖÜäöüß0-9\s\.]+)/g;
 
-const output =
-document.getElementById("scheduleOutput");
+let categoryMatches =
+[...pageText.matchAll(categoryRegex)];
 
-output.innerHTML = "";
-
-const regex =
-/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+(.+?)(?=\d+\s+[A-ZÄÖÜ]|$)/gs;
-
-let matches = [...text.matchAll(regex)];
-
-matches.forEach(match=>{
+categoryMatches.forEach(match=>{
 
 const begin = match[1];
 const end = match[2];
@@ -382,21 +471,23 @@ category = category
 
 .replace(/\d{2}:\d{2}:\d{2}.*/,"")
 
-.replace(/\d+\s+[A-ZÄÖÜ][a-zäöüß]+.*$/,"")
-
 .replace(/\s+/g," ")
 
 .trim();
 
-output.innerHTML += `
+if(category.length < 3) return;
+
+categoryCounter++;
+
+document
+.getElementById("scheduleOutput")
+.innerHTML += `
 
 <div class="item schedule">
 
-<strong>
-${category}
-</strong>
-
-<br><br>
+<h3>
+${categoryCounter}. ${category}
+</h3>
 
 🕒 ${begin} - ${end}
 
@@ -426,37 +517,13 @@ ${participants}
 
 });
 
-}
-
-function analyzeRunners(text){
-
-const output =
-document.getElementById("runnerOutput");
-
-output.innerHTML = "";
-
 const runnerRegex =
 /(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+(?:\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+)+)\s+(SSG\s+[A-Za-zÄÖÜäöüß\-]+|TV\s+[A-Za-zÄÖÜäöüß0-9\-]+|Wattenscheider\s+RSC|ERC\s+[A-Za-zÄÖÜäöüß\-]+|REV\s+[A-Za-zÄÖÜäöüß\-]+|TuS\s+[A-Za-zÄÖÜäöüß\-]+|SC\s+[A-Za-zÄÖÜäöüß\-]+|SV\s+[A-Za-zÄÖÜäöüß\-]+)/g;
 
-let matches = [...text.matchAll(runnerRegex)];
+let runnerMatches =
+[...pageText.matchAll(runnerRegex)];
 
-if(matches.length === 0){
-
-output.innerHTML = `
-
-<div class="item">
-
-Keine Läufer erkannt.
-
-</div>
-
-`;
-
-return;
-
-}
-
-matches.forEach(match=>{
+runnerMatches.forEach(match=>{
 
 const start = match[1];
 
@@ -468,9 +535,17 @@ const club = match[3]
 .replace(/\s+/g," ")
 .trim();
 
-output.innerHTML += `
+runnerCounter++;
+
+document
+.getElementById("runnerOutput")
+.innerHTML += `
 
 <div class="item runner">
+
+<h3>
+${runnerCounter}. Läufer
+</h3>
 
 <strong>
 Start ${start}
@@ -490,47 +565,27 @@ Start ${start}
 
 });
 
-checkScoring(text);
+});
 
-}
-
-function checkScoring(text){
-
-const scoreInfo =
-document.getElementById("scoreInfo");
-
-if(
-
-text.includes("Figurenläufer") ||
-text.includes("Kunstläufer") ||
-text.includes("Schüler") ||
-text.includes("Jugend")
-
-){
-
-scoreInfo.innerHTML = `
+document.getElementById("pdfInfo").innerHTML = `
 
 <div class="item">
 
-✅ Wertung aktiv
+✅ PDF erfolgreich analysiert
+
+<br><br>
+
+🕒 Kategorien:
+${categoryCounter}
+
+<br>
+
+👥 Läufer:
+${runnerCounter}
 
 </div>
 
 `;
-
-}else{
-
-scoreInfo.innerHTML = `
-
-<div class="item">
-
-❌ Keine Wertung nötig
-
-</div>
-
-`;
-
-}
 
 }
 
