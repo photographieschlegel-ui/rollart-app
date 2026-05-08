@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RollArt Score Online</title>
+<title>RollArt Score Pro</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -12,96 +12,198 @@
 
 body{
   font-family:Arial,sans-serif;
-  background:#f4f6f8;
   margin:0;
   padding:0;
+  background:#0f172a;
+  color:white;
 }
 
 .app{
-  max-width:900px;
+  max-width:1400px;
   margin:auto;
   padding:20px;
 }
 
-.card{
-  background:white;
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.logo{
+  font-size:34px;
+  font-weight:bold;
+}
+
+.tabs{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.tab{
+  background:#1e293b;
+  padding:12px 20px;
   border-radius:14px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.tab:hover{
+  background:#334155;
+  transform:translateY(-2px);
+}
+
+.live-banner{
+  background:linear-gradient(135deg,#7c3aed,#2563eb);
+  padding:20px;
+  border-radius:20px;
+  text-align:center;
+  font-size:30px;
+  font-weight:bold;
+  margin-bottom:20px;
+  animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+  0%{transform:scale(1);}
+  50%{transform:scale(1.01);}
+  100%{transform:scale(1);}
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#1e293b;
+  border-radius:20px;
   padding:20px;
   margin-top:20px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
+  animation:fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn{
+  from{
+    opacity:0;
+    transform:translateY(10px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
 }
 
 h1,h2,h3{
-  color:#1d3557;
+  color:white;
 }
 
 input,button,select{
   width:100%;
   padding:14px;
   margin-top:10px;
-  border-radius:10px;
-  border:1px solid #ccc;
+  border-radius:14px;
+  border:none;
+  background:#334155;
+  color:white;
   font-size:16px;
   box-sizing:border-box;
 }
 
 button{
-  background:#1d3557;
-  color:white;
-  border:none;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
   font-weight:bold;
-  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.02);
+  opacity:0.9;
 }
 
 .success{
-  background:#2e7d32 !important;
+  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
 }
 
 .danger{
-  background:#b00020 !important;
+  background:linear-gradient(135deg,#dc2626,#ef4444)!important;
 }
 
 .item{
-  background:#eef4f8;
-  padding:12px;
-  border-radius:10px;
-  margin-top:10px;
+  background:#334155;
+  padding:16px;
+  border-radius:16px;
+  margin-top:12px;
+  transition:0.3s;
 }
 
-.judge{
-  background:#f8fafc;
-  border:1px solid #d9e2ec;
-  border-radius:12px;
-  padding:12px;
-  margin-top:12px;
+.item:hover{
+  transform:translateY(-2px);
 }
 
 .podium{
   display:flex;
-  gap:10px;
-  margin-top:20px;
+  gap:20px;
+  align-items:flex-end;
+  margin-top:30px;
 }
 
 .medal{
   flex:1;
   text-align:center;
-  padding:20px;
-  border-radius:14px;
+  border-radius:20px;
   color:white;
   font-weight:bold;
-  font-size:20px;
+  padding:20px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.3);
+  animation:pop 0.6s ease;
+}
+
+@keyframes pop{
+  0%{
+    transform:scale(0.8);
+    opacity:0;
+  }
+  100%{
+    transform:scale(1);
+    opacity:1;
+  }
 }
 
 .gold{
-  background:#d4af37;
+  background:linear-gradient(135deg,#facc15,#eab308);
+  height:260px;
+  font-size:30px;
 }
 
 .silver{
-  background:#a7a7ad;
+  background:linear-gradient(135deg,#cbd5e1,#94a3b8);
+  height:220px;
+  font-size:24px;
 }
 
 .bronze{
-  background:#cd7f32;
+  background:linear-gradient(135deg,#fb923c,#ea580c);
+  height:190px;
+  font-size:22px;
+}
+
+@media(max-width:700px){
+
+  .podium{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .gold,.silver,.bronze{
+    height:auto;
+  }
+
 }
 
 </style>
@@ -111,39 +213,45 @@ button{
 
 <div class="app">
 
-<h1>RollArt Score Online</h1>
+<div class="topbar">
+
+<div class="logo">
+🏆 RollArt Score Pro
+</div>
+
+</div>
+
+<div class="live-banner">
+LIVE WETTKAMPF SYSTEM
+</div>
+
+<div class="tabs">
+
+<div class="tab">🏟 Wettbewerbe</div>
+<div class="tab">👥 Läufer</div>
+<div class="tab">📊 Wertung</div>
+<div class="tab">🏆 Ergebnisse</div>
+<div class="tab">⚙ Verwaltung</div>
+
+</div>
+
+<div class="grid">
+
+<div>
 
 <div class="card">
 
-<h2>Wettbewerb speichern</h2>
+<h2>Wettbewerb</h2>
 
-<input type="text"
-id="competitionName"
-placeholder="Wettbewerb">
+<input type="text" id="competitionName" placeholder="Wettbewerb">
+<input type="text" id="competitionPlace" placeholder="Ort">
 
-<input type="text"
-id="competitionPlace"
-placeholder="Ort">
-
-<label>Von:</label>
-
-<input type="date"
-id="competitionDateFrom">
-
-<label>Bis:</label>
-
-<input type="date"
-id="competitionDateTo">
+<input type="date" id="competitionDateFrom">
+<input type="date" id="competitionDateTo">
 
 <button onclick="saveCompetition()">
 Wettbewerb speichern
 </button>
-
-</div>
-
-<div class="card">
-
-<h2>Wettbewerb auswählen</h2>
 
 <select id="competitionSelect"></select>
 
@@ -153,21 +261,13 @@ Wettbewerb speichern
 
 <div class="card">
 
-<h2>Kategorie speichern</h2>
+<h2>Kategorien</h2>
 
-<input type="text"
-id="categoryName"
-placeholder="Kategorie">
+<input type="text" id="categoryName" placeholder="Kategorie">
 
 <button onclick="saveCategory()">
 Kategorie speichern
 </button>
-
-</div>
-
-<div class="card">
-
-<h2>Kategorien</h2>
 
 <div id="categoryList"></div>
 
@@ -175,37 +275,29 @@ Kategorie speichern
 
 <div class="card">
 
-<h2>Läufer speichern</h2>
+<h2>Läufer</h2>
 
 <select id="skaterCategory"></select>
 
-<input type="number"
-id="skaterStart"
-placeholder="Startnummer">
+<input type="number" id="skaterStart" placeholder="Startnummer">
 
-<input type="text"
-id="skaterName"
-placeholder="Name">
+<input type="text" id="skaterName" placeholder="Name">
 
 <select id="clubSelect"></select>
 
-<input type="text"
-id="skaterClub"
-placeholder="Oder neuen Verein eingeben">
+<input type="text" id="skaterClub" placeholder="Neuer Verein">
 
 <button onclick="saveSkater()">
 Läufer speichern
 </button>
 
-</div>
-
-<div class="card">
-
-<h2>Läufer</h2>
-
 <div id="skaterList"></div>
 
 </div>
+
+</div>
+
+<div>
 
 <div class="card">
 
@@ -213,35 +305,23 @@ Läufer speichern
 
 <select id="scoreSkater"></select>
 
-<div class="judge">
-
 <h3>Richter 1</h3>
 
-<input type="number" step="0.1" id="a1" placeholder="Note A">
-<input type="number" step="0.1" id="b1" placeholder="Note B">
+<input type="number" step="0.1" id="a1" placeholder="A">
+<input type="number" step="0.1" id="b1" placeholder="B">
 <select id="d1"></select>
-
-</div>
-
-<div class="judge">
 
 <h3>Richter 2</h3>
 
-<input type="number" step="0.1" id="a2" placeholder="Note A">
-<input type="number" step="0.1" id="b2" placeholder="Note B">
+<input type="number" step="0.1" id="a2" placeholder="A">
+<input type="number" step="0.1" id="b2" placeholder="B">
 <select id="d2"></select>
-
-</div>
-
-<div class="judge">
 
 <h3>Richter 3</h3>
 
-<input type="number" step="0.1" id="a3" placeholder="Note A">
-<input type="number" step="0.1" id="b3" placeholder="Note B">
+<input type="number" step="0.1" id="a3" placeholder="A">
+<input type="number" step="0.1" id="b3" placeholder="B">
 <select id="d3"></select>
-
-</div>
 
 <button class="success"
 onclick="saveScore()">
@@ -254,17 +334,19 @@ Wertung speichern
 
 <div class="card">
 
-<h2>Ergebnisse</h2>
+<h2>🏆 Live Ergebnisse</h2>
 
 <button onclick="downloadPDF()">
 PDF Ergebnisliste
 </button>
 
-<h3>🏆 Podium</h3>
-
 <div id="podium"></div>
 
 <div id="resultList"></div>
+
+</div>
+
+</div>
 
 </div>
 
@@ -316,19 +398,10 @@ const deductions = {
 0:{text:"Kein Abzug",value:0.0},
 1:{text:"Knien oder Liegen",value:0.3},
 2:{text:"Kostümverstoß",value:0.2},
-3:{text:"Make-up Verstoß",value:0.3},
-4:{text:"Programmfehler",value:0.2},
-5:{text:"Programmbeginn zu spät",value:0.3},
-6:{text:"Zeitlimit Einlauf/Ausgang",value:0.3},
-7:{text:"Musikverstoß",value:0.3},
-8:{text:"Fläche verlassen",value:0.3},
-9:{text:"Fehlendes Element",value:0.5},
-10:{text:"Unterbrechung Programm",value:0.5},
-11:{text:"Falsche Musik",value:0.5},
-12:{text:"Zu lange Kür",value:0.5},
-13:{text:"Zu kurze Kür",value:0.5},
-14:{text:"Unsportliches Verhalten",value:1.0},
-15:{text:"Verbotenes Element",value:0.5}
+3:{text:"Programmfehler",value:0.2},
+4:{text:"Musikverstoß",value:0.3},
+5:{text:"Fläche verlassen",value:0.3},
+6:{text:"Fehlendes Element",value:0.5}
 
 };
 
@@ -345,7 +418,7 @@ Object.keys(deductions).forEach(k=>{
 el.innerHTML += `
 
 <option value="${k}">
-${k} - ${deductions[k].text}
+${deductions[k].text}
 (-${deductions[k].value})
 </option>
 
@@ -364,13 +437,6 @@ const place=document.getElementById("competitionPlace").value;
 const from=document.getElementById("competitionDateFrom").value;
 const to=document.getElementById("competitionDateTo").value;
 
-if(!name || !place || !from || !to){
-
-alert("Bitte alles ausfüllen");
-return;
-
-}
-
 await addDoc(collection(db,"competitions"),{
 name,place,from,to
 });
@@ -379,27 +445,13 @@ loadCompetitions();
 
 };
 
-window.deleteCompetition = async function(id){
-
-if(!confirm("Wettbewerb löschen?")) return;
-
-await deleteDoc(doc(db,"competitions",id));
-
-loadCompetitions();
-
-};
-
 window.saveCategory = async function(){
 
-const competitionId=document.getElementById("competitionSelect").value;
-const category=document.getElementById("categoryName").value;
+const competitionId=
+document.getElementById("competitionSelect").value;
 
-if(!competitionId || !category){
-
-alert("Bitte alles ausfüllen");
-return;
-
-}
+const category=
+document.getElementById("categoryName").value;
 
 await addDoc(collection(db,"categories"),{
 competitionId,
@@ -412,14 +464,23 @@ loadCategories();
 
 window.saveSkater = async function(){
 
-const competitionId=document.getElementById("competitionSelect").value;
-const category=document.getElementById("skaterCategory").value;
-const start=document.getElementById("skaterStart").value;
-const name=document.getElementById("skaterName").value;
+const competitionId=
+document.getElementById("competitionSelect").value;
 
-let club=document.getElementById("clubSelect").value;
+const category=
+document.getElementById("skaterCategory").value;
 
-const newClub=document.getElementById("skaterClub").value;
+const start=
+document.getElementById("skaterStart").value;
+
+const name=
+document.getElementById("skaterName").value;
+
+let club=
+document.getElementById("clubSelect").value;
+
+const newClub=
+document.getElementById("skaterClub").value;
 
 if(newClub){
 
@@ -428,13 +489,6 @@ club=newClub;
 await addDoc(collection(db,"clubs"),{
 name:newClub
 });
-
-}
-
-if(!competitionId || !category || !start || !name || !club){
-
-alert("Bitte alles ausfüllen");
-return;
 
 }
 
@@ -450,19 +504,10 @@ loadSkaters();
 
 };
 
-window.deleteSkater = async function(id){
-
-if(!confirm("Läufer löschen?")) return;
-
-await deleteDoc(doc(db,"skaters",id));
-
-loadSkaters();
-
-};
-
 window.saveScore = async function(){
 
-const skater=document.getElementById("scoreSkater").value;
+const skater=
+document.getElementById("scoreSkater").value;
 
 const total=
 
@@ -493,7 +538,8 @@ const list=document.getElementById("competitionList");
 select.innerHTML="";
 list.innerHTML="";
 
-const snapshot=await getDocs(collection(db,"competitions"));
+const snapshot=
+await getDocs(collection(db,"competitions"));
 
 snapshot.forEach((d)=>{
 
@@ -502,7 +548,7 @@ const c=d.data();
 select.innerHTML += `
 
 <option value="${d.id}">
-${c.name} | ${c.place}
+${c.name}
 </option>
 
 `;
@@ -521,15 +567,6 @@ ${c.place}
 
 ${c.from} bis ${c.to}
 
-<br><br>
-
-<button class="danger"
-onclick="deleteCompetition('${d.id}')">
-
-Wettbewerb löschen
-
-</button>
-
 </div>
 
 `;
@@ -544,7 +581,8 @@ loadResults();
 
 async function loadCategories(){
 
-const competitionId=document.getElementById("competitionSelect").value;
+const competitionId=
+document.getElementById("competitionSelect").value;
 
 const list=document.getElementById("categoryList");
 const select=document.getElementById("skaterCategory");
@@ -585,7 +623,8 @@ ${c.category}
 
 async function loadSkaters(){
 
-const competitionId=document.getElementById("competitionSelect").value;
+const competitionId=
+document.getElementById("competitionSelect").value;
 
 const list=document.getElementById("skaterList");
 const select=document.getElementById("scoreSkater");
@@ -608,19 +647,15 @@ list.innerHTML += `
 
 <div class="item">
 
-${s.start}<br>
-${s.name}<br>
-${s.club}<br>
+${s.start} - ${s.name}
+
+<br>
+
+${s.club}
+
+<br>
+
 ${s.category}
-
-<br><br>
-
-<button class="danger"
-onclick="deleteSkater('${d.id}')">
-
-Läufer löschen
-
-</button>
 
 </div>
 
@@ -640,7 +675,8 @@ ${s.start} - ${s.name}
 
 async function loadResults(){
 
-const competitionId=document.getElementById("competitionSelect").value;
+const competitionId=
+document.getElementById("competitionSelect").value;
 
 const list=document.getElementById("resultList");
 const podium=document.getElementById("podium");
@@ -648,26 +684,24 @@ const podium=document.getElementById("podium");
 list.innerHTML="";
 podium.innerHTML="";
 
-if(!competitionId) return;
-
 const skaterQuery=query(
 collection(db,"skaters"),
 where("competitionId","==",competitionId)
 );
 
-const skaterSnapshot=await getDocs(skaterQuery);
+const skaterSnapshot=
+await getDocs(skaterQuery);
 
 let skaterNames=[];
 
 skaterSnapshot.forEach((d)=>{
 
-const s=d.data();
-
-skaterNames.push(s.name);
+skaterNames.push(d.data().name);
 
 });
 
-const scoreSnapshot=await getDocs(collection(db,"scores"));
+const scoreSnapshot=
+await getDocs(collection(db,"scores"));
 
 let results=[];
 
@@ -689,7 +723,8 @@ results.forEach((r,i)=>{
 
 list.innerHTML += `
 
-<div class="item">
+<div class="item"
+style="border-left:6px solid #22c55e;">
 
 <strong>
 Platz ${i+1}
@@ -701,7 +736,6 @@ ${r.skater}
 
 <br>
 
-Gesamt:
 ${r.total}
 
 </div>
@@ -710,9 +744,9 @@ ${r.total}
 
 });
 
-if(results.length > 0){
+if(results.length){
 
-podium.innerHTML = `
+podium.innerHTML=`
 
 <div class="podium">
 
@@ -745,20 +779,17 @@ const { jsPDF } = window.jspdf;
 
 const doc = new jsPDF();
 
-const list =
-document.querySelectorAll("#resultList .item");
-
 let y = 20;
 
 doc.setFontSize(18);
 
-doc.text("RollArt Ergebnisliste",20,y);
+doc.text("RollArt Ergebnisse",20,y);
 
 y += 20;
 
-list.forEach((item)=>{
-
-doc.setFontSize(12);
+document
+.querySelectorAll("#resultList .item")
+.forEach((item)=>{
 
 doc.text(item.innerText,20,y);
 
@@ -772,7 +803,8 @@ doc.save("RollArt-Ergebnisse.pdf");
 
 async function loadClubs(){
 
-const select=document.getElementById("clubSelect");
+const select=
+document.getElementById("clubSelect");
 
 select.innerHTML=`
 
@@ -782,7 +814,8 @@ Verein auswählen
 
 `;
 
-const snapshot=await getDocs(collection(db,"clubs"));
+const snapshot=
+await getDocs(collection(db,"clubs"));
 
 snapshot.forEach((d)=>{
 
@@ -817,6 +850,13 @@ loadCompetitions();
 loadClubs();
 
 loadResults();
+
+setInterval(()=>{
+
+loadResults();
+loadSkaters();
+
+},3000);
 
 </script>
 
