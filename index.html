@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -131,6 +132,7 @@ font-size:14px;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -192,7 +194,7 @@ LIVE WETTKAMPF SYSTEM
 <input type="date" id="competitionTo">
 
 <button class="success" onclick="saveCompetition()">
-Wettbewerb speichern
+💾 Wettbewerb speichern
 </button>
 
 <div id="competitionOutput"></div>
@@ -323,28 +325,47 @@ const tabs = [
 ];
 
 tabs.forEach(id=>{
-document.getElementById(id).classList.add("hidden");
+
+const tab =
+document.getElementById(id);
+
+if(tab){
+tab.classList.add("hidden");
+}
+
 });
 
-document.getElementById(tabId).classList.remove("hidden");
+const active =
+document.getElementById(tabId);
+
+if(active){
+active.classList.remove("hidden");
+}
 
 }
 
-showTab("competitionTab");
-
 function saveCompetition(){
 
-competition.name =
-document.getElementById("competitionName").value;
+competition = {
 
-competition.place =
-document.getElementById("competitionPlace").value;
+name:
+document.getElementById("competitionName").value || "",
 
-competition.from =
-document.getElementById("competitionFrom").value;
+place:
+document.getElementById("competitionPlace").value || "",
 
-competition.to =
-document.getElementById("competitionTo").value;
+from:
+document.getElementById("competitionFrom").value || "",
+
+to:
+document.getElementById("competitionTo").value || ""
+
+};
+
+localStorage.setItem(
+"rollart_competition",
+JSON.stringify(competition)
+);
 
 document.getElementById("competitionOutput").innerHTML = `
 
@@ -357,6 +378,10 @@ document.getElementById("competitionOutput").innerHTML = `
 <br><br>
 
 📅 ${competition.from} bis ${competition.to}
+
+<br><br>
+
+✅ Gespeichert
 
 </div>
 
@@ -384,9 +409,7 @@ const typedarray =
 new Uint8Array(this.result);
 
 const pdf =
-await pdfjsLib
-.getDocument(typedarray)
-.promise;
+await pdfjsLib.getDocument(typedarray).promise;
 
 let fullText = "";
 
@@ -857,12 +880,7 @@ localStorage.setItem(
 JSON.stringify(categories)
 );
 
-localStorage.setItem(
-"rollart_competition",
-JSON.stringify(competition)
-);
-
-alert("✅ Wettbewerb gespeichert");
+alert("✅ Import gespeichert");
 
 }
 
@@ -909,6 +927,8 @@ saveCompetition();
 renderCategories();
 renderRunners();
 renderScores();
+
+showTab("competitionTab");
 
 }
 
