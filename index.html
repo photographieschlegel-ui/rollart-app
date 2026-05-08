@@ -1,4 +1,4 @@
-```html id="d5q8va"
+```html id="k8v2pn"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -8,7 +8,6 @@
 
 <title>RollArt Score Pro</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <style>
@@ -68,7 +67,26 @@ body{
   margin-top:20px;
 }
 
-input,button,select{
+.item{
+  background:#334155;
+  padding:16px;
+  border-radius:16px;
+  margin-top:12px;
+}
+
+.runner{
+  border-left:5px solid #22c55e;
+}
+
+.schedule{
+  border-left:5px solid #3b82f6;
+}
+
+.hidden{
+  display:none;
+}
+
+input,button{
   width:100%;
   padding:14px;
   margin-top:10px;
@@ -86,23 +104,13 @@ button{
   cursor:pointer;
 }
 
-.item{
-  background:#334155;
-  padding:16px;
-  border-radius:16px;
-  margin-top:12px;
-}
-
-.success{
-  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
-}
-
-.danger{
-  background:linear-gradient(135deg,#dc2626,#ef4444)!important;
-}
-
-.hidden{
-  display:none;
+.warning{
+  background:#f59e0b;
+  color:black;
+  padding:12px;
+  border-radius:12px;
+  margin-top:15px;
+  font-weight:bold;
 }
 
 </style>
@@ -124,23 +132,8 @@ LIVE WETTKAMPF SYSTEM
 <div class="tabs">
 
 <div class="tab"
-onclick="showTab('competitionsTab')">
-🏟 Wettbewerbe
-</div>
-
-<div class="tab"
-onclick="showTab('skaterTab')">
-👥 Läufer
-</div>
-
-<div class="tab"
-onclick="showTab('scoreTab')">
-📊 Wertung
-</div>
-
-<div class="tab"
-onclick="showTab('resultTab')">
-🏆 Ergebnisse
+onclick="showTab('pdfTab')">
+📄 PDF Import
 </div>
 
 <div class="tab"
@@ -149,121 +142,20 @@ onclick="showTab('scheduleTab')">
 </div>
 
 <div class="tab"
-onclick="showTab('pdfTab')">
-📄 PDF Import
+onclick="showTab('runnerTab')">
+👥 Läufer
 </div>
 
-</div>
-
-<!-- Wettbewerbe -->
-
-<div id="competitionsTab">
-
-<div class="card">
-
-<h2>Wettbewerb</h2>
-
-<input type="text"
-id="competitionName"
-placeholder="Wettbewerb">
-
-<input type="text"
-id="competitionPlace"
-placeholder="Ort">
-
-<input type="date"
-id="competitionDateFrom">
-
-<input type="date"
-id="competitionDateTo">
-
-<button>
-Wettbewerb speichern
-</button>
-
-</div>
-
-</div>
-
-<!-- Läufer -->
-
-<div id="skaterTab" class="hidden">
-
-<div class="card">
-
-<h2>Läufer</h2>
-
-<input type="text"
-placeholder="Name">
-
-<input type="text"
-placeholder="Verein">
-
-<button>
-Läufer speichern
-</button>
-
-</div>
-
-</div>
-
-<!-- Wertung -->
-
-<div id="scoreTab" class="hidden">
-
-<div class="card">
-
-<h2>Wertung</h2>
-
-<input type="number"
-placeholder="Technik">
-
-<input type="number"
-placeholder="Künstlerisch">
-
-<button class="success">
-Wertung speichern
-</button>
-
-</div>
-
-</div>
-
-<!-- Ergebnisse -->
-
-<div id="resultTab" class="hidden">
-
-<div class="card">
-
-<h2>🏆 Ergebnisse</h2>
-
-<div class="item">
-
-1. Platz
-
-</div>
-
-</div>
-
-</div>
-
-<!-- Zeitplan -->
-
-<div id="scheduleTab" class="hidden">
-
-<div class="card">
-
-<h2>🕒 Zeitplan</h2>
-
-<div id="scheduleList"></div>
-
+<div class="tab"
+onclick="showTab('scoreTab')">
+📊 Wertung
 </div>
 
 </div>
 
 <!-- PDF IMPORT -->
 
-<div id="pdfTab" class="hidden">
+<div id="pdfTab">
 
 <div class="card">
 
@@ -283,6 +175,54 @@ PDF auslesen
 
 </div>
 
+<!-- ZEITPLAN -->
+
+<div id="scheduleTab" class="hidden">
+
+<div class="card">
+
+<h2>🕒 Erkannte Zeitpläne</h2>
+
+<div id="scheduleOutput"></div>
+
+</div>
+
+</div>
+
+<!-- LÄUFER -->
+
+<div id="runnerTab" class="hidden">
+
+<div class="card">
+
+<h2>👥 Erkannte Läufer</h2>
+
+<div id="runnerOutput"></div>
+
+</div>
+
+</div>
+
+<!-- WERTUNG -->
+
+<div id="scoreTab" class="hidden">
+
+<div class="card">
+
+<h2>📊 Wertung</h2>
+
+<div class="warning">
+
+Wertungen erst ab Figurenläufer aktiv.
+
+</div>
+
+<div id="scoreInfo"></div>
+
+</div>
+
+</div>
+
 </div>
 
 <script>
@@ -291,12 +231,10 @@ function showTab(tabId){
 
 const tabs = [
 
-"competitionsTab",
-"skaterTab",
-"scoreTab",
-"resultTab",
+"pdfTab",
 "scheduleTab",
-"pdfTab"
+"runnerTab",
+"scoreTab"
 
 ];
 
@@ -314,7 +252,7 @@ document
 
 }
 
-showTab("competitionsTab");
+showTab("pdfTab");
 
 async function readPDF(){
 
@@ -372,8 +310,16 @@ reader.readAsArrayBuffer(file);
 
 function analyzePDF(text){
 
+analyzeSchedules(text);
+
+analyzeRunners(text);
+
+}
+
+function analyzeSchedules(text){
+
 const output =
-document.getElementById("pdfOutput");
+document.getElementById("scheduleOutput");
 
 output.innerHTML = "";
 
@@ -381,22 +327,6 @@ const regex =
 /(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+(.+?)(?=\d+\s+[A-ZÄÖÜ]|$)/gs;
 
 let matches = [...text.matchAll(regex)];
-
-if(matches.length === 0){
-
-output.innerHTML = `
-
-<div class="item">
-
-Keine Wettkampfzeilen erkannt.
-
-</div>
-
-`;
-
-return;
-
-}
 
 matches.forEach(match=>{
 
@@ -423,7 +353,7 @@ category = category
 
 output.innerHTML += `
 
-<div class="item">
+<div class="item schedule">
 
 <strong>
 ${category}
@@ -458,6 +388,100 @@ ${participants}
 `;
 
 });
+
+}
+
+function analyzeRunners(text){
+
+const output =
+document.getElementById("runnerOutput");
+
+output.innerHTML = "";
+
+const lines = text.split("\n");
+
+const runnerRegex =
+/(\d+)\s+([A-ZÄÖÜ][a-zäöüßA-ZÄÖÜ\s\-]+)\s+([A-ZÄÖÜa-zäöüß0-9\s\-]+)/;
+
+lines.forEach(line=>{
+
+const match = line.match(runnerRegex);
+
+if(match){
+
+const start = match[1];
+
+const name = match[2]
+.trim();
+
+const club = match[3]
+.trim();
+
+output.innerHTML += `
+
+<div class="item runner">
+
+<strong>
+${start}
+</strong>
+
+<br><br>
+
+👤 ${name}
+
+<br>
+
+🏢 ${club}
+
+</div>
+
+`;
+
+}
+
+});
+
+checkScoring(text);
+
+}
+
+function checkScoring(text){
+
+const scoreInfo =
+document.getElementById("scoreInfo");
+
+if(
+
+text.includes("Figurenläufer") ||
+text.includes("Kunstläufer") ||
+text.includes("Schüler") ||
+text.includes("Jugend")
+
+){
+
+scoreInfo.innerHTML = `
+
+<div class="item">
+
+✅ Wertung aktiv
+
+</div>
+
+`;
+
+}else{
+
+scoreInfo.innerHTML = `
+
+<div class="item">
+
+❌ Keine Wertung nötig
+
+</div>
+
+`;
+
+}
 
 }
 
