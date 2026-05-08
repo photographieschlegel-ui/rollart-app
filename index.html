@@ -1,4 +1,4 @@
-```html id="g7m2la"
+```html id="d5q8va"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -27,16 +27,10 @@ body{
   padding:20px;
 }
 
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
-}
-
 .logo{
   font-size:34px;
   font-weight:bold;
+  margin-bottom:20px;
 }
 
 .tabs{
@@ -67,12 +61,6 @@ body{
   margin-bottom:20px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
-  gap:20px;
-}
-
 .card{
   background:#1e293b;
   border-radius:20px;
@@ -98,6 +86,13 @@ button{
   cursor:pointer;
 }
 
+.item{
+  background:#334155;
+  padding:16px;
+  border-radius:16px;
+  margin-top:12px;
+}
+
 .success{
   background:linear-gradient(135deg,#16a34a,#22c55e)!important;
 }
@@ -106,42 +101,8 @@ button{
   background:linear-gradient(135deg,#dc2626,#ef4444)!important;
 }
 
-.item{
-  background:#334155;
-  padding:16px;
-  border-radius:16px;
-  margin-top:12px;
-}
-
-.podium{
-  display:flex;
-  gap:20px;
-  align-items:flex-end;
-  margin-top:30px;
-}
-
-.medal{
-  flex:1;
-  text-align:center;
-  border-radius:20px;
-  color:white;
-  font-weight:bold;
-  padding:20px;
-}
-
-.gold{
-  background:linear-gradient(135deg,#facc15,#eab308);
-  height:260px;
-}
-
-.silver{
-  background:linear-gradient(135deg,#cbd5e1,#94a3b8);
-  height:220px;
-}
-
-.bronze{
-  background:linear-gradient(135deg,#fb923c,#ea580c);
-  height:190px;
+.hidden{
+  display:none;
 }
 
 </style>
@@ -152,12 +113,8 @@ button{
 
 <div class="app">
 
-<div class="topbar">
-
 <div class="logo">
 🏆 RollArt Score Pro
-</div>
-
 </div>
 
 <div class="live-banner">
@@ -191,13 +148,18 @@ onclick="showTab('scheduleTab')">
 🕒 Zeitplan
 </div>
 
+<div class="tab"
+onclick="showTab('pdfTab')">
+📄 PDF Import
 </div>
 
-<div class="grid">
+</div>
 
-<div>
+<!-- Wettbewerbe -->
 
-<div class="card" id="competitionsTab">
+<div id="competitionsTab">
+
+<div class="card">
 
 <h2>Wettbewerb</h2>
 
@@ -215,147 +177,93 @@ id="competitionDateFrom">
 <input type="date"
 id="competitionDateTo">
 
-<button onclick="saveCompetition()">
+<button>
 Wettbewerb speichern
 </button>
 
-<select id="competitionSelect"></select>
-
-<div id="competitionList"></div>
+</div>
 
 </div>
 
-<div class="card" id="skaterTab">
+<!-- Läufer -->
 
-<h2>Kategorie + Zeitplan</h2>
+<div id="skaterTab" class="hidden">
 
-<input type="text"
-id="categoryName"
-placeholder="Kategorie">
-
-<input type="time"
-id="scheduleBegin">
-
-<input type="time"
-id="scheduleEnd">
-
-<input type="text"
-id="scheduleDuration"
-placeholder="Dauer">
-
-<input type="text"
-id="scheduleWarmup"
-placeholder="Einlaufzeit">
-
-<input type="number"
-id="scheduleGroups"
-placeholder="Einlaufgruppen">
-
-<input type="number"
-id="scheduleParticipants"
-placeholder="Teilnehmer">
-
-<button onclick="saveCategory();saveSchedule();">
-Kategorie speichern
-</button>
-
-<div id="categoryList"></div>
-
-<hr>
+<div class="card">
 
 <h2>Läufer</h2>
 
-<select id="skaterCategory"></select>
-
-<input type="number"
-id="skaterStart"
-placeholder="Startnummer">
-
 <input type="text"
-id="skaterName"
 placeholder="Name">
 
-<select id="clubSelect"></select>
-
 <input type="text"
-id="skaterClub"
-placeholder="Neuer Verein">
+placeholder="Verein">
 
-<button onclick="saveSkater()">
+<button>
 Läufer speichern
 </button>
 
-<div id="skaterList"></div>
-
 </div>
 
 </div>
 
-<div>
+<!-- Wertung -->
 
-<div class="card" id="scoreTab">
+<div id="scoreTab" class="hidden">
+
+<div class="card">
 
 <h2>Wertung</h2>
 
-<select id="scoreSkater"></select>
+<input type="number"
+placeholder="Technik">
 
-<h3>Richter 1</h3>
+<input type="number"
+placeholder="Künstlerisch">
 
-<input type="number" step="0.1" id="a1">
-<input type="number" step="0.1" id="b1">
-<select id="d1"></select>
-
-<h3>Richter 2</h3>
-
-<input type="number" step="0.1" id="a2">
-<input type="number" step="0.1" id="b2">
-<select id="d2"></select>
-
-<h3>Richter 3</h3>
-
-<input type="number" step="0.1" id="a3">
-<input type="number" step="0.1" id="b3">
-<select id="d3"></select>
-
-<button class="success"
-onclick="saveScore()">
+<button class="success">
 Wertung speichern
 </button>
 
 </div>
 
-<div class="card" id="resultTab">
+</div>
 
-<h2>🏆 Live Ergebnisse</h2>
+<!-- Ergebnisse -->
 
-<button onclick="downloadPDF()">
-PDF Ergebnisliste
-</button>
+<div id="resultTab" class="hidden">
 
-<div id="podium"></div>
+<div class="card">
 
-<div id="resultList"></div>
+<h2>🏆 Ergebnisse</h2>
+
+<div class="item">
+
+1. Platz
 
 </div>
 
-<div class="card" id="scheduleTab">
-
-<h2>🕒 Live Zeitplan</h2>
-
-<div id="liveNow"
-class="live-banner">
-Wettkampf startet...
 </div>
 
-<div id="nextSkater"
-class="item"></div>
+</div>
 
-<div id="countdownBox"
-class="item"></div>
+<!-- Zeitplan -->
+
+<div id="scheduleTab" class="hidden">
+
+<div class="card">
+
+<h2>🕒 Zeitplan</h2>
 
 <div id="scheduleList"></div>
 
 </div>
+
+</div>
+
+<!-- PDF IMPORT -->
+
+<div id="pdfTab" class="hidden">
 
 <div class="card">
 
@@ -377,100 +285,38 @@ PDF auslesen
 
 </div>
 
-</div>
+<script>
 
-<script type="module">
+function showTab(tabId){
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-addDoc,
-getDocs,
-query,
-where,
-deleteDoc,
-doc
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-
-apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-authDomain: "rollart-score-5319a.firebaseapp.com",
-projectId: "rollart-score-5319a",
-storageBucket: "rollart-score-5319a.firebasestorage.app",
-messagingSenderId: "658963624980",
-appId: "1:658963624980:web:2e4d153f5df087c4f42301"
-
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-
-const deductions = {
-
-0:{text:"Kein Abzug",value:0.0},
-1:{text:"Knien oder Liegen",value:0.3},
-2:{text:"Kostümverstoß",value:0.2},
-3:{text:"Programmfehler",value:0.2},
-4:{text:"Musikverstoß",value:0.3},
-5:{text:"Fläche verlassen",value:0.3},
-6:{text:"Fehlendes Element",value:0.5}
-
-};
-
-function fillDeductionDropdowns(){
-
-["d1","d2","d3"].forEach(id=>{
-
-const el=document.getElementById(id);
-
-el.innerHTML="";
-
-Object.keys(deductions).forEach(k=>{
-
-el.innerHTML += `
-
-<option value="${k}">
-${deductions[k].text}
-(-${deductions[k].value})
-</option>
-
-`;
-
-});
-
-});
-
-}
-
-window.showTab = function(tabId){
-
-const tabs=[
+const tabs = [
 
 "competitionsTab",
 "skaterTab",
 "scoreTab",
 "resultTab",
-"scheduleTab"
+"scheduleTab",
+"pdfTab"
 
 ];
 
 tabs.forEach(id=>{
 
-document.getElementById(id).style.display="none";
+document
+.getElementById(id)
+.classList.add("hidden");
 
 });
 
-document.getElementById(tabId).style.display="block";
+document
+.getElementById(tabId)
+.classList.remove("hidden");
 
-};
+}
 
-window.readPDF = async function(){
+showTab("competitionsTab");
+
+async function readPDF(){
 
 const file =
 document.getElementById("pdfUpload").files[0];
@@ -478,6 +324,7 @@ document.getElementById("pdfUpload").files[0];
 if(!file){
 
 alert("Bitte PDF auswählen");
+
 return;
 
 }
@@ -490,7 +337,9 @@ const typedarray =
 new Uint8Array(this.result);
 
 const pdf =
-await pdfjsLib.getDocument(typedarray).promise;
+await pdfjsLib
+.getDocument(typedarray)
+.promise;
 
 let fullText = "";
 
@@ -519,7 +368,7 @@ analyzePDF(fullText);
 
 reader.readAsArrayBuffer(file);
 
-};
+}
 
 function analyzePDF(text){
 
@@ -529,7 +378,7 @@ document.getElementById("pdfOutput");
 output.innerHTML = "";
 
 const regex =
-/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+(.+?)(?=\d+\s+[A-ZÄÖÜ])/gs;
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\d+)\s+(\d+)\s+(.+?)(?=\d+\s+[A-ZÄÖÜ]|$)/gs;
 
 let matches = [...text.matchAll(regex)];
 
@@ -538,7 +387,9 @@ if(matches.length === 0){
 output.innerHTML = `
 
 <div class="item">
+
 Keine Wettkampfzeilen erkannt.
+
 </div>
 
 `;
@@ -559,11 +410,15 @@ const participants = match[6];
 let category = match[7];
 
 category = category
-.replace(/\s+/g," ")
-.trim();
 
-category = category
+.replace(/\d{2}:\d{2}.*/,"")
+
+.replace(/\d{2}:\d{2}:\d{2}.*/,"")
+
 .replace(/\d+\s+[A-ZÄÖÜ][a-zäöüß]+.*$/,"")
+
+.replace(/\s+/g," ")
+
 .trim();
 
 output.innerHTML += `
@@ -605,8 +460,6 @@ ${participants}
 });
 
 }
-
-showTab("competitionsTab");
 
 </script>
 
