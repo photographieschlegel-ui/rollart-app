@@ -39,113 +39,12 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
-window.saveCompetition = async function(){
-
-const name =
-document.getElementById("competitionName").value;
-
-const place =
-document.getElementById("competitionPlace").value;
-
-const from =
-document.getElementById("competitionFrom").value;
-
-const to =
-document.getElementById("competitionTo").value;
-
-if(
-!name ||
-!place ||
-!from ||
-!to
-){
-alert("Bitte alles ausfüllen");
-return;
-}
-
-await addDoc(collection(db,"competitions"),{
-
-name,
-place,
-from,
-to,
-created:new Date()
-
-});
-
-document.getElementById("competitionName").value="";
-document.getElementById("competitionPlace").value="";
-document.getElementById("competitionFrom").value="";
-document.getElementById("competitionTo").value="";
-
-loadCompetitions();
-
-};
-
-window.deleteCompetition = async function(id){
-
-await deleteDoc(
-doc(db,"competitions",id)
-);
-
-loadCompetitions();
-
-};
-
-window.loadCompetitions = async function(){
-
-const list =
-document.getElementById("competitionList");
-
-list.innerHTML = "";
-
-const snapshot =
-await getDocs(
-collection(db,"competitions")
-);
-
-snapshot.forEach((d)=>{
-
-const c = d.data();
-
-list.innerHTML += `
-
-<div class="item">
-
-<strong>
-${c.name}
-</strong>
-
-<br><br>
-
-📍 ${c.place}
-
-<br>
-
-📅 ${c.from} bis ${c.to}
-
-<br><br>
-
-<button class="danger"
-onclick="deleteCompetition('${d.id}')">
-
-Löschen
-
-</button>
-
-</div>
-
-`;
-
-});
-
-};
-
-window.onload = ()=>{
-
-loadCompetitions();
-
-};
+window.db = db;
+window.collection = collection;
+window.addDoc = addDoc;
+window.getDocs = getDocs;
+window.deleteDoc = deleteDoc;
+window.doc = doc;
 
 </script>
 
@@ -339,6 +238,12 @@ Wettbewerb speichern
 
 </button>
 
+<h3>
+📋 Aktiver Wettbewerb
+</h3>
+
+<select id="activeCompetition"></select>
+
 <div id="competitionList"></div>
 
 </div>
@@ -360,6 +265,13 @@ accept=".pdf">
 <button onclick="readPDF()">
 
 PDF analysieren
+
+</button>
+
+<button class="success"
+onclick="saveAllData()">
+
+💾 Alles speichern
 
 </button>
 
@@ -444,6 +356,119 @@ document
 }
 
 showTab("competitionTab");
+
+async function saveCompetition(){
+
+const name =
+document.getElementById("competitionName").value;
+
+const place =
+document.getElementById("competitionPlace").value;
+
+const from =
+document.getElementById("competitionFrom").value;
+
+const to =
+document.getElementById("competitionTo").value;
+
+if(
+!name ||
+!place ||
+!from ||
+!to
+){
+alert("Bitte alles ausfüllen");
+return;
+}
+
+await addDoc(collection(db,"competitions"),{
+
+name,
+place,
+from,
+to,
+created:new Date()
+
+});
+
+loadCompetitions();
+
+}
+
+async function loadCompetitions(){
+
+const list =
+document.getElementById("competitionList");
+
+const select =
+document.getElementById("activeCompetition");
+
+list.innerHTML = "";
+select.innerHTML = "";
+
+const snapshot =
+await getDocs(collection(db,"competitions"));
+
+snapshot.forEach((d)=>{
+
+const c = d.data();
+
+list.innerHTML += `
+
+<div class="item">
+
+<strong>
+${c.name}
+</strong>
+
+<br><br>
+
+📍 ${c.place}
+
+<br>
+
+📅 ${c.from} bis ${c.to}
+
+<br><br>
+
+<button class="danger"
+onclick="deleteCompetition('${d.id}')">
+
+Löschen
+
+</button>
+
+</div>
+
+`;
+
+select.innerHTML += `
+
+<option value="${d.id}">
+${c.name}
+</option>
+
+`;
+
+});
+
+}
+
+async function deleteCompetition(id){
+
+await deleteDoc(
+doc(db,"competitions",id)
+);
+
+loadCompetitions();
+
+}
+
+window.onload = ()=>{
+
+loadCompetitions();
+
+};
 
 async function readPDF(){
 
@@ -531,11 +556,8 @@ if(!categoryMatch) return;
 
 let category =
 categoryMatch[1]
-
 .replace(/Startfolge Kür/gi,"")
-
 .replace(/Westhofener Kürpokal/gi,"")
-
 .trim();
 
 const categoryId =
@@ -565,15 +587,10 @@ runners.forEach(runner=>{
 importedRunners.push({
 
 id:Date.now()+Math.random(),
-
 categoryId,
-
 category,
-
 start:runner[1],
-
 name:runner[2],
-
 club:runner[3]
 
 });
@@ -799,7 +816,7 @@ importedRunners.push({
 
 id:Date.now()+Math.random(),
 categoryId:0,
-category:"Kategorie",
+category:"Neue Kategorie",
 start:"",
 name:"",
 club:""
@@ -807,6 +824,46 @@ club:""
 });
 
 renderRunners();
+
+}
+
+async function saveAllData(){
+
+const competitionId =
+document.getElementById("activeCompetition").value;
+
+if(!competitionId){
+
+alert("Bitte Wettbewerb auswählen");
+return;
+
+}
+
+for(const cat of importedCategories){
+
+await addDoc(
+collection(db,"categories"),
+{
+competitionId,
+...cat
+}
+);
+
+}
+
+for(const runner of importedRunners){
+
+await addDoc(
+collection(db,"runners"),
+{
+competitionId,
+...runner
+}
+);
+
+}
+
+alert("Alles gespeichert ✅");
 
 }
 
