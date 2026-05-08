@@ -85,18 +85,6 @@ body{
   padding:20px;
   margin-top:20px;
   box-shadow:0 10px 30px rgba(0,0,0,0.4);
-  animation:fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn{
-  from{
-    opacity:0;
-    transform:translateY(10px);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
 }
 
 h1,h2,h3{
@@ -118,12 +106,6 @@ input,button,select{
 button{
   background:linear-gradient(135deg,#2563eb,#7c3aed);
   font-weight:bold;
-  transition:0.3s;
-}
-
-button:hover{
-  transform:scale(1.02);
-  opacity:0.9;
 }
 
 .success{
@@ -139,11 +121,6 @@ button:hover{
   padding:16px;
   border-radius:16px;
   margin-top:12px;
-  transition:0.3s;
-}
-
-.item:hover{
-  transform:translateY(-2px);
 }
 
 .podium{
@@ -160,19 +137,6 @@ button:hover{
   color:white;
   font-weight:bold;
   padding:20px;
-  box-shadow:0 10px 20px rgba(0,0,0,0.3);
-  animation:pop 0.6s ease;
-}
-
-@keyframes pop{
-  0%{
-    transform:scale(0.8);
-    opacity:0;
-  }
-  100%{
-    transform:scale(1);
-    opacity:1;
-  }
 }
 
 .gold{
@@ -191,19 +155,6 @@ button:hover{
   background:linear-gradient(135deg,#fb923c,#ea580c);
   height:190px;
   font-size:22px;
-}
-
-@media(max-width:700px){
-
-  .podium{
-    flex-direction:column;
-    align-items:stretch;
-  }
-
-  .gold,.silver,.bronze{
-    height:auto;
-  }
-
 }
 
 </style>
@@ -231,7 +182,7 @@ LIVE WETTKAMPF SYSTEM
 <div class="tab">👥 Läufer</div>
 <div class="tab">📊 Wertung</div>
 <div class="tab">🏆 Ergebnisse</div>
-<div class="tab">⚙ Verwaltung</div>
+<div class="tab">🕒 Zeitplan</div>
 
 </div>
 
@@ -244,9 +195,11 @@ LIVE WETTKAMPF SYSTEM
 <h2>Wettbewerb</h2>
 
 <input type="text" id="competitionName" placeholder="Wettbewerb">
+
 <input type="text" id="competitionPlace" placeholder="Ort">
 
 <input type="date" id="competitionDateFrom">
+
 <input type="date" id="competitionDateTo">
 
 <button onclick="saveCompetition()">
@@ -261,11 +214,35 @@ Wettbewerb speichern
 
 <div class="card">
 
-<h2>Kategorien</h2>
+<h2>Kategorie + Zeitplan</h2>
 
-<input type="text" id="categoryName" placeholder="Kategorie">
+<input type="text"
+id="categoryName"
+placeholder="Kategorie">
 
-<button onclick="saveCategory()">
+<input type="time"
+id="scheduleBegin">
+
+<input type="time"
+id="scheduleEnd">
+
+<input type="text"
+id="scheduleDuration"
+placeholder="Dauer">
+
+<input type="text"
+id="scheduleWarmup"
+placeholder="Einlaufzeit">
+
+<input type="number"
+id="scheduleGroups"
+placeholder="Einlaufgruppen">
+
+<input type="number"
+id="scheduleParticipants"
+placeholder="Teilnehmer">
+
+<button onclick="saveCategory();saveSchedule();">
 Kategorie speichern
 </button>
 
@@ -279,13 +256,19 @@ Kategorie speichern
 
 <select id="skaterCategory"></select>
 
-<input type="number" id="skaterStart" placeholder="Startnummer">
+<input type="number"
+id="skaterStart"
+placeholder="Startnummer">
 
-<input type="text" id="skaterName" placeholder="Name">
+<input type="text"
+id="skaterName"
+placeholder="Name">
 
 <select id="clubSelect"></select>
 
-<input type="text" id="skaterClub" placeholder="Neuer Verein">
+<input type="text"
+id="skaterClub"
+placeholder="Neuer Verein">
 
 <button onclick="saveSkater()">
 Läufer speichern
@@ -307,20 +290,20 @@ Läufer speichern
 
 <h3>Richter 1</h3>
 
-<input type="number" step="0.1" id="a1" placeholder="A">
-<input type="number" step="0.1" id="b1" placeholder="B">
+<input type="number" step="0.1" id="a1">
+<input type="number" step="0.1" id="b1">
 <select id="d1"></select>
 
 <h3>Richter 2</h3>
 
-<input type="number" step="0.1" id="a2" placeholder="A">
-<input type="number" step="0.1" id="b2" placeholder="B">
+<input type="number" step="0.1" id="a2">
+<input type="number" step="0.1" id="b2">
 <select id="d2"></select>
 
 <h3>Richter 3</h3>
 
-<input type="number" step="0.1" id="a3" placeholder="A">
-<input type="number" step="0.1" id="b3" placeholder="B">
+<input type="number" step="0.1" id="a3">
+<input type="number" step="0.1" id="b3">
 <select id="d3"></select>
 
 <button class="success"
@@ -346,6 +329,22 @@ PDF Ergebnisliste
 
 </div>
 
+<div class="card">
+
+<h2>🕒 Live Zeitplan</h2>
+
+<div id="liveNow" class="live-banner">
+Wettkampf startet...
+</div>
+
+<div id="nextSkater" class="item"></div>
+
+<div id="countdownBox" class="item"></div>
+
+<div id="scheduleList"></div>
+
+</div>
+
 </div>
 
 </div>
@@ -365,9 +364,7 @@ collection,
 addDoc,
 getDocs,
 query,
-where,
-deleteDoc,
-doc
+where
 
 }
 
@@ -432,13 +429,13 @@ ${deductions[k].text}
 
 window.saveCompetition = async function(){
 
-const name=document.getElementById("competitionName").value;
-const place=document.getElementById("competitionPlace").value;
-const from=document.getElementById("competitionDateFrom").value;
-const to=document.getElementById("competitionDateTo").value;
-
 await addDoc(collection(db,"competitions"),{
-name,place,from,to
+
+name:competitionName.value,
+place:competitionPlace.value,
+from:competitionDateFrom.value,
+to:competitionDateTo.value
+
 });
 
 loadCompetitions();
@@ -447,57 +444,58 @@ loadCompetitions();
 
 window.saveCategory = async function(){
 
-const competitionId=
-document.getElementById("competitionSelect").value;
-
-const category=
-document.getElementById("categoryName").value;
-
 await addDoc(collection(db,"categories"),{
-competitionId,
-category
+
+competitionId:competitionSelect.value,
+category:categoryName.value
+
 });
 
 loadCategories();
 
 };
 
+window.saveSchedule = async function(){
+
+await addDoc(collection(db,"schedules"),{
+
+competitionId:competitionSelect.value,
+category:categoryName.value,
+begin:scheduleBegin.value,
+end:scheduleEnd.value,
+duration:scheduleDuration.value,
+warmup:scheduleWarmup.value,
+groups:scheduleGroups.value,
+participants:scheduleParticipants.value
+
+});
+
+loadSchedule();
+
+};
+
 window.saveSkater = async function(){
 
-const competitionId=
-document.getElementById("competitionSelect").value;
+let club = clubSelect.value;
 
-const category=
-document.getElementById("skaterCategory").value;
+if(skaterClub.value){
 
-const start=
-document.getElementById("skaterStart").value;
-
-const name=
-document.getElementById("skaterName").value;
-
-let club=
-document.getElementById("clubSelect").value;
-
-const newClub=
-document.getElementById("skaterClub").value;
-
-if(newClub){
-
-club=newClub;
+club = skaterClub.value;
 
 await addDoc(collection(db,"clubs"),{
-name:newClub
+name:club
 });
 
 }
 
 await addDoc(collection(db,"skaters"),{
-competitionId,
-category,
-start,
-name,
-club
+
+competitionId:competitionSelect.value,
+category:skaterCategory.value,
+start:skaterStart.value,
+name:skaterName.value,
+club:club
+
 });
 
 loadSkaters();
@@ -506,10 +504,7 @@ loadSkaters();
 
 window.saveScore = async function(){
 
-const skater=
-document.getElementById("scoreSkater").value;
-
-const total=
+const total =
 
 (+a1.value + +b1.value - deductions[d1.value].value)
 
@@ -522,8 +517,10 @@ const total=
 (+a3.value + +b3.value - deductions[d3.value].value);
 
 await addDoc(collection(db,"scores"),{
-skater,
+
+skater:scoreSkater.value,
 total:Number(total.toFixed(2))
+
 });
 
 loadResults();
@@ -532,20 +529,17 @@ loadResults();
 
 async function loadCompetitions(){
 
-const select=document.getElementById("competitionSelect");
-const list=document.getElementById("competitionList");
+competitionSelect.innerHTML="";
+competitionList.innerHTML="";
 
-select.innerHTML="";
-list.innerHTML="";
-
-const snapshot=
+const snapshot =
 await getDocs(collection(db,"competitions"));
 
 snapshot.forEach((d)=>{
 
 const c=d.data();
 
-select.innerHTML += `
+competitionSelect.innerHTML += `
 
 <option value="${d.id}">
 ${c.name}
@@ -553,11 +547,11 @@ ${c.name}
 
 `;
 
-list.innerHTML += `
+competitionList.innerHTML += `
 
 <div class="item">
 
-<strong>${c.name}</strong>
+${c.name}
 
 <br>
 
@@ -576,23 +570,18 @@ ${c.from} bis ${c.to}
 loadCategories();
 loadSkaters();
 loadResults();
+loadSchedule();
 
 }
 
 async function loadCategories(){
 
-const competitionId=
-document.getElementById("competitionSelect").value;
-
-const list=document.getElementById("categoryList");
-const select=document.getElementById("skaterCategory");
-
-list.innerHTML="";
-select.innerHTML="";
+categoryList.innerHTML="";
+skaterCategory.innerHTML="";
 
 const q=query(
 collection(db,"categories"),
-where("competitionId","==",competitionId)
+where("competitionId","==",competitionSelect.value)
 );
 
 const snapshot=await getDocs(q);
@@ -601,7 +590,7 @@ snapshot.forEach((d)=>{
 
 const c=d.data();
 
-list.innerHTML += `
+categoryList.innerHTML += `
 
 <div class="item">
 ${c.category}
@@ -609,7 +598,7 @@ ${c.category}
 
 `;
 
-select.innerHTML += `
+skaterCategory.innerHTML += `
 
 <option value="${c.category}">
 ${c.category}
@@ -623,18 +612,12 @@ ${c.category}
 
 async function loadSkaters(){
 
-const competitionId=
-document.getElementById("competitionSelect").value;
-
-const list=document.getElementById("skaterList");
-const select=document.getElementById("scoreSkater");
-
-list.innerHTML="";
-select.innerHTML="";
+skaterList.innerHTML="";
+scoreSkater.innerHTML="";
 
 const q=query(
 collection(db,"skaters"),
-where("competitionId","==",competitionId)
+where("competitionId","==",competitionSelect.value)
 );
 
 const snapshot=await getDocs(q);
@@ -643,7 +626,7 @@ snapshot.forEach((d)=>{
 
 const s=d.data();
 
-list.innerHTML += `
+skaterList.innerHTML += `
 
 <div class="item">
 
@@ -661,7 +644,7 @@ ${s.category}
 
 `;
 
-select.innerHTML += `
+scoreSkater.innerHTML += `
 
 <option value="${s.name}">
 ${s.start} - ${s.name}
@@ -675,45 +658,17 @@ ${s.start} - ${s.name}
 
 async function loadResults(){
 
-const competitionId=
-document.getElementById("competitionSelect").value;
-
-const list=document.getElementById("resultList");
-const podium=document.getElementById("podium");
-
-list.innerHTML="";
+resultList.innerHTML="";
 podium.innerHTML="";
 
-const skaterQuery=query(
-collection(db,"skaters"),
-where("competitionId","==",competitionId)
-);
-
-const skaterSnapshot=
-await getDocs(skaterQuery);
-
-let skaterNames=[];
-
-skaterSnapshot.forEach((d)=>{
-
-skaterNames.push(d.data().name);
-
-});
-
-const scoreSnapshot=
+const scoreSnapshot =
 await getDocs(collection(db,"scores"));
 
 let results=[];
 
 scoreSnapshot.forEach((d)=>{
 
-const r=d.data();
-
-if(skaterNames.includes(r.skater)){
-
-results.push(r);
-
-}
+results.push(d.data());
 
 });
 
@@ -721,10 +676,9 @@ results.sort((a,b)=>b.total-a.total);
 
 results.forEach((r,i)=>{
 
-list.innerHTML += `
+resultList.innerHTML += `
 
-<div class="item"
-style="border-left:6px solid #22c55e;">
+<div class="item">
 
 <strong>
 Platz ${i+1}
@@ -746,7 +700,7 @@ ${r.total}
 
 if(results.length){
 
-podium.innerHTML=`
+podium.innerHTML = `
 
 <div class="podium">
 
@@ -757,7 +711,7 @@ ${results[1] ? results[1].skater : "-"}
 
 <div class="medal gold">
 🥇<br>
-${results[0] ? results[0].skater : "-"}
+${results[0].skater}
 </div>
 
 <div class="medal bronze">
@@ -773,6 +727,141 @@ ${results[2] ? results[2].skater : "-"}
 
 }
 
+async function loadSchedule(){
+
+scheduleList.innerHTML="";
+
+const q=query(
+collection(db,"schedules"),
+where("competitionId","==",competitionSelect.value)
+);
+
+const snapshot=await getDocs(q);
+
+let schedules=[];
+
+snapshot.forEach((d)=>{
+
+schedules.push(d.data());
+
+});
+
+schedules.sort((a,b)=>
+a.begin.localeCompare(b.begin)
+);
+
+const now = new Date();
+
+const currentTime =
+now.toTimeString().slice(0,5);
+
+let current=null;
+let next=null;
+
+schedules.forEach((s,index)=>{
+
+if(currentTime >= s.begin &&
+currentTime <= s.end){
+
+current=s;
+
+next=schedules[index+1];
+
+}
+
+scheduleList.innerHTML += `
+
+<div class="item">
+
+<strong>${s.category}</strong>
+
+<br><br>
+
+🕒 ${s.begin} - ${s.end}
+
+<br>
+
+⏱ Dauer:
+${s.duration}
+
+<br>
+
+👥 Gruppen:
+${s.groups}
+
+<br>
+
+🏃 Teilnehmer:
+${s.participants}
+
+<br>
+
+🔥 Einlauf:
+${s.warmup}
+
+</div>
+
+`;
+
+});
+
+if(current){
+
+liveNow.innerHTML = `
+
+▶ Jetzt läuft:
+
+<br><br>
+
+${current.category}
+
+`;
+
+}
+
+if(next){
+
+nextSkater.innerHTML = `
+
+⏭ Als nächstes:
+
+<br><br>
+
+${next.category}
+
+<br>
+
+${next.begin}
+
+`;
+
+const target = new Date();
+
+target.setHours(next.begin.split(":")[0]);
+target.setMinutes(next.begin.split(":")[1]);
+
+const diff = target - now;
+
+const minutes =
+Math.floor(diff/60000);
+
+const seconds =
+Math.floor((diff%60000)/1000);
+
+countdownBox.innerHTML = `
+
+⏱ Countdown:
+
+<br><br>
+
+${minutes}m ${seconds}s
+
+`;
+
+}
+
+}
+
 window.downloadPDF = async function(){
 
 const { jsPDF } = window.jspdf;
@@ -780,8 +869,6 @@ const { jsPDF } = window.jspdf;
 const doc = new jsPDF();
 
 let y = 20;
-
-doc.setFontSize(18);
 
 doc.text("RollArt Ergebnisse",20,y);
 
@@ -803,10 +890,7 @@ doc.save("RollArt-Ergebnisse.pdf");
 
 async function loadClubs(){
 
-const select=
-document.getElementById("clubSelect");
-
-select.innerHTML=`
+clubSelect.innerHTML=`
 
 <option value="">
 Verein auswählen
@@ -821,7 +905,7 @@ snapshot.forEach((d)=>{
 
 const c=d.data();
 
-select.innerHTML += `
+clubSelect.innerHTML += `
 
 <option value="${c.name}">
 ${c.name}
@@ -833,13 +917,12 @@ ${c.name}
 
 }
 
-document
-.getElementById("competitionSelect")
-.addEventListener("change",()=>{
+competitionSelect.addEventListener("change",()=>{
 
 loadCategories();
 loadSkaters();
 loadResults();
+loadSchedule();
 
 });
 
@@ -851,12 +934,13 @@ loadClubs();
 
 loadResults();
 
+loadSchedule();
+
 setInterval(()=>{
 
-loadResults();
-loadSkaters();
+loadSchedule();
 
-},3000);
+},1000);
 
 </script>
 
