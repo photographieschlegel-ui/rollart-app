@@ -397,31 +397,42 @@ document.getElementById("runnerOutput");
 
 output.innerHTML = "";
 
-const lines = text.split("\n");
+const regex =
+/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\s\-]+?)\s+([A-ZÄÖÜa-zäöüß0-9\s\-]+?)(?=\s+\d+\s+[A-ZÄÖÜ]|$)/g;
 
-lines.forEach(line=>{
+let matches = [...text.matchAll(regex)];
 
-line = line
-.replace(/\s+/g," ")
-.trim();
+if(matches.length === 0){
 
-const match = line.match(
+output.innerHTML = `
 
-/^(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+?)\s+([A-ZÄÖÜ]{2,}.*)$/
+<div class="item">
 
-);
+Keine Läufer erkannt.
 
-if(match){
+</div>
+
+`;
+
+return;
+
+}
+
+matches.forEach(match=>{
 
 const start = match[1];
 
-const name = match[2].trim();
+let full = match[2]
+.replace(/\s+/g," ")
+.trim();
 
-const club = match[3].trim();
+let club = match[3]
+.replace(/\s+/g," ")
+.trim();
 
 if(
 
-name.length < 3 ||
+full.length < 3 ||
 club.length < 2
 
 ){
@@ -440,7 +451,7 @@ Start ${start}
 
 <br><br>
 
-👤 ${name}
+👤 ${full}
 
 <br>
 
@@ -449,8 +460,6 @@ Start ${start}
 </div>
 
 `;
-
-}
 
 });
 
