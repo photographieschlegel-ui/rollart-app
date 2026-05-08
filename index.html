@@ -111,8 +111,13 @@ button{
   background:linear-gradient(135deg,#dc2626,#ef4444)!important;
 }
 
-h3{
-  margin-top:20px;
+.categoryLabel{
+  background:#2563eb;
+  padding:6px 10px;
+  border-radius:10px;
+  display:inline-block;
+  margin-bottom:10px;
+  font-size:14px;
 }
 
 </style>
@@ -334,34 +339,6 @@ return;
 
 }
 
-try{
-
-const existing =
-await getDocs(collection(db,"competitions"));
-
-let duplicate = false;
-
-existing.forEach((d)=>{
-
-const c = d.data();
-
-if(
-c.name === name &&
-c.from === from
-){
-duplicate = true;
-}
-
-});
-
-if(duplicate){
-
-alert("Wettbewerb existiert bereits");
-
-return;
-
-}
-
 await addDoc(collection(db,"competitions"),{
 
 name,
@@ -372,23 +349,7 @@ created:new Date()
 
 });
 
-document.getElementById("competitionSaved").innerHTML = `
-
-<div class="item">
-
-✅ Wettbewerb gespeichert
-
-</div>
-
-`;
-
 loadCompetitions();
-
-}catch(error){
-
-alert(error.message);
-
-}
 
 };
 
@@ -441,8 +402,6 @@ Wettbewerb löschen
 
 window.deleteCompetition = async function(id){
 
-if(!confirm("Wettbewerb löschen?")) return;
-
 await deleteDoc(doc(db,"competitions",id));
 
 loadCompetitions();
@@ -463,14 +422,6 @@ alert("Bitte PDF auswählen");
 return;
 
 }
-
-document.getElementById("pdfInfo").innerHTML = `
-
-<div class="item">
-📄 PDF wird analysiert...
-</div>
-
-`;
 
 const reader = new FileReader();
 
@@ -601,12 +552,31 @@ document
 .getElementById("runnerOutput")
 .innerHTML = "";
 
+const categoryBlocks =
+text.split(/(?=\d{2}:\d{2}\s+\d{2}:\d{2})/g);
+
+let runnerCount = 0;
+
+categoryBlocks.forEach(block=>{
+
+const categoryMatch =
+block.match(/([A-Za-zÄÖÜäöüß0-9\s\.]+)\s+\d+\s+[A-ZÄÖÜ]/);
+
+if(!categoryMatch) return;
+
+let category =
+categoryMatch[1]
+.replace(/\s+/g," ")
+.trim();
+
+category = category
+.replace(/Westhofener Kürpokal/gi,"")
+.trim();
+
 const runnerRegex =
-/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+(?:\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+)+)\s+(SSG\s+[A-Za-zÄÖÜäöüß\-]+|RRD\s+[A-Za-zÄÖÜäöüß\-]+|Wattenscheider\s+RSC|TV\s+[A-Za-zÄÖÜäöüß0-9\-]+|TG\s+[A-Za-zÄÖÜäöüß\-]+|ERC\s+[A-Za-zÄÖÜäöüß\-]+|REV\s+[A-Za-zÄÖÜäöüß\-]+|TuS\s+[A-Za-zÄÖÜäöüß\-]+|SC\s+[A-Za-zÄÖÜäöüß\-]+|SV\s+[A-Za-zÄÖÜäöüß\-]+)/g;
+/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+?)\s+(TV\s+[A-Za-zÄÖÜäöüß0-9\- ]+|SSG\s+[A-Za-zÄÖÜäöüß\- ]+|RRD\s+[A-Za-zÄÖÜäöüß\- ]+|Wattenscheider\s+RSC|TG\s+[A-Za-zÄÖÜäöüß\- ]+|ERC\s+[A-Za-zÄÖÜäöüß\- ]+|REV\s+[A-Za-zÄÖÜäöüß\- ]+|TuS\s+[A-Za-zÄÖÜäöüß\- ]+|SC\s+[A-Za-zÄÖÜäöüß\- ]+|SV\s+[A-Za-zÄÖÜäöüß\- ]+)/g;
 
-let matches = [...text.matchAll(runnerRegex)];
-
-const unique = [];
+let matches = [...block.matchAll(runnerRegex)];
 
 matches.forEach(match=>{
 
@@ -621,29 +591,26 @@ const club = match[3]
 .trim();
 
 if(
-
-name.includes("Westhofener Kürpokal") ||
 name.includes("Startfolge") ||
-name.length < 4
-
+name.includes("Kürpokal") ||
+name.length < 3
 ){
-
 return;
-
 }
 
-const key =
-start + "-" + name + "-" + club;
-
-if(unique.includes(key)) return;
-
-unique.push(key);
+runnerCount++;
 
 document
 .getElementById("runnerOutput")
 .innerHTML += `
 
 <div class="item runner">
+
+<div class="categoryLabel">
+${category}
+</div>
+
+<br>
 
 <strong>
 Start ${start}
@@ -663,6 +630,8 @@ Start ${start}
 
 });
 
+});
+
 document.getElementById("pdfInfo").innerHTML = `
 
 <div class="item">
@@ -672,7 +641,7 @@ document.getElementById("pdfInfo").innerHTML = `
 <br><br>
 
 👥 Läufer erkannt:
-${unique.length}
+${runnerCount}
 
 </div>
 
