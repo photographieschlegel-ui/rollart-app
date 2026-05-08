@@ -1,4 +1,4 @@
-```html id="n6v2fk"
+```html id="u7m3kx"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -16,7 +16,7 @@ body{
   font-family:Arial,sans-serif;
   margin:0;
   padding:0;
-  background:#0f172a;
+ background:#0f172a;
   color:white;
 }
 
@@ -207,8 +207,6 @@ accept=".pdf">
 <button onclick="readPDF()">
 PDF auslesen
 </button>
-
-<div id="pdfOutput"></div>
 
 </div>
 
@@ -438,11 +436,12 @@ document.getElementById("runnerOutput");
 
 output.innerHTML = "";
 
-const lines = text
-.replace(/\s+/g," ")
-.match(/\d+\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-\s]+/g);
+const runnerRegex =
+/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+(?:\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+)+)\s+(SSG\s+[A-Za-zÄÖÜäöüß\-]+|TV\s+[A-Za-zÄÖÜäöüß0-9\-]+|Wattenscheider\s+RSC|ERC\s+[A-Za-zÄÖÜäöüß\-]+|REV\s+[A-Za-zÄÖÜäöüß\-]+|TuS\s+[A-Za-zÄÖÜäöüß\-]+|SC\s+[A-Za-zÄÖÜäöüß\-]+|SV\s+[A-Za-zÄÖÜäöüß\-]+)/g;
 
-if(!lines){
+let matches = [...text.matchAll(runnerRegex)];
+
+if(matches.length === 0){
 
 output.innerHTML = `
 
@@ -458,48 +457,17 @@ return;
 
 }
 
-const clubWords = [
+matches.forEach(match=>{
 
-"RSC",
-"ERC",
-"REV",
-"TV",
-"TuS",
-"SSG",
-"SC",
-"SV"
+const start = match[1];
 
-];
+const name = match[2]
+.replace(/\s+/g," ")
+.trim();
 
-lines.forEach(line=>{
-
-line = line.trim();
-
-const parts = line.split(" ");
-
-const start = parts.shift();
-
-let clubIndex = -1;
-
-parts.forEach((word,index)=>{
-
-if(clubWords.includes(word)){
-
-clubIndex = index;
-
-}
-
-});
-
-if(clubIndex === -1) return;
-
-const name = parts
-.slice(0,clubIndex)
-.join(" ");
-
-const club = parts
-.slice(clubIndex)
-.join(" ");
+const club = match[3]
+.replace(/\s+/g," ")
+.trim();
 
 output.innerHTML += `
 
