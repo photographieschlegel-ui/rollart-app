@@ -50,6 +50,10 @@
       cursor:pointer;
     }
 
+    .danger{
+      background:#b00020 !important;
+    }
+
     .item{
       background:#eef4f8;
       padding:12px;
@@ -73,6 +77,8 @@
     <input type="text" id="competitionName" placeholder="Wettbewerb">
 
     <input type="text" id="competitionPlace" placeholder="Ort">
+
+    <input type="date" id="competitionDate">
 
     <button onclick="saveCompetition()">
       Wettbewerb speichern
@@ -124,7 +130,9 @@ import {
   getDocs,
   query,
   orderBy,
-  where
+  where,
+  deleteDoc,
+  doc
 
 }
 
@@ -156,7 +164,9 @@ window.saveCompetition = async function () {
 
   const place = document.getElementById("competitionPlace").value;
 
-  if(!name || !place){
+  const date = document.getElementById("competitionDate").value;
+
+  if(!name || !place || !date){
 
     alert("Bitte alles ausfüllen");
 
@@ -173,6 +183,7 @@ window.saveCompetition = async function () {
       {
         name:name,
         place:place,
+        date:date,
         created:new Date().toISOString()
       }
 
@@ -181,6 +192,8 @@ window.saveCompetition = async function () {
     document.getElementById("competitionName").value = "";
 
     document.getElementById("competitionPlace").value = "";
+
+    document.getElementById("competitionDate").value = "";
 
     loadCompetitions();
 
@@ -200,13 +213,23 @@ window.saveCompetition = async function () {
 
 window.saveCategory = async function(){
 
-  const competitionId = document.getElementById("competitionSelect").value;
+  const competitionId =
+  document.getElementById("competitionSelect").value;
 
-  const category = document.getElementById("categoryName").value;
+  const category =
+  document.getElementById("categoryName").value;
 
-  if(!competitionId || !category){
+  if(!competitionId){
 
-    alert("Bitte alles ausfüllen");
+    alert("Bitte Wettbewerb auswählen");
+
+    return;
+
+  }
+
+  if(!category){
+
+    alert("Bitte Kategorie eingeben");
 
     return;
 
@@ -244,6 +267,26 @@ window.saveCategory = async function(){
 
 };
 
+window.deleteCompetition = async function(id){
+
+  if(!confirm("Wettbewerb löschen?")) return;
+
+  await deleteDoc(doc(db,"competitions",id));
+
+  loadCompetitions();
+
+};
+
+window.deleteCategory = async function(id){
+
+  if(!confirm("Kategorie löschen?")) return;
+
+  await deleteDoc(doc(db,"categories",id));
+
+  loadCategories();
+
+};
+
 async function loadCompetitions(){
 
   const select = document.getElementById("competitionSelect");
@@ -260,15 +303,15 @@ async function loadCompetitions(){
 
   const snapshot = await getDocs(q);
 
-  snapshot.forEach((doc) => {
+  snapshot.forEach((d) => {
 
-    const c = doc.data();
+    const c = d.data();
 
     select.innerHTML += `
 
-      <option value="${doc.id}">
+      <option value="${d.id}">
 
-        ${c.name} - ${c.place}
+        ${c.name} - ${c.place} - ${c.date}
 
       </option>
 
@@ -276,15 +319,75 @@ async function loadCompetitions(){
 
   });
 
+  loadCompetitionList();
+
   loadCategories();
+
+}
+
+async function loadCompetitionList(){
+
+  const old =
+  document.getElementById("competitionItems");
+
+  if(old) old.remove();
+
+  const div = document.createElement("div");
+
+  div.id = "competitionItems";
+
+  document.querySelector(".app").appendChild(div);
+
+  const q = query(
+
+    collection(db,"competitions"),
+
+    orderBy("created","desc")
+
+  );
+
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach((d) => {
+
+    const c = d.data();
+
+    div.innerHTML += `
+
+      <div class="card">
+
+        <div class="item">
+
+          <strong>${c.name}</strong><br>
+
+          ${c.place}<br>
+
+          ${c.date}<br><br>
+
+          <button class="danger"
+          onclick="deleteCompetition('${d.id}')">
+
+            Wettbewerb löschen
+
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  });
 
 }
 
 async function loadCategories(){
 
-  const competitionId = document.getElementById("competitionSelect").value;
+  const competitionId =
+  document.getElementById("competitionSelect").value;
 
-  const list = document.getElementById("categoryList");
+  const list =
+  document.getElementById("categoryList");
 
   list.innerHTML = "";
 
@@ -302,15 +405,24 @@ async function loadCategories(){
 
   const snapshot = await getDocs(q);
 
-  snapshot.forEach((doc) => {
+  snapshot.forEach((d) => {
 
-    const c = doc.data();
+    const c = d.data();
 
     list.innerHTML += `
 
       <div class="item">
 
         ${c.category}
+
+        <br><br>
+
+        <button class="danger"
+        onclick="deleteCategory('${d.id}')">
+
+          Kategorie löschen
+
+        </button>
 
       </div>
 
