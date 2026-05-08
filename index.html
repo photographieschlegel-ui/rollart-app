@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -13,154 +12,125 @@
 <style>
 
 body{
-  margin:0;
-  padding:0;
-  background:#0f172a;
-  color:white;
-  font-family:Arial,sans-serif;
+margin:0;
+padding:0;
+background:#0f172a;
+color:white;
+font-family:Arial,sans-serif;
 }
 
 .app{
-  max-width:1800px;
-  margin:auto;
-  padding:20px;
+max-width:1800px;
+margin:auto;
+padding:20px;
 }
 
 .logo{
-  font-size:34px;
-  font-weight:bold;
-  margin-bottom:20px;
+font-size:34px;
+font-weight:bold;
+margin-bottom:20px;
 }
 
 .live-banner{
-  background:linear-gradient(135deg,#7c3aed,#2563eb);
-  padding:20px;
-  border-radius:20px;
-  text-align:center;
-  font-size:28px;
-  font-weight:bold;
-  margin-bottom:20px;
+background:linear-gradient(135deg,#7c3aed,#2563eb);
+padding:20px;
+border-radius:20px;
+text-align:center;
+font-size:28px;
+font-weight:bold;
+margin-bottom:20px;
 }
 
 .tabs{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:20px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:20px;
 }
 
 .tab{
-  background:#1e293b;
-  padding:12px 20px;
-  border-radius:14px;
-  cursor:pointer;
+background:#1e293b;
+padding:12px 20px;
+border-radius:14px;
+cursor:pointer;
 }
 
 .tab:hover{
-  background:#334155;
+background:#334155;
 }
 
 .card{
-  background:#1e293b;
-  border-radius:20px;
-  padding:20px;
-  margin-top:20px;
+background:#1e293b;
+border-radius:20px;
+padding:20px;
+margin-top:20px;
 }
 
 .item{
-  background:#334155;
-  padding:16px;
-  border-radius:16px;
-  margin-top:12px;
+background:#334155;
+padding:16px;
+border-radius:16px;
+margin-top:12px;
 }
 
 .runner{
-  border-left:5px solid #22c55e;
-}
-
-.score{
-  border-left:5px solid #f59e0b;
+border-left:5px solid #22c55e;
 }
 
 .category{
-  border-left:5px solid #3b82f6;
+border-left:5px solid #3b82f6;
+}
+
+.score{
+border-left:5px solid #f59e0b;
 }
 
 .hidden{
-  display:none;
+display:none;
 }
 
 button,input,select{
-  width:100%;
-  padding:14px;
-  margin-top:10px;
-  border-radius:14px;
-  border:none;
-  background:#475569;
-  color:white;
-  font-size:16px;
-  box-sizing:border-box;
+width:100%;
+padding:14px;
+margin-top:10px;
+border-radius:14px;
+border:none;
+background:#475569;
+color:white;
+font-size:16px;
+box-sizing:border-box;
 }
 
 button{
-  cursor:pointer;
-  font-weight:bold;
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
+cursor:pointer;
+font-weight:bold;
+background:linear-gradient(135deg,#2563eb,#7c3aed);
 }
 
 .success{
-  background:linear-gradient(135deg,#16a34a,#22c55e)!important;
+background:linear-gradient(135deg,#16a34a,#22c55e)!important;
 }
 
 .danger{
-  background:linear-gradient(135deg,#dc2626,#ef4444)!important;
-}
-
-.categoryLabel{
-  background:#2563eb;
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:10px;
-  margin-bottom:10px;
-  font-size:14px;
+background:linear-gradient(135deg,#dc2626,#ef4444)!important;
 }
 
 .grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
-  gap:15px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+gap:15px;
 }
 
-.podium{
-  display:flex;
-  gap:15px;
-  margin-top:20px;
-  flex-wrap:wrap;
-}
-
-.place{
-  flex:1;
-  min-width:200px;
-  border-radius:20px;
-  padding:20px;
-  text-align:center;
-  font-weight:bold;
-}
-
-.gold{
-  background:linear-gradient(135deg,#facc15,#ca8a04);
-}
-
-.silver{
-  background:linear-gradient(135deg,#cbd5e1,#94a3b8);
-}
-
-.bronze{
-  background:linear-gradient(135deg,#fb923c,#c2410c);
+.categoryLabel{
+background:#2563eb;
+display:inline-block;
+padding:6px 10px;
+border-radius:10px;
+margin-bottom:10px;
+font-size:14px;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -177,33 +147,27 @@ LIVE WETTKAMPF SYSTEM
 
 <div class="tabs">
 
-<div class="tab"
-onclick="showTab('competitionTab')">
+<div class="tab" onclick="showTab('competitionTab')">
 🏟 Wettbewerb
 </div>
 
-<div class="tab"
-onclick="showTab('pdfTab')">
+<div class="tab" onclick="showTab('pdfTab')">
 📄 PDF Import
 </div>
 
-<div class="tab"
-onclick="showTab('categoryTab')">
+<div class="tab" onclick="showTab('categoryTab')">
 🕒 Kategorien
 </div>
 
-<div class="tab"
-onclick="showTab('runnerTab')">
+<div class="tab" onclick="showTab('runnerTab')">
 👥 Läufer
 </div>
 
-<div class="tab"
-onclick="showTab('scoreTab')">
+<div class="tab" onclick="showTab('scoreTab')">
 ⭐ Wertung
 </div>
 
-<div class="tab"
-onclick="showTab('resultTab')">
+<div class="tab" onclick="showTab('resultTab')">
 🏆 Ergebnisse
 </div>
 
@@ -217,29 +181,18 @@ onclick="showTab('resultTab')">
 
 <h2>🏟 Wettbewerb</h2>
 
-<input type="text"
-id="competitionName"
-placeholder="Wettbewerb">
+<input type="text" id="competitionName" placeholder="Wettbewerb">
 
-<input type="text"
-id="competitionPlace"
-placeholder="Ort">
+<input type="text" id="competitionPlace" placeholder="Ort">
 
 <label>Von</label>
-
-<input type="date"
-id="competitionFrom">
+<input type="date" id="competitionFrom">
 
 <label>Bis</label>
+<input type="date" id="competitionTo">
 
-<input type="date"
-id="competitionTo">
-
-<button class="success"
-onclick="saveCompetition()">
-
+<button class="success" onclick="saveCompetition()">
 Wettbewerb speichern
-
 </button>
 
 <div id="competitionOutput"></div>
@@ -256,21 +209,14 @@ Wettbewerb speichern
 
 <h2>📄 PDF Import</h2>
 
-<input type="file"
-id="pdfUpload"
-accept=".pdf">
+<input type="file" id="pdfUpload" accept=".pdf">
 
 <button onclick="readPDF()">
-
 PDF analysieren
-
 </button>
 
-<button class="success"
-onclick="saveImportedData()">
-
+<button class="success" onclick="saveImportedData()">
 💾 Import speichern
-
 </button>
 
 <div id="pdfInfo"></div>
@@ -287,15 +233,11 @@ onclick="saveImportedData()">
 
 <h2>🕒 Kategorien</h2>
 
-<button class="success"
-onclick="addCategory()">
-
+<button class="success" onclick="addCategory()">
 + Kategorie hinzufügen
-
 </button>
 
-<div id="categoryOutput"
-class="grid"></div>
+<div id="categoryOutput" class="grid"></div>
 
 </div>
 
@@ -309,15 +251,11 @@ class="grid"></div>
 
 <h2>👥 Läufer</h2>
 
-<button class="success"
-onclick="addRunner()">
-
+<button class="success" onclick="addRunner()">
 + Läufer hinzufügen
-
 </button>
 
-<div id="runnerOutput"
-class="grid"></div>
+<div id="runnerOutput" class="grid"></div>
 
 </div>
 
@@ -331,8 +269,7 @@ class="grid"></div>
 
 <h2>⭐ Punkte & Abzüge</h2>
 
-<div id="scoreOutput"
-class="grid"></div>
+<div id="scoreOutput" class="grid"></div>
 
 </div>
 
@@ -344,24 +281,15 @@ class="grid"></div>
 
 <div class="card">
 
-<h2>🏆 Platzierungen</h2>
+<h2>🏆 Ergebnisse</h2>
 
-<button class="success"
-onclick="calculateRanking()">
-
+<button class="success" onclick="calculateRanking()">
 🏆 Plätze berechnen
-
 </button>
 
-<button class="success"
-onclick="exportPDF()">
-
+<button class="success" onclick="exportPDF()">
 📄 Ergebnisse als PDF speichern
-
 </button>
-
-<div id="podium"
-class="podium"></div>
 
 <div id="resultOutput"></div>
 
@@ -395,16 +323,10 @@ const tabs = [
 ];
 
 tabs.forEach(id=>{
-
-document
-.getElementById(id)
-.classList.add("hidden");
-
+document.getElementById(id).classList.add("hidden");
 });
 
-document
-.getElementById(tabId)
-.classList.remove("hidden");
+document.getElementById(tabId).classList.remove("hidden");
 
 }
 
@@ -424,23 +346,17 @@ document.getElementById("competitionFrom").value;
 competition.to =
 document.getElementById("competitionTo").value;
 
-document
-.getElementById("competitionOutput")
-.innerHTML = `
+document.getElementById("competitionOutput").innerHTML = `
 
 <div class="item">
 
-<h3>
-🏆 ${competition.name}
-</h3>
+<h3>🏆 ${competition.name}</h3>
 
 📍 ${competition.place}
 
 <br><br>
 
-📅 ${competition.from}
-bis
-${competition.to}
+📅 ${competition.from} bis ${competition.to}
 
 </div>
 
@@ -474,9 +390,7 @@ await pdfjsLib
 
 let fullText = "";
 
-for(let pageNum=1;
-pageNum<=pdf.numPages;
-pageNum++){
+for(let pageNum=1; pageNum<=pdf.numPages; pageNum++){
 
 const page =
 await pdf.getPage(pageNum);
@@ -511,63 +425,76 @@ const cleanedText = text
 .replace(/\s+/g," ")
 .trim();
 
-const blocks =
-cleanedText.match(
-/(\d{2}:\d{2}\s+\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}\s+\d+\s+\d+[\s\S]*?)(?=\d{2}:\d{2}\s+\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}|$)/g
-);
+const blockRegex =
+/(\d{2}:\d{2})\s+
+(\d{2}:\d{2})\s+
+(\d{2}:\d{2}:\d{2})\s+
+(\d{2}:\d{2}:\d{2})\s+
+(\d+)\s+
+(\d+)\s+
+([\s\S]*?)
+(?=
+\d{2}:\d{2}\s+
+\d{2}:\d{2}\s+
+\d{2}:\d{2}:\d{2}
+|$)/gx;
 
-if(blocks){
+const blocks =
+[...cleanedText.matchAll(blockRegex)];
 
 blocks.forEach((block)=>{
 
-const timeMatch =
-block.match(
-/(\d{2}:\d{2})\s+(\d{2}:\d{2})/
-);
+const begin = block[1];
+const end = block[2];
+const participants = block[6];
 
-if(!timeMatch) return;
-
-const begin = timeMatch[1];
-const end = timeMatch[2];
-
-let categoryName = "";
+let content =
+block[7]
+.replace(/\s+/g," ")
+.trim();
 
 const categoryMatch =
-block.match(
-/\d+\s+\d+\s+([A-Za-zÄÖÜäöüß0-9\s\.]+?)\s+\d+\s+[A-ZÄÖÜ]/
+content.match(
+/^(.*?)(?=\d+\s+[A-ZÄÖÜ])/
 );
 
-if(categoryMatch){
+if(!categoryMatch) return;
 
-categoryName =
+let categoryName =
 categoryMatch[1]
-.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
 .replace(/Startfolge Kür/gi,"")
 .replace(/Westhofener Kürpokal/gi,"")
+.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
 .replace(/\d{2}\.\d{2}\.\d{4}/g,"")
 .replace(/\s+/g," ")
 .trim();
 
-}
-
-if(categoryName.length > 2){
+if(categoryName.length < 3) return;
 
 categories.push({
 
 id:Date.now()+Math.random(),
-
 name:categoryName,
-
 begin,
-end
+end,
+participants
 
 });
 
 const runnerRegex =
-/(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+(SSG\sRonsdorf|RRD\sWuppertal|Wattenscheider\sRSC|TG\sWesthofen|TV\sDatteln\s09|TV\sWalsum-Aldenrade\s07|TV\sWalsum\s-\sAldenrade)/g;
+/(\d+)\s+
+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)
+\s+
+(SSG\sRonsdorf|
+RRD\sWuppertal|
+Wattenscheider\sRSC|
+TG\sWesthofen|
+TV\sDatteln\s09|
+TV\sWalsum-Aldenrade\s07|
+TV\sWalsum\s-\sAldenrade)/gx;
 
 const foundRunners =
-[...block.matchAll(runnerRegex)];
+[...content.matchAll(runnerRegex)];
 
 foundRunners.forEach(runner=>{
 
@@ -577,9 +504,9 @@ id:Date.now()+Math.random(),
 
 start:runner[1],
 
-name:runner[2],
+name:runner[2].trim(),
 
-club:runner[3],
+club:runner[3].trim(),
 
 category:categoryName,
 
@@ -592,19 +519,13 @@ gesamt:0
 
 });
 
-}
-
 });
-
-}
 
 renderCategories();
 renderRunners();
 renderScores();
 
-document
-.getElementById("pdfInfo")
-.innerHTML = `
+document.getElementById("pdfInfo").innerHTML = `
 
 <div class="item">
 
@@ -612,13 +533,11 @@ document
 
 <br><br>
 
-🕒 Kategorien:
-${categories.length}
+🕒 Kategorien: ${categories.length}
 
 <br>
 
-👥 Läufer:
-${runners.length}
+👥 Läufer: ${runners.length}
 
 </div>
 
@@ -649,7 +568,7 @@ document.getElementById("categoryOutput");
 
 output.innerHTML = "";
 
-categories.forEach((cat)=>{
+categories.forEach(cat=>{
 
 output.innerHTML += `
 
@@ -716,7 +635,7 @@ document.getElementById("runnerOutput");
 
 output.innerHTML = "";
 
-runners.forEach((runner)=>{
+runners.forEach(runner=>{
 
 output.innerHTML += `
 
@@ -725,19 +644,19 @@ output.innerHTML += `
 <label>Startnummer</label>
 
 <input
-value="${runner.start || ''}"
+value="${runner.start}"
 onchange="updateRunner(${runner.id},'start',this.value)">
 
 <label>Name</label>
 
 <input
-value="${runner.name || ''}"
+value="${runner.name}"
 onchange="updateRunner(${runner.id},'name',this.value)">
 
 <label>Verein</label>
 
 <input
-value="${runner.club || ''}"
+value="${runner.club}"
 onchange="updateRunner(${runner.id},'club',this.value)">
 
 <label>Kategorie</label>
@@ -753,7 +672,7 @@ ${categories.map(cat=>`
 
 <option
 value="${cat.name}"
-${runner.category === cat.name ? "selected" : ""}>
+${runner.category===cat.name ? "selected" : ""}>
 
 ${cat.name}
 
@@ -785,7 +704,7 @@ document.getElementById("scoreOutput");
 
 output.innerHTML = "";
 
-runners.forEach((runner)=>{
+runners.forEach(runner=>{
 
 runner.gesamt =
 (
@@ -802,11 +721,9 @@ output.innerHTML += `
 ${runner.category || 'Keine Kategorie'}
 </div>
 
-<h3>
-${runner.name || 'Unbekannt'}
-</h3>
+<h3>${runner.name}</h3>
 
-🏢 ${runner.club || '-'}
+🏢 ${runner.club}
 
 <label>⭐ Technik</label>
 
@@ -829,15 +746,7 @@ step="0.1"
 value="${runner.abzug}"
 onchange="updateRunner(${runner.id},'abzug',this.value)">
 
-<div style="
-margin-top:15px;
-padding:14px;
-background:#0f172a;
-border-radius:14px;
-font-size:22px;
-font-weight:bold;
-text-align:center;
-">
+<div class="item">
 
 🏆 Gesamt:
 ${runner.gesamt.toFixed(2)}
@@ -857,57 +766,11 @@ function calculateRanking(){
 const output =
 document.getElementById("resultOutput");
 
-const podium =
-document.getElementById("podium");
-
 output.innerHTML = "";
-podium.innerHTML = "";
 
 const sorted =
 [...runners]
 .sort((a,b)=>b.gesamt-a.gesamt);
-
-if(sorted[0]){
-
-podium.innerHTML += `
-<div class="place gold">
-🥇 1. Platz
-<br><br>
-${sorted[0].name}
-<br>
-${sorted[0].gesamt.toFixed(2)}
-</div>
-`;
-
-}
-
-if(sorted[1]){
-
-podium.innerHTML += `
-<div class="place silver">
-🥈 2. Platz
-<br><br>
-${sorted[1].name}
-<br>
-${sorted[1].gesamt.toFixed(2)}
-</div>
-`;
-
-}
-
-if(sorted[2]){
-
-podium.innerHTML += `
-<div class="place bronze">
-🥉 3. Platz
-<br><br>
-${sorted[2].name}
-<br>
-${sorted[2].gesamt.toFixed(2)}
-</div>
-`;
-
-}
 
 sorted.forEach((runner,index)=>{
 
@@ -918,25 +781,18 @@ output.innerHTML += `
 <h3>${index+1}. Platz</h3>
 
 👤 ${runner.name}
+
 <br>
 
 🏢 ${runner.club}
+
 <br>
 
 📂 ${runner.category}
+
 <br><br>
 
-⭐ Technik: ${runner.technik}
-<br>
-
-🎨 Kunst: ${runner.kunst}
-<br>
-
-❌ Abzüge: ${runner.abzug}
-<br><br>
-
-🏆 Gesamt:
-<strong>${runner.gesamt.toFixed(2)}</strong>
+🏆 ${runner.gesamt.toFixed(2)} Punkte
 
 </div>
 
@@ -954,8 +810,6 @@ const doc = new jsPDF();
 
 let y = 20;
 
-doc.setFontSize(18);
-
 doc.text(
 competition.name || "RollArt Wettbewerb",
 20,
@@ -963,24 +817,6 @@ y
 );
 
 y += 10;
-
-doc.setFontSize(12);
-
-doc.text(
-competition.place || "",
-20,
-y
-);
-
-y += 10;
-
-doc.text(
-`${competition.from} bis ${competition.to}`,
-20,
-y
-);
-
-y += 20;
 
 const sorted =
 [...runners]
@@ -1042,17 +878,11 @@ const savedCompetition =
 localStorage.getItem("rollart_competition");
 
 if(savedRunners){
-
-runners =
-JSON.parse(savedRunners);
-
+runners = JSON.parse(savedRunners);
 }
 
 if(savedCategories){
-
-categories =
-JSON.parse(savedCategories);
-
+categories = JSON.parse(savedCategories);
 }
 
 if(savedCompetition){
