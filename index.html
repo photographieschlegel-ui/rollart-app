@@ -13,9 +13,9 @@
 body{
 margin:0;
 padding:0;
+font-family:Arial,sans-serif;
 background:#0f172a;
 color:white;
-font-family:Arial,sans-serif;
 }
 
 .app{
@@ -32,21 +32,27 @@ margin-bottom:20px;
 
 .tabs{
 display:flex;
-gap:10px;
 flex-wrap:wrap;
+gap:10px;
 margin-bottom:20px;
 }
 
-.tab{
+.tabButton{
+padding:14px 20px;
 background:#1e293b;
-padding:12px 20px;
+border:none;
 border-radius:14px;
+color:white;
 cursor:pointer;
-user-select:none;
+font-size:16px;
 }
 
-.tab:hover{
+.tabButton:hover{
 background:#334155;
+}
+
+.page{
+display:none;
 }
 
 .card{
@@ -99,10 +105,6 @@ grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
 gap:15px;
 }
 
-.page{
-display:none;
-}
-
 </style>
 </head>
 
@@ -116,27 +118,27 @@ display:none;
 
 <div class="tabs">
 
-<div class="tab" id="tabCompetition">
+<button class="tabButton" onclick="showPage('competitionPage')">
 🏟 Wettbewerb
-</div>
+</button>
 
-<div class="tab" id="tabPDF">
+<button class="tabButton" onclick="showPage('pdfPage')">
 📄 PDF
-</div>
+</button>
 
-<div class="tab" id="tabCategory">
+<button class="tabButton" onclick="showPage('categoryPage')">
 🕒 Kategorien
-</div>
+</button>
 
-<div class="tab" id="tabRunner">
+<button class="tabButton" onclick="showPage('runnerPage')">
 👥 Läufer
-</div>
+</button>
 
 </div>
 
 <!-- Wettbewerb -->
 
-<div id="competitionTab" class="page">
+<div id="competitionPage" class="page">
 
 <div class="card">
 
@@ -161,7 +163,7 @@ id="competitionFrom">
 id="competitionTo">
 
 <button class="success"
-id="saveCompetitionButton">
+onclick="saveCompetition()">
 
 💾 Wettbewerb speichern
 
@@ -175,7 +177,7 @@ id="saveCompetitionButton">
 
 <!-- PDF -->
 
-<div id="pdfTab" class="page">
+<div id="pdfPage" class="page">
 
 <div class="card">
 
@@ -185,8 +187,10 @@ id="saveCompetitionButton">
 id="pdfUpload"
 accept=".pdf">
 
-<button id="analyzePDFButton">
+<button onclick="readPDF()">
+
 PDF analysieren
+
 </button>
 
 <div id="pdfInfo"></div>
@@ -197,7 +201,7 @@ PDF analysieren
 
 <!-- Kategorien -->
 
-<div id="categoryTab" class="page">
+<div id="categoryPage" class="page">
 
 <div class="card">
 
@@ -212,7 +216,7 @@ class="grid"></div>
 
 <!-- Läufer -->
 
-<div id="runnerTab" class="page">
+<div id="runnerPage" class="page">
 
 <div class="card">
 
@@ -229,9 +233,6 @@ class="grid"></div>
 
 <script>
 
-let runners = [];
-let categories = [];
-
 let competition = {
 name:"",
 place:"",
@@ -239,45 +240,38 @@ from:"",
 to:""
 };
 
-function showTab(tabId){
+let categories = [];
+let runners = [];
+
+function showPage(pageId){
 
 const pages =
-document.querySelectorAll(".page");
+document.getElementsByClassName("page");
 
-pages.forEach(page=>{
+for(let i=0;i<pages.length;i++){
 
-page.style.display = "none";
-
-});
-
-const activePage =
-document.getElementById(tabId);
-
-if(activePage){
-
-activePage.style.display = "block";
+pages[i].style.display = "none";
 
 }
+
+document.getElementById(pageId)
+.style.display = "block";
 
 }
 
 function saveCompetition(){
 
-competition = {
+competition.name =
+document.getElementById("competitionName").value;
 
-name:
-document.getElementById("competitionName").value || "",
+competition.place =
+document.getElementById("competitionPlace").value;
 
-place:
-document.getElementById("competitionPlace").value || "",
+competition.from =
+document.getElementById("competitionFrom").value;
 
-from:
-document.getElementById("competitionFrom").value || "",
-
-to:
-document.getElementById("competitionTo").value || ""
-
-};
+competition.to =
+document.getElementById("competitionTo").value;
 
 localStorage.setItem(
 "rollart_competition",
@@ -289,21 +283,19 @@ document.getElementById("competitionOutput")
 
 <div class="item">
 
-🏆 ${competition.name}
+✅ Wettbewerb gespeichert
 
 <br><br>
+
+🏆 ${competition.name}
+
+<br>
 
 📍 ${competition.place}
 
-<br><br>
+<br>
 
-📅 ${competition.from}
-bis
-${competition.to}
-
-<br><br>
-
-✅ Wettbewerb gespeichert
+📅 ${competition.from} bis ${competition.to}
 
 </div>
 
@@ -366,8 +358,8 @@ reader.readAsArrayBuffer(file);
 
 function analyzePDF(text){
 
-runners = [];
 categories = [];
+runners = [];
 
 document.getElementById("pdfInfo")
 .innerHTML = `
@@ -423,9 +415,7 @@ output.innerHTML += `
 
 <div class="item runner">
 
-<h3>
-Start ${runner.start}
-</h3>
+<h3>Start ${runner.start}</h3>
 
 👤 ${runner.name}
 
@@ -446,48 +436,6 @@ Start ${runner.start}
 }
 
 window.onload = function(){
-
-document.getElementById("tabCompetition")
-.addEventListener("click",function(){
-
-showTab("competitionTab");
-
-});
-
-document.getElementById("tabPDF")
-.addEventListener("click",function(){
-
-showTab("pdfTab");
-
-});
-
-document.getElementById("tabCategory")
-.addEventListener("click",function(){
-
-showTab("categoryTab");
-
-});
-
-document.getElementById("tabRunner")
-.addEventListener("click",function(){
-
-showTab("runnerTab");
-
-});
-
-document.getElementById("saveCompetitionButton")
-.addEventListener("click",function(){
-
-saveCompetition();
-
-});
-
-document.getElementById("analyzePDFButton")
-.addEventListener("click",function(){
-
-readPDF();
-
-});
 
 const savedCompetition =
 localStorage.getItem("rollart_competition");
@@ -516,15 +464,13 @@ document.getElementById("competitionOutput")
 
 🏆 ${competition.name}
 
-<br><br>
+<br>
 
 📍 ${competition.place}
 
-<br><br>
+<br>
 
-📅 ${competition.from}
-bis
-${competition.to}
+📅 ${competition.from} bis ${competition.to}
 
 </div>
 
@@ -532,7 +478,7 @@ ${competition.to}
 
 }
 
-showTab("competitionTab");
+showPage("competitionPage");
 
 };
 
