@@ -17,7 +17,7 @@ color:white;
 }
 
 .app{
-max-width:1400px;
+max-width:1500px;
 margin:auto;
 padding:20px;
 }
@@ -108,6 +108,20 @@ background:#dc2626;
 color:white;
 }
 
+.openButton{
+width:100%;
+margin-top:10px;
+background:#16a34a;
+color:white;
+}
+
+.infoBox{
+background:#1d4ed8;
+padding:16px;
+border-radius:16px;
+margin-top:15px;
+}
+
 </style>
 </head>
 
@@ -125,8 +139,8 @@ color:white;
 🏟 Wettbewerbe
 </button>
 
-<button onclick="showPage('futurePage')">
-📄 Später
+<button onclick="showPage('detailPage')">
+📂 Wettbewerb
 </button>
 
 </div>
@@ -148,10 +162,12 @@ id="competitionPlace"
 placeholder="Ort">
 
 <label>Von</label>
+
 <input type="date"
 id="competitionFrom">
 
 <label>Bis</label>
+
 <input type="date"
 id="competitionTo">
 
@@ -175,13 +191,21 @@ class="grid"></div>
 
 </div>
 
-<!-- Platzhalter -->
+<!-- Wettbewerb Details -->
 
-<div id="futurePage" class="page">
+<div id="detailPage" class="page">
 
 <div class="card">
 
-<h2>📄 Weitere Funktionen</h2>
+<h2>📂 Aktiver Wettbewerb</h2>
+
+<div id="activeCompetition"></div>
+
+</div>
+
+<div class="card">
+
+<h2>🚧 Nächste Schritte</h2>
 
 <div class="item">
 
@@ -195,6 +219,8 @@ Hier kommen später:
 • Läufer
 <br>
 • Wertung
+<br>
+• Export
 
 </div>
 
@@ -207,6 +233,8 @@ Hier kommen später:
 <script>
 
 let competitions = [];
+
+let activeCompetition = null;
 
 function showPage(pageId){
 
@@ -222,6 +250,8 @@ document.getElementById(pageId)
 .style.display = "block";
 
 }
+
+/* Wettbewerb hinzufügen */
 
 function addCompetition(){
 
@@ -262,6 +292,8 @@ clearCompetitionForm();
 
 }
 
+/* Wettbewerb löschen */
+
 function deleteCompetition(id){
 
 const confirmDelete =
@@ -272,11 +304,50 @@ if(!confirmDelete) return;
 competitions =
 competitions.filter(c => c.id !== id);
 
+if(
+activeCompetition &&
+activeCompetition.id === id
+){
+
+activeCompetition = null;
+
+localStorage.removeItem(
+"rollart_active_competition"
+);
+
+}
+
 saveCompetitions();
 
 renderCompetitions();
 
+renderActiveCompetition();
+
 }
+
+/* Wettbewerb öffnen */
+
+function openCompetition(id){
+
+const competition =
+competitions.find(c => c.id === id);
+
+if(!competition) return;
+
+activeCompetition = competition;
+
+localStorage.setItem(
+"rollart_active_competition",
+JSON.stringify(activeCompetition)
+);
+
+renderActiveCompetition();
+
+showPage("detailPage");
+
+}
+
+/* Wettbewerbe anzeigen */
 
 function renderCompetitions(){
 
@@ -319,6 +390,13 @@ output.innerHTML += `
 bis
 ${comp.to || "-"}
 
+<button class="openButton"
+onclick="openCompetition(${comp.id})">
+
+📂 Öffnen
+
+</button>
+
 <button class="deleteButton"
 onclick="deleteCompetition(${comp.id})">
 
@@ -334,6 +412,53 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
+/* Aktiven Wettbewerb anzeigen */
+
+function renderActiveCompetition(){
+
+const output =
+document.getElementById("activeCompetition");
+
+if(!activeCompetition){
+
+output.innerHTML = `
+
+<div class="item">
+
+Kein Wettbewerb ausgewählt
+
+</div>
+
+`;
+
+return;
+
+}
+
+output.innerHTML = `
+
+<div class="infoBox">
+
+<h2>
+🏆 ${activeCompetition.name}
+</h2>
+
+📍 ${activeCompetition.place || "-"}
+
+<br><br>
+
+📅 ${activeCompetition.from || "-"}
+bis
+${activeCompetition.to || "-"}
+
+</div>
+
+`;
+
+}
+
+/* Speichern */
+
 function saveCompetitions(){
 
 localStorage.setItem(
@@ -342,6 +467,8 @@ JSON.stringify(competitions)
 );
 
 }
+
+/* Laden */
 
 function loadCompetitions(){
 
@@ -357,7 +484,21 @@ JSON.parse(saved);
 
 }
 
+const savedActive =
+localStorage.getItem(
+"rollart_active_competition"
+);
+
+if(savedActive){
+
+activeCompetition =
+JSON.parse(savedActive);
+
 }
+
+}
+
+/* Formular leeren */
 
 function clearCompetitionForm(){
 
@@ -368,11 +509,15 @@ document.getElementById("competitionTo").value = "";
 
 }
 
+/* Start */
+
 window.onload = function(){
 
 loadCompetitions();
 
 renderCompetitions();
+
+renderActiveCompetition();
 
 showPage("competitionPage");
 
