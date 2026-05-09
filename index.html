@@ -324,15 +324,7 @@ localStorage.removeItem(
 "rollart_competition"
 );
 
-document.getElementById("competitionName").value = "";
-document.getElementById("competitionPlace").value = "";
-document.getElementById("competitionFrom").value = "";
-document.getElementById("competitionTo").value = "";
-
-document.getElementById("competitionOutput")
-.innerHTML = "";
-
-alert("✅ Wettbewerb gelöscht");
+location.reload();
 
 }
 
@@ -424,7 +416,17 @@ const runnerRegex =
 const runnerMatches =
 [...cleaned.matchAll(runnerRegex)];
 
-runnerMatches.forEach((runner,index)=>{
+let currentCategory = 0;
+let count = 0;
+
+runnerMatches.forEach(runner=>{
+
+if(count >= 8){
+
+currentCategory++;
+count = 0;
+
+}
 
 runners.push({
 
@@ -437,11 +439,13 @@ name:runner[2].trim(),
 club:runner[3].trim(),
 
 category:
-categories[index]
-? categories[index].name
+categories[currentCategory]
+? categories[currentCategory].name
 : "Keine Kategorie"
 
 });
+
+count++;
 
 });
 
