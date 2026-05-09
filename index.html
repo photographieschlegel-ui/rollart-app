@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -6,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RollArt Score Pro</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <style>
+
 body{
 margin:0;
 padding:0;
@@ -65,7 +67,15 @@ border-radius:16px;
 margin-top:15px;
 }
 
-input{
+.runner{
+border-left:5px solid #22c55e;
+}
+
+.category{
+border-left:5px solid #3b82f6;
+}
+
+input,select{
 width:100%;
 padding:14px;
 border:none;
@@ -76,7 +86,7 @@ margin-top:10px;
 box-sizing:border-box;
 }
 
-.mainButton{
+button.mainButton{
 width:100%;
 padding:14px;
 border:none;
@@ -88,8 +98,28 @@ font-size:16px;
 font-weight:bold;
 cursor:pointer;
 }
+
+button.deleteButton{
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+margin-top:10px;
+background:#dc2626;
+color:white;
+cursor:pointer;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+gap:15px;
+margin-top:15px;
+}
+
 </style>
 </head>
+
 <body>
 
 <div class="app">
@@ -99,10 +129,10 @@ cursor:pointer;
 </div>
 
 <div class="tabs">
-<button type="button" onclick="showPage('competitionPage')">🏟 Wettbewerb</button>
-<button type="button" onclick="showPage('pdfPage')">📄 PDF</button>
-<button type="button" onclick="showPage('categoryPage')">🕒 Kategorien</button>
-<button type="button" onclick="showPage('runnerPage')">👥 Läufer</button>
+<button onclick="showPage('competitionPage')">🏟 Wettbewerb</button>
+<button onclick="showPage('pdfPage')">📄 PDF</button>
+<button onclick="showPage('categoryPage')">🕒 Kategorien</button>
+<button onclick="showPage('runnerPage')">👥 Läufer</button>
 </div>
 
 <!-- Wettbewerb -->
@@ -123,7 +153,7 @@ cursor:pointer;
 <label>Bis</label>
 <input type="date" id="competitionTo">
 
-<button type="button" class="mainButton" onclick="saveCompetition()">
+<button class="mainButton" onclick="saveCompetition()">
 💾 Wettbewerb speichern
 </button>
 
@@ -141,15 +171,13 @@ cursor:pointer;
 
 <h2>📄 PDF Import</h2>
 
-<input type="file" id="pdfUpload">
+<input type="file" id="pdfUpload" accept=".pdf">
 
-<button type="button" class="mainButton">
+<button class="mainButton" onclick="readPDF()">
 PDF analysieren
 </button>
 
-<div class="item">
-PDF Import vorbereitet
-</div>
+<div id="pdfInfo"></div>
 
 </div>
 
@@ -158,117 +186,362 @@ PDF Import vorbereitet
 <!-- Kategorien -->
 
 <div id="categoryPage" class="page">
+
 <div class="card">
+
 <h2>🕒 Kategorien</h2>
-<div class="item">Noch keine Kategorien</div>
+
+<div id="categoryOutput" class="grid"></div>
+
 </div>
+
 </div>
 
 <!-- Läufer -->
 
 <div id="runnerPage" class="page">
+
 <div class="card">
+
 <h2>👥 Läufer</h2>
-<div class="item">Noch keine Läufer</div>
+
+<div id="runnerOutput" class="grid"></div>
+
 </div>
+
 </div>
 
 </div>
 
 <script>
 
+let categories = [];
+let runners = [];
+
 function showPage(pageId){
 
-const pages = document.querySelectorAll('.page');
+const pages =
+document.querySelectorAll(".page");
 
-pages.forEach(function(page){
-page.style.display = 'none';
+pages.forEach(page=>{
+page.style.display = "none";
 });
 
-const activePage = document.getElementById(pageId);
-
-if(activePage){
-activePage.style.display = 'block';
-}
+document.getElementById(pageId)
+.style.display = "block";
 
 }
 
 function saveCompetition(){
 
 const competition = {
-name: document.getElementById('competitionName').value,
-place: document.getElementById('competitionPlace').value,
-from: document.getElementById('competitionFrom').value,
-to: document.getElementById('competitionTo').value
+
+name:
+document.getElementById("competitionName").value,
+
+place:
+document.getElementById("competitionPlace").value,
+
+from:
+document.getElementById("competitionFrom").value,
+
+to:
+document.getElementById("competitionTo").value
+
 };
 
 localStorage.setItem(
-'rollart_competition',
+"rollart_competition",
 JSON.stringify(competition)
 );
 
-const output = document.getElementById('competitionOutput');
+document.getElementById("competitionOutput")
+.innerHTML = `
 
-output.innerHTML = `
 <div class="item">
+
 ✅ Wettbewerb gespeichert
+
 <br><br>
+
 🏆 ${competition.name}
+
 <br><br>
+
 📍 ${competition.place}
+
 <br><br>
+
 📅 ${competition.from} bis ${competition.to}
+
 </div>
+
 `;
 
-alert('✅ Wettbewerb gespeichert');
+}
+
+async function readPDF(){
+
+const file =
+document.getElementById("pdfUpload").files[0];
+
+if(!file){
+
+alert("Bitte PDF auswählen");
+return;
+
+}
+
+const reader = new FileReader();
+
+reader.onload = async function(){
+
+const typedarray =
+new Uint8Array(this.result);
+
+const pdf =
+await pdfjsLib
+.getDocument(typedarray)
+.promise;
+
+let text = "";
+
+for(let i=1;i<=pdf.numPages;i++){
+
+const page =
+await pdf.getPage(i);
+
+const content =
+await page.getTextContent();
+
+text += " " +
+content.items
+.map(item=>item.str)
+.join(" ");
+
+}
+
+analyzePDF(text);
+
+};
+
+reader.readAsArrayBuffer(file);
+
+}
+
+function analyzePDF(text){
+
+categories = [];
+runners = [];
+
+const cleaned =
+text
+.replace(/\n/g," ")
+.replace(/\s+/g," ")
+.trim();
+
+const categoryRegex =
+/([A-Za-zÄÖÜäöüß0-9\s\.\-]+?)\s(\d{2}:\d{2})\s(\d{2}:\d{2})/g;
+
+const categoryMatches =
+[...cleaned.matchAll(categoryRegex)];
+
+categoryMatches.forEach(match=>{
+
+const name =
+match[1]
+.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
+.replace(/\s+/g," ")
+.trim();
+
+if(name.length < 3) return;
+
+categories.push({
+
+id:Date.now()+Math.random(),
+
+name:name,
+
+begin:match[2],
+
+end:match[3]
+
+});
+
+});
+
+const runnerRegex =
+/(\d+)\s([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s(SSG Ronsdorf|RRD Wuppertal|Wattenscheider RSC|TG Westhofen|TV Datteln 09|TV Walsum-Aldenrade 07)/g;
+
+const runnerMatches =
+[...cleaned.matchAll(runnerRegex)];
+
+runnerMatches.forEach((runner,index)=>{
+
+runners.push({
+
+id:Date.now()+Math.random(),
+
+start:runner[1],
+
+name:runner[2],
+
+club:runner[3],
+
+category:
+categories[index]
+? categories[index].name
+: "Keine Kategorie"
+
+});
+
+});
+
+renderCategories();
+renderRunners();
+
+document.getElementById("pdfInfo")
+.innerHTML = `
+
+<div class="item">
+
+✅ PDF importiert
+
+<br><br>
+
+🕒 Kategorien:
+${categories.length}
+
+<br>
+
+👥 Läufer:
+${runners.length}
+
+</div>
+
+`;
+
+}
+
+function renderCategories(){
+
+const output =
+document.getElementById("categoryOutput");
+
+output.innerHTML = "";
+
+categories.forEach(cat=>{
+
+output.innerHTML += `
+
+<div class="item category">
+
+<h3>${cat.name}</h3>
+
+🕒 ${cat.begin} - ${cat.end}
+
+<button class="deleteButton"
+onclick="deleteCategory('${cat.id}')">
+
+Kategorie löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+function renderRunners(){
+
+const output =
+document.getElementById("runnerOutput");
+
+output.innerHTML = "";
+
+runners.forEach(runner=>{
+
+output.innerHTML += `
+
+<div class="item runner">
+
+<h3>Start ${runner.start}</h3>
+
+👤 ${runner.name}
+
+<br><br>
+
+🏢 ${runner.club}
+
+<br><br>
+
+📂 ${runner.category}
+
+<button class="deleteButton"
+onclick="deleteRunner('${runner.id}')">
+
+Läufer löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+function deleteCategory(id){
+
+categories =
+categories.filter(cat=>cat.id != id);
+
+renderCategories();
+
+}
+
+function deleteRunner(id){
+
+runners =
+runners.filter(runner=>runner.id != id);
+
+renderRunners();
 
 }
 
 window.onload = function(){
 
-const savedCompetition = localStorage.getItem('rollart_competition');
+const savedCompetition =
+localStorage.getItem("rollart_competition");
 
 if(savedCompetition){
 
-const competition = JSON.parse(savedCompetition);
+const competition =
+JSON.parse(savedCompetition);
 
-if(document.getElementById('competitionName')){
-document.getElementById('competitionName').value = competition.name || '';
-}
+document.getElementById("competitionName").value =
+competition.name || "";
 
-if(document.getElementById('competitionPlace')){
-document.getElementById('competitionPlace').value = competition.place || '';
-}
+document.getElementById("competitionPlace").value =
+competition.place || "";
 
-if(document.getElementById('competitionFrom')){
-document.getElementById('competitionFrom').value = competition.from || '';
-}
+document.getElementById("competitionFrom").value =
+competition.from || "";
 
-if(document.getElementById('competitionTo')){
-document.getElementById('competitionTo').value = competition.to || '';
-}
-
-const output = document.getElementById('competitionOutput');
-
-output.innerHTML = `
-<div class="item">
-🏆 ${competition.name}
-<br><br>
-📍 ${competition.place}
-<br><br>
-📅 ${competition.from} bis ${competition.to}
-</div>
-`;
+document.getElementById("competitionTo").value =
+competition.to || "";
 
 }
 
-showPage('competitionPage');
+showPage("competitionPage");
 
-}
+};
 
 </script>
 
 </body>
 </html>
-```
