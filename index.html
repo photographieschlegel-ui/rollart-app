@@ -97,10 +97,6 @@ background:linear-gradient(135deg,#2563eb,#7c3aed);
 background:linear-gradient(135deg,#16a34a,#22c55e)!important;
 }
 
-.danger{
-background:linear-gradient(135deg,#dc2626,#ef4444)!important;
-}
-
 .grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
@@ -114,6 +110,10 @@ padding:6px 10px;
 border-radius:10px;
 margin-bottom:10px;
 font-size:14px;
+}
+
+.page{
+display:none;
 }
 
 </style>
@@ -159,7 +159,7 @@ onclick="showTab('scoreTab')">
 
 <!-- Wettbewerb -->
 
-<div id="competitionTab">
+<div id="competitionTab" class="page">
 
 <div class="card">
 
@@ -174,10 +174,12 @@ id="competitionPlace"
 placeholder="Ort">
 
 <label>Von</label>
+
 <input type="date"
 id="competitionFrom">
 
 <label>Bis</label>
+
 <input type="date"
 id="competitionTo">
 
@@ -196,8 +198,7 @@ onclick="saveCompetition()">
 
 <!-- PDF -->
 
-<div id="pdfTab"
-style="display:none;">
+<div id="pdfTab" class="page">
 
 <div class="card">
 
@@ -228,8 +229,7 @@ onclick="saveImportedData()">
 
 <!-- Kategorien -->
 
-<div id="categoryTab"
-style="display:none;">
+<div id="categoryTab" class="page">
 
 <div class="card">
 
@@ -244,8 +244,7 @@ class="grid"></div>
 
 <!-- Läufer -->
 
-<div id="runnerTab"
-style="display:none;">
+<div id="runnerTab" class="page">
 
 <div class="card">
 
@@ -260,8 +259,7 @@ class="grid"></div>
 
 <!-- Wertung -->
 
-<div id="scoreTab"
-style="display:none;">
+<div id="scoreTab" class="page">
 
 <div class="card">
 
@@ -290,25 +288,23 @@ to:""
 
 function showTab(tabId){
 
-const tabs = [
-"competitionTab",
-"pdfTab",
-"categoryTab",
-"runnerTab",
-"scoreTab"
-];
+const pages =
+document.querySelectorAll(".page");
 
-tabs.forEach(id=>{
+pages.forEach(page=>{
 
-document
-.getElementById(id)
-.style.display = "none";
+page.style.display = "none";
 
 });
 
-document
-.getElementById(tabId)
-.style.display = "block";
+const active =
+document.getElementById(tabId);
+
+if(active){
+
+active.style.display = "block";
+
+}
 
 }
 
@@ -317,16 +313,16 @@ function saveCompetition(){
 competition = {
 
 name:
-document.getElementById("competitionName").value,
+document.getElementById("competitionName").value || "",
 
 place:
-document.getElementById("competitionPlace").value,
+document.getElementById("competitionPlace").value || "",
 
 from:
-document.getElementById("competitionFrom").value,
+document.getElementById("competitionFrom").value || "",
 
 to:
-document.getElementById("competitionTo").value
+document.getElementById("competitionTo").value || ""
 
 };
 
@@ -335,9 +331,9 @@ localStorage.setItem(
 JSON.stringify(competition)
 );
 
-document
-.getElementById("competitionOutput")
-.innerHTML = `
+document.getElementById(
+"competitionOutput"
+).innerHTML = `
 
 <div class="item">
 
@@ -355,11 +351,13 @@ ${competition.to}
 
 <br><br>
 
-✅ Gespeichert
+✅ Wettbewerb gespeichert
 
 </div>
 
 `;
+
+alert("✅ Wettbewerb gespeichert");
 
 }
 
@@ -419,134 +417,20 @@ function analyzePDF(text){
 runners = [];
 categories = [];
 
-const cleaned =
-text
-.replace(/\n/g," ")
-.replace(/\s+/g," ")
-.trim();
-
-const categoryBlockRegex =
-/([A-Za-zÄÖÜäöüß0-9\s\.\-]+?)\s+
-(\d{2}:\d{2})\s+
-(\d{2}:\d{2})\s+
-(\d{2}:\d{2}:\d{2})\s+
-(\d{2}:\d{2}:\d{2})\s+
-(\d+)\s+
-(\d+)
-([\s\S]*?)
-(?=
-[A-Za-zÄÖÜäöüß0-9\s\.\-]+?\s+\d{2}:\d{2}\s+\d{2}:\d{2}
-|$)/gx;
-
-const blocks =
-[...cleaned.matchAll(categoryBlockRegex)];
-
-blocks.forEach(block=>{
-
-let categoryName =
-block[1]
-
-.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
-.replace(/Startfolge Kür/gi,"")
-.replace(/Westhofener Kürpokal/gi,"")
-.replace(/\d{2}\.\d{2}\.\d{4}/g,"")
-.replace(/\s+/g," ")
-.trim();
-
-if(
-categoryName.length < 3
-) return;
-
-const category = {
-
-id:Date.now()+Math.random(),
-
-name:categoryName,
-
-begin:block[2],
-
-end:block[3],
-
-duration:block[4],
-
-warmup:block[5],
-
-groups:block[6],
-
-participants:block[7]
-
-};
-
-categories.push(category);
-
-const runnerText =
-block[8];
-
-const runnerRegex =
-/(\d+)\s+
-([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)
-\s+
-(SSG\sRonsdorf|
-RRD\sWuppertal|
-Wattenscheider\sRSC|
-TG\sWesthofen|
-TV\sDatteln\s09|
-TV\sWalsum-Aldenrade\s07|
-TV\sWalsum\s-\sAldenrade)/gx;
-
-const runnerMatches =
-[...runnerText.matchAll(runnerRegex)];
-
-runnerMatches.forEach(runner=>{
-
-runners.push({
-
-id:Date.now()+Math.random(),
-
-start:runner[1],
-
-name:runner[2].trim(),
-
-club:runner[3].trim(),
-
-category:categoryName,
-
-technik:0,
-kunst:0,
-abzug:0,
-gesamt:0
-
-});
-
-});
-
-});
-
-renderCategories();
-renderRunners();
-renderScores();
-
-document
-.getElementById("pdfInfo")
+document.getElementById("pdfInfo")
 .innerHTML = `
 
 <div class="item">
 
 ✅ PDF importiert
 
-<br><br>
-
-🕒 Kategorien:
-${categories.length}
-
-<br>
-
-👥 Läufer:
-${runners.length}
-
 </div>
 
 `;
+
+renderCategories();
+renderRunners();
+renderScores();
 
 }
 
@@ -563,31 +447,9 @@ output.innerHTML += `
 
 <div class="item category">
 
-<h3>
-${cat.name}
-</h3>
+<h3>${cat.name}</h3>
 
 🕒 ${cat.begin} - ${cat.end}
-
-<br><br>
-
-⏱ Dauer:
-${cat.duration}
-
-<br>
-
-🔥 Einlauf:
-${cat.warmup}
-
-<br>
-
-👥 Gruppen:
-${cat.groups}
-
-<br>
-
-🏃 Teilnehmer:
-${cat.participants}
 
 </div>
 
@@ -641,7 +503,7 @@ output.innerHTML = "";
 
 runners.forEach(runner=>{
 
-runner.gesamt =
+const total =
 (
 Number(runner.technik || 0) +
 Number(runner.kunst || 0)
@@ -653,61 +515,22 @@ output.innerHTML += `
 <div class="item score">
 
 <div class="categoryLabel">
-${runner.category}
+${runner.category || ""}
 </div>
 
-<h3>
-${runner.name}
-</h3>
+<h3>${runner.name}</h3>
 
 🏢 ${runner.club}
 
-<label>⭐ Technik</label>
+<br><br>
 
-<input type="number"
-step="0.1"
-value="${runner.technik}"
-onchange="updateRunner(${runner.id},'technik',this.value)">
-
-<label>🎨 Kunst</label>
-
-<input type="number"
-step="0.1"
-value="${runner.kunst}"
-onchange="updateRunner(${runner.id},'kunst',this.value)">
-
-<label>❌ Abzüge</label>
-
-<input type="number"
-step="0.1"
-value="${runner.abzug}"
-onchange="updateRunner(${runner.id},'abzug',this.value)">
-
-<div class="item">
-
-🏆 Gesamt:
-${runner.gesamt.toFixed(2)}
-
-</div>
+🏆 ${total.toFixed(2)}
 
 </div>
 
 `;
 
 });
-
-}
-
-function updateRunner(id,field,value){
-
-const runner =
-runners.find(r=>r.id===id);
-
-if(!runner) return;
-
-runner[field] = value;
-
-renderScores();
 
 }
 
@@ -732,12 +555,6 @@ window.onload = function(){
 const savedCompetition =
 localStorage.getItem("rollart_competition");
 
-const savedRunners =
-localStorage.getItem("rollart_runners");
-
-const savedCategories =
-localStorage.getItem("rollart_categories");
-
 if(savedCompetition){
 
 competition =
@@ -755,7 +572,32 @@ competition.from || "";
 document.getElementById("competitionTo").value =
 competition.to || "";
 
+document.getElementById(
+"competitionOutput"
+).innerHTML = `
+
+<div class="item">
+
+🏆 ${competition.name}
+
+<br><br>
+
+📍 ${competition.place}
+
+<br><br>
+
+📅 ${competition.from}
+bis
+${competition.to}
+
+</div>
+
+`;
+
 }
+
+const savedRunners =
+localStorage.getItem("rollart_runners");
 
 if(savedRunners){
 
@@ -763,6 +605,9 @@ runners =
 JSON.parse(savedRunners);
 
 }
+
+const savedCategories =
+localStorage.getItem("rollart_categories");
 
 if(savedCategories){
 
