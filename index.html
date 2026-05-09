@@ -397,19 +397,17 @@ text
 /* KATEGORIEN */
 
 const categoryRegex =
-/([A-Za-zÄÖÜäöüß ]+(?:Minis|Erstlinge|Anfänger|Freiläufer|Figurenläufer|Kunstläufer|Nachwuchs|Neulinge|Schüler|Jugend|Cup)[A-Za-zÄÖÜäöüß 0-9\.\-]*)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})/g;
+/((?:Freiläufer|Figurenläufer|Kunstläufer|Anfänger|Erstlinge|Minis|Nachwuchs|Neulinge|Jugend|Schüler)[A-Za-zÄÖÜäöüß 0-9\.\-]*)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})/g;
 
 const categoryMatches =
 [...cleaned.matchAll(categoryRegex)];
 
 categoryMatches.forEach(match=>{
 
-let name =
+const name =
 match[1]
 .replace(/\s+/g," ")
 .trim();
-
-if(name.length < 3) return;
 
 const exists =
 categories.some(
@@ -433,21 +431,6 @@ end:match[3]
 }
 
 });
-
-/* FALLBACK */
-
-if(categories.length === 0){
-
-categories.push({
-
-id:1,
-name:"Keine Kategorie",
-begin:"--:--",
-end:"--:--"
-
-});
-
-}
 
 /* LÄUFER */
 
