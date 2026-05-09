@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -43,6 +42,7 @@ background:#1e293b;
 padding:12px 20px;
 border-radius:14px;
 cursor:pointer;
+user-select:none;
 }
 
 .tab:hover{
@@ -71,11 +71,7 @@ border-left:5px solid #22c55e;
 border-left:5px solid #3b82f6;
 }
 
-.score{
-border-left:5px solid #f59e0b;
-}
-
-button,input,select{
+button,input{
 width:100%;
 padding:14px;
 margin-top:10px;
@@ -103,21 +99,11 @@ grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
 gap:15px;
 }
 
-.categoryLabel{
-background:#2563eb;
-display:inline-block;
-padding:6px 10px;
-border-radius:10px;
-margin-bottom:10px;
-font-size:14px;
-}
-
 .page{
 display:none;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -130,29 +116,20 @@ display:none;
 
 <div class="tabs">
 
-<div class="tab"
-onclick="showTab('competitionTab')">
+<div class="tab" id="tabCompetition">
 🏟 Wettbewerb
 </div>
 
-<div class="tab"
-onclick="showTab('pdfTab')">
+<div class="tab" id="tabPDF">
 📄 PDF
 </div>
 
-<div class="tab"
-onclick="showTab('categoryTab')">
+<div class="tab" id="tabCategory">
 🕒 Kategorien
 </div>
 
-<div class="tab"
-onclick="showTab('runnerTab')">
+<div class="tab" id="tabRunner">
 👥 Läufer
-</div>
-
-<div class="tab"
-onclick="showTab('scoreTab')">
-⭐ Wertung
 </div>
 
 </div>
@@ -184,7 +161,7 @@ id="competitionFrom">
 id="competitionTo">
 
 <button class="success"
-onclick="saveCompetition()">
+id="saveCompetitionButton">
 
 💾 Wettbewerb speichern
 
@@ -208,17 +185,8 @@ onclick="saveCompetition()">
 id="pdfUpload"
 accept=".pdf">
 
-<button onclick="readPDF()">
-
+<button id="analyzePDFButton">
 PDF analysieren
-
-</button>
-
-<button class="success"
-onclick="saveImportedData()">
-
-💾 Import speichern
-
 </button>
 
 <div id="pdfInfo"></div>
@@ -257,21 +225,6 @@ class="grid"></div>
 
 </div>
 
-<!-- Wertung -->
-
-<div id="scoreTab" class="page">
-
-<div class="card">
-
-<h2>⭐ Punkte & Abzüge</h2>
-
-<div id="scoreOutput"
-class="grid"></div>
-
-</div>
-
-</div>
-
 </div>
 
 <script>
@@ -297,12 +250,12 @@ page.style.display = "none";
 
 });
 
-const active =
+const activePage =
 document.getElementById(tabId);
 
-if(active){
+if(activePage){
 
-active.style.display = "block";
+activePage.style.display = "block";
 
 }
 
@@ -331,9 +284,8 @@ localStorage.setItem(
 JSON.stringify(competition)
 );
 
-document.getElementById(
-"competitionOutput"
-).innerHTML = `
+document.getElementById("competitionOutput")
+.innerHTML = `
 
 <div class="item">
 
@@ -430,7 +382,6 @@ document.getElementById("pdfInfo")
 
 renderCategories();
 renderRunners();
-renderScores();
 
 }
 
@@ -494,63 +445,49 @@ Start ${runner.start}
 
 }
 
-function renderScores(){
+window.onload = function(){
 
-const output =
-document.getElementById("scoreOutput");
+document.getElementById("tabCompetition")
+.addEventListener("click",function(){
 
-output.innerHTML = "";
-
-runners.forEach(runner=>{
-
-const total =
-(
-Number(runner.technik || 0) +
-Number(runner.kunst || 0)
-) -
-Number(runner.abzug || 0);
-
-output.innerHTML += `
-
-<div class="item score">
-
-<div class="categoryLabel">
-${runner.category || ""}
-</div>
-
-<h3>${runner.name}</h3>
-
-🏢 ${runner.club}
-
-<br><br>
-
-🏆 ${total.toFixed(2)}
-
-</div>
-
-`;
+showTab("competitionTab");
 
 });
 
-}
+document.getElementById("tabPDF")
+.addEventListener("click",function(){
 
-function saveImportedData(){
+showTab("pdfTab");
 
-localStorage.setItem(
-"rollart_runners",
-JSON.stringify(runners)
-);
+});
 
-localStorage.setItem(
-"rollart_categories",
-JSON.stringify(categories)
-);
+document.getElementById("tabCategory")
+.addEventListener("click",function(){
 
-alert("✅ Import gespeichert");
+showTab("categoryTab");
 
-}
+});
 
-window.onload = function(){
+document.getElementById("tabRunner")
+.addEventListener("click",function(){
+
+showTab("runnerTab");
+
+});
+
+document.getElementById("saveCompetitionButton")
+.addEventListener("click",function(){
+
+saveCompetition();
+
+});
+
+document.getElementById("analyzePDFButton")
+.addEventListener("click",function(){
+
+readPDF();
+
+});
 
 const savedCompetition =
 localStorage.getItem("rollart_competition");
@@ -572,9 +509,8 @@ competition.from || "";
 document.getElementById("competitionTo").value =
 competition.to || "";
 
-document.getElementById(
-"competitionOutput"
-).innerHTML = `
+document.getElementById("competitionOutput")
+.innerHTML = `
 
 <div class="item">
 
@@ -595,30 +531,6 @@ ${competition.to}
 `;
 
 }
-
-const savedRunners =
-localStorage.getItem("rollart_runners");
-
-if(savedRunners){
-
-runners =
-JSON.parse(savedRunners);
-
-}
-
-const savedCategories =
-localStorage.getItem("rollart_categories");
-
-if(savedCategories){
-
-categories =
-JSON.parse(savedCategories);
-
-}
-
-renderCategories();
-renderRunners();
-renderScores();
 
 showTab("competitionTab");
 
