@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>RollArt Score Pro</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -18,13 +19,13 @@ color:white;
 }
 
 .app{
-max-width:1600px;
+max-width:1700px;
 margin:auto;
 padding:20px;
 }
 
 .logo{
-font-size:32px;
+font-size:34px;
 font-weight:bold;
 margin-bottom:20px;
 }
@@ -39,10 +40,10 @@ margin-bottom:20px;
 .tabs button{
 background:#1e293b;
 border:none;
-color:white;
 padding:14px 20px;
 border-radius:14px;
 cursor:pointer;
+color:white;
 font-size:16px;
 }
 
@@ -75,39 +76,28 @@ border-left:5px solid #22c55e;
 border-left:5px solid #3b82f6;
 }
 
-input,select{
+button,input{
 width:100%;
 padding:14px;
 border:none;
 border-radius:14px;
-background:#475569;
-color:white;
 margin-top:10px;
 box-sizing:border-box;
-}
-
-button.mainButton{
-width:100%;
-padding:14px;
-border:none;
-border-radius:14px;
-margin-top:15px;
-background:linear-gradient(135deg,#2563eb,#7c3aed);
+background:#475569;
 color:white;
 font-size:16px;
-font-weight:bold;
-cursor:pointer;
 }
 
-button.deleteButton{
-width:100%;
-padding:12px;
-border:none;
-border-radius:12px;
-margin-top:10px;
-background:#dc2626;
-color:white;
+.mainButton{
+background:linear-gradient(135deg,#2563eb,#7c3aed);
 cursor:pointer;
+font-weight:bold;
+}
+
+.deleteButton{
+background:#dc2626;
+cursor:pointer;
+font-weight:bold;
 }
 
 .grid{
@@ -118,6 +108,7 @@ margin-top:15px;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -129,10 +120,23 @@ margin-top:15px;
 </div>
 
 <div class="tabs">
-<button onclick="showPage('competitionPage')">🏟 Wettbewerb</button>
-<button onclick="showPage('pdfPage')">📄 PDF</button>
-<button onclick="showPage('categoryPage')">🕒 Kategorien</button>
-<button onclick="showPage('runnerPage')">👥 Läufer</button>
+
+<button onclick="showPage('competitionPage')">
+🏟 Wettbewerb
+</button>
+
+<button onclick="showPage('pdfPage')">
+📄 PDF
+</button>
+
+<button onclick="showPage('categoryPage')">
+🕒 Kategorien
+</button>
+
+<button onclick="showPage('runnerPage')">
+👥 Läufer
+</button>
+
 </div>
 
 <!-- Wettbewerb -->
@@ -143,18 +147,36 @@ margin-top:15px;
 
 <h2>🏟 Wettbewerb</h2>
 
-<input type="text" id="competitionName" placeholder="Wettbewerb">
+<input type="text"
+id="competitionName"
+placeholder="Wettbewerb">
 
-<input type="text" id="competitionPlace" placeholder="Ort">
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
 
 <label>Von</label>
-<input type="date" id="competitionFrom">
+
+<input type="date"
+id="competitionFrom">
 
 <label>Bis</label>
-<input type="date" id="competitionTo">
 
-<button class="mainButton" onclick="saveCompetition()">
+<input type="date"
+id="competitionTo">
+
+<button class="mainButton"
+onclick="saveCompetition()">
+
 💾 Wettbewerb speichern
+
+</button>
+
+<button class="deleteButton"
+onclick="deleteCompetition()">
+
+🗑 Wettbewerb löschen
+
 </button>
 
 <div id="competitionOutput"></div>
@@ -171,10 +193,22 @@ margin-top:15px;
 
 <h2>📄 PDF Import</h2>
 
-<input type="file" id="pdfUpload" accept=".pdf">
+<input type="file"
+id="pdfUpload"
+accept=".pdf">
 
-<button class="mainButton" onclick="readPDF()">
+<button class="mainButton"
+onclick="readPDF()">
+
 PDF analysieren
+
+</button>
+
+<button class="mainButton"
+onclick="saveImportedData()">
+
+💾 PDF Daten speichern
+
 </button>
 
 <div id="pdfInfo"></div>
@@ -191,7 +225,8 @@ PDF analysieren
 
 <h2>🕒 Kategorien</h2>
 
-<div id="categoryOutput" class="grid"></div>
+<div id="categoryOutput"
+class="grid"></div>
 
 </div>
 
@@ -205,7 +240,8 @@ PDF analysieren
 
 <h2>👥 Läufer</h2>
 
-<div id="runnerOutput" class="grid"></div>
+<div id="runnerOutput"
+class="grid"></div>
 
 </div>
 
@@ -272,11 +308,31 @@ document.getElementById("competitionOutput")
 
 <br><br>
 
-📅 ${competition.from} bis ${competition.to}
+📅 ${competition.from}
+bis
+${competition.to}
 
 </div>
 
 `;
+
+}
+
+function deleteCompetition(){
+
+localStorage.removeItem(
+"rollart_competition"
+);
+
+document.getElementById("competitionName").value = "";
+document.getElementById("competitionPlace").value = "";
+document.getElementById("competitionFrom").value = "";
+document.getElementById("competitionTo").value = "";
+
+document.getElementById("competitionOutput")
+.innerHTML = "";
+
+alert("✅ Wettbewerb gelöscht");
 
 }
 
@@ -341,26 +397,18 @@ text
 .trim();
 
 const categoryRegex =
-/([A-Za-zÄÖÜäöüß0-9\s\.\-]+?)\s(\d{2}:\d{2})\s(\d{2}:\d{2})/g;
+/([A-Za-zÄÖÜäöüß ]+\d\.\d)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})/g;
 
 const categoryMatches =
 [...cleaned.matchAll(categoryRegex)];
 
 categoryMatches.forEach(match=>{
 
-const name =
-match[1]
-.replace(/Beginn Ende Dauer Einlaufzeit Einlaufgruppen TN Wettbewerb/gi,"")
-.replace(/\s+/g," ")
-.trim();
-
-if(name.length < 3) return;
-
 categories.push({
 
 id:Date.now()+Math.random(),
 
-name:name,
+name:match[1].trim(),
 
 begin:match[2],
 
@@ -384,9 +432,9 @@ id:Date.now()+Math.random(),
 
 start:runner[1],
 
-name:runner[2],
+name:runner[2].trim(),
 
-club:runner[3],
+club:runner[3].trim(),
 
 category:
 categories[index]
@@ -468,7 +516,9 @@ output.innerHTML += `
 
 <div class="item runner">
 
-<h3>Start ${runner.start}</h3>
+<h3>
+Start ${runner.start}
+</h3>
 
 👤 ${runner.name}
 
@@ -513,6 +563,22 @@ renderRunners();
 
 }
 
+function saveImportedData(){
+
+localStorage.setItem(
+"rollart_categories",
+JSON.stringify(categories)
+);
+
+localStorage.setItem(
+"rollart_runners",
+JSON.stringify(runners)
+);
+
+alert("✅ PDF Daten gespeichert");
+
+}
+
 window.onload = function(){
 
 const savedCompetition =
@@ -534,6 +600,30 @@ competition.from || "";
 
 document.getElementById("competitionTo").value =
 competition.to || "";
+
+}
+
+const savedCategories =
+localStorage.getItem("rollart_categories");
+
+if(savedCategories){
+
+categories =
+JSON.parse(savedCategories);
+
+renderCategories();
+
+}
+
+const savedRunners =
+localStorage.getItem("rollart_runners");
+
+if(savedRunners){
+
+runners =
+JSON.parse(savedRunners);
+
+renderRunners();
 
 }
 
