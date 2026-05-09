@@ -30,14 +30,20 @@ font-weight:bold;
 margin-bottom:20px;
 }
 
+/* MENÜ FIX */
+
 .tabs{
 display:flex;
-gap:10px;
+flex-direction:row;
 flex-wrap:wrap;
+gap:10px;
 margin-bottom:20px;
+align-items:center;
 }
 
 .tabs button{
+width:auto !important;
+display:inline-block;
 background:#1e293b;
 border:none;
 padding:14px 20px;
@@ -45,6 +51,8 @@ border-radius:14px;
 cursor:pointer;
 color:white;
 font-size:16px;
+white-space:nowrap;
+flex:0 0 auto;
 }
 
 .tabs button:hover{
@@ -388,6 +396,8 @@ text
 .replace(/\s+/g," ")
 .trim();
 
+/* KATEGORIEN */
+
 const categoryRegex =
 /([A-Za-zÄÖÜäöüß ]+\d\.\d)\s+(\d{2}:\d{2})\s+(\d{2}:\d{2})/g;
 
@@ -396,11 +406,23 @@ const categoryMatches =
 
 categoryMatches.forEach(match=>{
 
+const name =
+match[1]
+.replace(/\s+/g," ")
+.trim();
+
+const exists =
+categories.some(
+c => c.name === name
+);
+
+if(!exists){
+
 categories.push({
 
 id:Date.now()+Math.random(),
 
-name:match[1].trim(),
+name:name,
 
 begin:match[2],
 
@@ -408,7 +430,11 @@ end:match[3]
 
 });
 
+}
+
 });
+
+/* LÄUFER */
 
 const runnerRegex =
 /(\d+)\s([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s(SSG Ronsdorf|RRD Wuppertal|Wattenscheider RSC|TG Westhofen|TV Datteln 09|TV Walsum-Aldenrade 07)/g;
@@ -424,6 +450,7 @@ runnerMatches.forEach(runner=>{
 if(count >= 8){
 
 currentCategory++;
+
 count = 0;
 
 }
