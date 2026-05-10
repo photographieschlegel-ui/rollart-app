@@ -600,9 +600,6 @@ return;
 
 }
 
-/* NICHT LEEREN
-DAMIT MEHRERE BLÖCKE IMPORTIERT WERDEN KÖNNEN */
-
 const lines =
 text
 .split("\n")
@@ -700,10 +697,11 @@ return;
 }
 
 /* LÄUFER */
+/* NACHNAME FIX */
 
 const runnerMatch =
 line.match(
-/^(\d+)\s+(.+?)\s+([A-ZÄÖÜ].+)$/
+/^(\d+)\s+(.+)\s+([A-ZÄÖÜ].+)$/
 );
 
 if(
@@ -711,12 +709,50 @@ runnerMatch &&
 currentCategory
 ){
 
+const parts =
+runnerMatch[2]
+.split(" ");
+
+let name = runnerMatch[2];
+let club = runnerMatch[3];
+
+/* VEREINE SUCHEN */
+
+const knownClubs = [
+
+"SSG Ronsdorf",
+"RRD Wuppertal",
+"Wattenscheider RSC",
+"TG Westhofen",
+"TV Datteln 09",
+"RESG Walsum",
+"1. RC Recklinghausen",
+"TV Walsum-Aldenrade 07"
+
+];
+
+knownClubs.forEach(c=>{
+
+if(line.includes(c)){
+
+club = c;
+
+name =
+line
+.replace(runnerMatch[1],"")
+.replace(c,"")
+.trim();
+
+}
+
+});
+
 const alreadyExists =
 activeCompetition.runners.find(
 r =>
 
 r.start == runnerMatch[1] &&
-r.name == runnerMatch[2] &&
+r.name == name &&
 r.category == currentCategory.name
 );
 
@@ -728,9 +764,9 @@ id:Date.now()+Math.random(),
 
 start:runnerMatch[1],
 
-name:runnerMatch[2],
+name:name,
 
-club:runnerMatch[3],
+club:club,
 
 categoryId:currentCategory.id,
 
