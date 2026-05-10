@@ -88,6 +88,13 @@ min-height:350px;
 resize:vertical;
 }
 
+.scoreGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:15px;
+}
+
 button{
 padding:14px;
 border:none;
@@ -125,6 +132,13 @@ background:#ca8a04;
 color:white;
 }
 
+.saveScoreButton{
+width:100%;
+margin-top:10px;
+background:#2563eb;
+color:white;
+}
+
 .infoBox{
 background:#1d4ed8;
 padding:16px;
@@ -139,6 +153,13 @@ border-radius:16px;
 margin-top:15px;
 text-align:center;
 color:#cbd5e1;
+}
+
+.scoreBox{
+margin-top:15px;
+padding:12px;
+background:#1e293b;
+border-radius:12px;
 }
 
 </style>
@@ -273,7 +294,7 @@ class="grid"></div>
 
 <div class="card">
 
-<h2>👥 Läufer</h2>
+<h2>👥 Läufer & Wertung</h2>
 
 <input type="text"
 id="newRunnerName"
@@ -350,7 +371,6 @@ const competition =
 competitions.find(c => c.id == editId);
 
 competition.name = name;
-
 competition.place =
 document.getElementById("competitionPlace").value;
 
@@ -378,7 +398,6 @@ to:
 document.getElementById("competitionTo").value,
 
 categories:[],
-
 runners:[]
 
 });
@@ -393,7 +412,7 @@ clearCompetitionForm();
 
 }
 
-/* Wettbewerb bearbeiten */
+/* Wettbewerb */
 
 function editCompetition(id){
 
@@ -421,8 +440,6 @@ showPage("competitionPage");
 
 }
 
-/* Wettbewerb löschen */
-
 function deleteCompetition(id){
 
 if(!confirm("Wettbewerb löschen?"))
@@ -447,8 +464,6 @@ renderCompetitions();
 renderActiveCompetition();
 
 }
-
-/* Wettbewerb öffnen */
 
 function openCompetition(id){
 
@@ -534,7 +549,7 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
-/* Aktiver Wettbewerb */
+/* Aktiv */
 
 function renderActiveCompetition(){
 
@@ -573,12 +588,11 @@ ${activeCompetition.to || "-"}
 `;
 
 renderCategories();
-
 renderRunners();
 
 }
 
-/* BLOCK IMPORT */
+/* TEXT IMPORT */
 
 function parseCompetitionText(){
 
@@ -610,8 +624,6 @@ let currentCategory = null;
 
 lines.forEach(line=>{
 
-/* KATEGORIE */
-
 const categoryMatch =
 line.match(
 /(\d{2}:\d{2})\s+(\d{2}:\d{2}).+?([A-Za-zÄÖÜäöüß]+\s?[0-9A-Za-z\.\- ]+)$/
@@ -622,7 +634,6 @@ if(categoryMatch){
 let categoryName =
 categoryMatch[3]
 .replace(/• Startfolge Kür/gi,"")
-.replace(/• Startfolge Kurzkür/gi,"")
 .trim();
 
 let existingCategory =
@@ -655,8 +666,6 @@ activeCompetition.categories.push(currentCategory);
 return;
 
 }
-
-/* STARTFOLGE */
 
 if(line.includes("• Startfolge Kür")){
 
@@ -696,27 +705,7 @@ return;
 
 }
 
-/* LÄUFER */
-/* NACHNAME FIX */
-
-const runnerMatch =
-line.match(
-/^(\d+)\s+(.+)\s+([A-ZÄÖÜ].+)$/
-);
-
-if(
-runnerMatch &&
-currentCategory
-){
-
-const parts =
-runnerMatch[2]
-.split(" ");
-
-let name = runnerMatch[2];
-let club = runnerMatch[3];
-
-/* VEREINE SUCHEN */
+/* Läufer */
 
 const knownClubs = [
 
@@ -731,15 +720,27 @@ const knownClubs = [
 
 ];
 
+const runnerMatch =
+line.match(/^(\d+)\s+(.+)$/);
+
+if(runnerMatch && currentCategory){
+
+const start = runnerMatch[1];
+
+let rest =
+runnerMatch[2];
+
+let club = "";
+let name = rest;
+
 knownClubs.forEach(c=>{
 
-if(line.includes(c)){
+if(rest.includes(c)){
 
 club = c;
 
 name =
-line
-.replace(runnerMatch[1],"")
+rest
 .replace(c,"")
 .trim();
 
@@ -751,7 +752,7 @@ const alreadyExists =
 activeCompetition.runners.find(
 r =>
 
-r.start == runnerMatch[1] &&
+r.start == start &&
 r.name == name &&
 r.category == currentCategory.name
 );
@@ -762,7 +763,7 @@ activeCompetition.runners.push({
 
 id:Date.now()+Math.random(),
 
-start:runnerMatch[1],
+start:start,
 
 name:name,
 
@@ -770,7 +771,12 @@ club:club,
 
 categoryId:currentCategory.id,
 
-category:currentCategory.name
+category:currentCategory.name,
+
+scoreA:"",
+scoreB:"",
+scoreC:"",
+total:""
 
 });
 
@@ -783,6 +789,9 @@ saveCompetitions();
 renderCategories();
 
 renderRunners();
+
+document.getElementById("competitionText")
+.value = "";
 
 document.getElementById("importInfo")
 .innerHTML = `
@@ -804,9 +813,6 @@ ${activeCompetition.runners.length}
 </div>
 
 `;
-
-document.getElementById("competitionText")
-.value = "";
 
 }
 
@@ -891,9 +897,7 @@ output.innerHTML += `
 
 <div class="item">
 
-<h3>
-${cat.name}
-</h3>
+<h3>${cat.name}</h3>
 
 🕒 ${cat.begin} - ${cat.end}
 
@@ -957,7 +961,12 @@ club:club,
 
 categoryId:category ? category.id : null,
 
-category:category ? category.name : "Keine Kategorie"
+category:category ? category.name : "Keine Kategorie",
+
+scoreA:"",
+scoreB:"",
+scoreC:"",
+total:""
 
 });
 
@@ -966,6 +975,43 @@ saveCompetitions();
 renderRunners();
 
 }
+
+/* Punkte speichern */
+
+function saveRunnerScore(id){
+
+const runner =
+activeCompetition.runners.find(
+r => r.id == id
+);
+
+if(!runner) return;
+
+runner.scoreA =
+document.getElementById("scoreA_"+id).value;
+
+runner.scoreB =
+document.getElementById("scoreB_"+id).value;
+
+runner.scoreC =
+document.getElementById("scoreC_"+id).value;
+
+const total =
+
+(Number(runner.scoreA) || 0) +
+(Number(runner.scoreB) || 0) +
+(Number(runner.scoreC) || 0);
+
+runner.total =
+total.toFixed(2);
+
+saveCompetitions();
+
+renderRunners();
+
+}
+
+/* Läufer löschen */
 
 function deleteRunner(id){
 
@@ -982,6 +1028,8 @@ saveCompetitions();
 renderRunners();
 
 }
+
+/* Läufer anzeigen */
 
 function renderRunners(){
 
@@ -1024,6 +1072,50 @@ Start ${runner.start}
 
 📂 ${runner.category}
 
+<div class="scoreBox">
+
+<h4>🏅 Wertung</h4>
+
+<div class="scoreGrid">
+
+<input
+id="scoreA_${runner.id}"
+type="number"
+step="0.01"
+placeholder="A"
+value="${runner.scoreA || ""}">
+
+<input
+id="scoreB_${runner.id}"
+type="number"
+step="0.01"
+placeholder="B"
+value="${runner.scoreB || ""}">
+
+<input
+id="scoreC_${runner.id}"
+type="number"
+step="0.01"
+placeholder="C"
+value="${runner.scoreC || ""}">
+
+<input
+type="text"
+disabled
+placeholder="Gesamt"
+value="${runner.total || ""}">
+
+</div>
+
+<button class="saveScoreButton"
+onclick="saveRunnerScore('${runner.id}')">
+
+💾 Punkte speichern
+
+</button>
+
+</div>
+
 <button class="deleteButton"
 onclick="deleteRunner('${runner.id}')">
 
@@ -1039,7 +1131,7 @@ onclick="deleteRunner('${runner.id}')">
 
 }
 
-/* Kategorie Select */
+/* Select */
 
 function updateCategorySelect(){
 
