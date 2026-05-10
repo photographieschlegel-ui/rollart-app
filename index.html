@@ -234,12 +234,12 @@ class="grid"></div>
 
 <textarea
 id="competitionText"
-placeholder="Text aus PDF hier einfügen..."></textarea>
+placeholder="Block aus PDF hier einfügen..."></textarea>
 
 <button class="mainButton"
 onclick="parseCompetitionText()">
 
-📥 Text analysieren
+📥 Block importieren
 
 </button>
 
@@ -578,7 +578,7 @@ renderRunners();
 
 }
 
-/* TEXT PARSER */
+/* BLOCK IMPORT */
 
 function parseCompetitionText(){
 
@@ -600,8 +600,8 @@ return;
 
 }
 
-activeCompetition.categories = [];
-activeCompetition.runners = [];
+/* NICHT LEEREN
+DAMIT MEHRERE BLÖCKE IMPORTIERT WERDEN KÖNNEN */
 
 const lines =
 text
@@ -611,18 +611,33 @@ text
 
 let currentCategory = null;
 
-/* ZEILEN */
-
 lines.forEach(line=>{
 
-/* KATEGORIE MIT ZEIT */
+/* KATEGORIE */
 
 const categoryMatch =
 line.match(
-/(\d{2}:\d{2})\s+(\d{2}:\d{2}).+?([A-Za-zÄÖÜäöüß0-9\.\- ]+)$/
+/(\d{2}:\d{2})\s+(\d{2}:\d{2}).+?([A-Za-zÄÖÜäöüß]+\s?[0-9A-Za-z\.\- ]+)$/
 );
 
 if(categoryMatch){
+
+let categoryName =
+categoryMatch[3]
+.replace(/• Startfolge Kür/gi,"")
+.replace(/• Startfolge Kurzkür/gi,"")
+.trim();
+
+let existingCategory =
+activeCompetition.categories.find(
+cat => cat.name === categoryName
+);
+
+if(existingCategory){
+
+currentCategory = existingCategory;
+
+}else{
 
 currentCategory = {
 
@@ -632,18 +647,19 @@ begin:categoryMatch[1],
 
 end:categoryMatch[2],
 
-name:categoryMatch[3]
-.trim()
+name:categoryName
 
 };
 
 activeCompetition.categories.push(currentCategory);
 
+}
+
 return;
 
 }
 
-/* STARTFOLGE KÜR */
+/* STARTFOLGE */
 
 if(line.includes("• Startfolge Kür")){
 
@@ -651,6 +667,17 @@ const categoryName =
 line
 .replace("• Startfolge Kür","")
 .trim();
+
+let existingCategory =
+activeCompetition.categories.find(
+cat => cat.name === categoryName
+);
+
+if(existingCategory){
+
+currentCategory = existingCategory;
+
+}else{
 
 currentCategory = {
 
@@ -666,6 +693,8 @@ name:categoryName
 
 activeCompetition.categories.push(currentCategory);
 
+}
+
 return;
 
 }
@@ -674,13 +703,24 @@ return;
 
 const runnerMatch =
 line.match(
-/^(\d+)\s+(.+?)\s+([A-Z].+)$/
+/^(\d+)\s+(.+?)\s+([A-ZÄÖÜ].+)$/
 );
 
 if(
 runnerMatch &&
 currentCategory
 ){
+
+const alreadyExists =
+activeCompetition.runners.find(
+r =>
+
+r.start == runnerMatch[1] &&
+r.name == runnerMatch[2] &&
+r.category == currentCategory.name
+);
+
+if(alreadyExists) return;
 
 activeCompetition.runners.push({
 
@@ -702,18 +742,6 @@ category:currentCategory.name
 
 });
 
-/* DOPPELTE KATEGORIEN ENTFERNEN */
-
-activeCompetition.categories =
-activeCompetition.categories.filter(
-(cat,index,self)=>
-
-index === self.findIndex(
-c => c.name === cat.name
-)
-
-);
-
 saveCompetitions();
 
 renderCategories();
@@ -725,7 +753,7 @@ document.getElementById("importInfo")
 
 <div class="item">
 
-✅ Text analysiert
+✅ Block importiert
 
 <br><br>
 
@@ -740,6 +768,9 @@ ${activeCompetition.runners.length}
 </div>
 
 `;
+
+document.getElementById("competitionText")
+.value = "";
 
 }
 
@@ -972,7 +1003,7 @@ onclick="deleteRunner('${runner.id}')">
 
 }
 
-/* Select */
+/* Kategorie Select */
 
 function updateCategorySelect(){
 
