@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>🏆 RollArt Score Pro</title>
 
 <style>
@@ -475,6 +476,8 @@ function openCompetition(id){
 activeCompetition =
 competitions.find(c=>c.id===id);
 
+currentRunnerIndex = 0;
+
 renderCategories();
 renderRunners();
 
@@ -494,9 +497,30 @@ return;
 competitions =
 competitions.filter(c=>c.id!==id);
 
+/* LIVE RESET */
+
+if(
+activeCompetition &&
+activeCompetition.id === id
+){
+
+activeCompetition = null;
+
+currentRunnerIndex = 0;
+
+document.getElementById("liveCategory").innerHTML = "-";
+document.getElementById("liveRunner").innerHTML = "-";
+document.getElementById("nextRunner").innerHTML = "-";
+
+}
+
 saveData();
 
 renderCompetitions();
+
+renderCategories();
+
+renderRunners();
 
 }
 
@@ -657,6 +681,8 @@ function renderCategories(){
 const output =
 document.getElementById("categoryList");
 
+if(!output) return;
+
 output.innerHTML="";
 
 if(!activeCompetition) return;
@@ -708,6 +734,8 @@ function renderRunners(){
 const output =
 document.getElementById("runnerList");
 
+if(!output) return;
+
 output.innerHTML="";
 
 if(!activeCompetition) return;
@@ -753,15 +781,14 @@ placeholder="Nr"
 value="${runner.deductionNumber}">
 
 <input
-id="deduction_${runner.id}"
 type="text"
 disabled
-value="${runner.deduction}">
+value="Abzug: ${runner.deduction}">
 
 <input
 type="text"
 disabled
-value="${runner.total}">
+value="Gesamt: ${runner.total}">
 
 </div>
 
@@ -843,16 +870,21 @@ parseFloat(document.getElementById("b2_"+id).value) || 0;
 runner.b3 =
 parseFloat(document.getElementById("b3_"+id).value) || 0;
 
+/* ABZUGSNUMMER */
+
 runner.deductionNumber =
 document.getElementById(
 "deductionNumber_"+id
 ).value;
 
+/* ABZUG */
+
 runner.deduction =
 deductions[runner.deductionNumber]
-|| 0;
+? deductions[runner.deductionNumber]
+: 0;
 
-/* KEIN DURCHSCHNITT */
+/* SUMME */
 
 const total =
 
@@ -874,6 +906,8 @@ runner.confirmed = false;
 saveData();
 
 renderRunners();
+
+updateLiveMode();
 
 }
 
@@ -911,7 +945,15 @@ updateLiveMode();
 
 function updateLiveMode(){
 
-if(!activeCompetition) return;
+if(!activeCompetition){
+
+document.getElementById("liveCategory").innerHTML = "-";
+document.getElementById("liveRunner").innerHTML = "-";
+document.getElementById("nextRunner").innerHTML = "-";
+
+return;
+
+}
 
 const now = new Date();
 
@@ -935,15 +977,9 @@ let activeCategory = null;
 
 activeCompetition.categories.forEach(cat=>{
 
-const begin =
-cat.begin;
-
-const end =
-cat.end;
-
 if(
-currentTime >= begin &&
-currentTime <= end
+currentTime >= cat.begin &&
+currentTime <= cat.end
 ){
 
 activeCategory = cat;
@@ -958,6 +994,12 @@ document.getElementById("liveCategory")
 .innerHTML =
 "Keine aktive Kategorie";
 
+document.getElementById("liveRunner")
+.innerHTML = "-";
+
+document.getElementById("nextRunner")
+.innerHTML = "-";
+
 return;
 
 }
@@ -971,9 +1013,17 @@ activeCompetition.runners.filter(
 r=>r.categoryId===activeCategory.id
 );
 
-if(categoryRunners.length===0) return;
+if(categoryRunners.length===0){
 
-/* etwas früher/später */
+document.getElementById("liveRunner")
+.innerHTML = "-";
+
+document.getElementById("nextRunner")
+.innerHTML = "-";
+
+return;
+
+}
 
 const currentRunner =
 categoryRunners[currentRunnerIndex]
@@ -983,6 +1033,99 @@ const nextRunner =
 categoryRunners[currentRunnerIndex+1]
 || null;
 
+let liveScoring = "";
+
+if(scoringEnabled(currentRunner.category)){
+
+liveScoring = `
+
+<div class="scoreBox">
+
+<h3>🏅 LIVE WERTUNG</h3>
+
+<div class="scoreGrid">
+
+<input
+id="a1_${currentRunner.id}"
+type="number"
+step="0.01"
+placeholder="A1"
+value="${currentRunner.a1 || ""}">
+
+<input
+id="a2_${currentRunner.id}"
+type="number"
+step="0.01"
+placeholder="A2"
+value="${currentRunner.a2 || ""}">
+
+<input
+id="a3_${currentRunner.id}"
+type="number"
+step="0.01"
+placeholder="A3"
+value="${currentRunner.a3 || ""}">
+
+</div>
+
+<div class="scoreGrid">
+
+<input
+id="b1_${currentRunner.id}"
+type="number"
+step="0.01"
+placeholder="B1"
+value="${currentRunner.b1 || ""}">
+
+<input
+id="b2_${currentRunner.id}"
+type="number"
+step="0.01"
+placeholder="B2"
+value="${currentRunner.b2 || ""}">
+
+<input
+id="b3_${currentRunner.id}"
+type="number"
+step="0.01"
+placeholder="B3"
+value="${currentRunner.b3 || ""}">
+
+</div>
+
+<div class="scoreGrid">
+
+<input
+id="deductionNumber_${currentRunner.id}"
+type="number"
+placeholder="Abzugsnummer"
+value="${currentRunner.deductionNumber || ""}">
+
+<input
+type="text"
+disabled
+value="Abzug: ${currentRunner.deduction || 0}">
+
+<input
+type="text"
+disabled
+value="Gesamt: ${currentRunner.total || "0.00"}">
+
+</div>
+
+<button class="saveButton"
+onclick="saveRunnerScore('${currentRunner.id}')">
+
+💾 Wertung speichern
+
+</button>
+
+</div>
+
+`;
+
+}
+
 document.getElementById("liveRunner")
 .innerHTML =
 
@@ -990,6 +1133,11 @@ document.getElementById("liveRunner")
 Start ${currentRunner.start}
 <br>
 ${currentRunner.name}
+<br><br>
+🏢 ${currentRunner.club}
+<br><br>
+
+${liveScoring}
 `;
 
 document.getElementById("nextRunner")
