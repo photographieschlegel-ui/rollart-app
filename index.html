@@ -385,11 +385,9 @@ output.innerHTML = "";
 if(competitions.length === 0){
 
 output.innerHTML = `
-
 <div class="item">
 Noch keine Wettbewerbe gespeichert
 </div>
-
 `;
 
 return;
@@ -555,7 +553,7 @@ text
 /* Kategorien */
 
 const categoryRegex =
-/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+\d{2}:\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}\s+\d+\s+\d+\s+([A-Za-zÄÖÜäöüß0-9\.\- ]+?)(?=\d{2}:\d{2}\s+\d{2}:\d{2}|$)/g;
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+\d{2}:\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}\s+\d+\s+\d+\s+([^0-9]+?)(?=\s+\d+\s+[A-ZÄÖÜ]|\s+\d{2}:\d{2}\s+\d{2}:\d{2}|$)/g;
 
 const categoryMatches =
 [...cleaned.matchAll(categoryRegex)];
@@ -567,12 +565,60 @@ match[3]
 .replace(/• Startfolge Kür/gi,"")
 .replace(/• Startfolge Kurzkür/gi,"")
 .replace(/Westhofener Kürpokal/gi,"")
+.replace(/Stand:/gi,"")
+.replace(/Sporthalle Hemberg/gi,"")
+.replace(/\s+/g," ")
 .trim();
 
-categoryName =
-categoryName
-.split(/\s+1\s+[A-ZÄÖÜ]/)[0]
-.trim();
+/* Sonderfälle */
+
+if(categoryName.includes("Freiläufer 1")){
+categoryName = "Freiläufer 1";
+}
+
+if(categoryName.includes("Freiläufer 2")){
+categoryName = "Freiläufer 2";
+}
+
+if(categoryName.includes("Minis 2")){
+categoryName = "Minis 2";
+}
+
+if(categoryName.includes("Minis 1")){
+categoryName = "Minis 1";
+}
+
+if(categoryName.includes("Schüler D Mädchen")){
+categoryName = "Schüler D Mädchen";
+}
+
+if(categoryName.includes("Schüler C Mädchen")){
+categoryName = "Schüler C Mädchen";
+}
+
+if(categoryName.includes("Schüler B Mädchen")){
+categoryName = "Schüler B Mädchen";
+}
+
+if(categoryName.includes("Schüler A Mädchen")){
+categoryName = "Schüler A Mädchen";
+}
+
+if(categoryName.includes("Cup A")){
+categoryName = "Cup A";
+}
+
+if(categoryName.includes("Cup B")){
+categoryName = "Cup B";
+}
+
+if(categoryName.includes("Erstlinge 1")){
+categoryName = "Erstlinge 1";
+}
+
+if(categoryName.includes("Erstlinge 2")){
+categoryName = "Erstlinge 2";
+}
 
 const category = {
 
