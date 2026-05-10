@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>🏆 RollArt Score Pro</title>
 
 <style>
@@ -186,25 +185,13 @@ border-radius:14px;
 
 <h2>🏟 Wettbewerb</h2>
 
-<input type="text"
-id="competitionName"
-placeholder="Wettbewerb">
+<input type="text" id="competitionName" placeholder="Wettbewerb">
+<input type="text" id="competitionPlace" placeholder="Ort">
+<input type="date" id="competitionFrom">
+<input type="date" id="competitionTo">
 
-<input type="text"
-id="competitionPlace"
-placeholder="Ort">
-
-<input type="date"
-id="competitionFrom">
-
-<input type="date"
-id="competitionTo">
-
-<button class="mainButton"
-onclick="saveCompetition()">
-
+<button class="mainButton" onclick="saveCompetition()">
 💾 Wettbewerb speichern
-
 </button>
 
 </div>
@@ -213,8 +200,7 @@ onclick="saveCompetition()">
 
 <h2>📋 Wettbewerbe</h2>
 
-<div id="competitionList"
-class="grid"></div>
+<div id="competitionList" class="grid"></div>
 
 </div>
 
@@ -232,11 +218,8 @@ class="grid"></div>
 id="competitionText"
 placeholder="Block aus PDF einfügen"></textarea>
 
-<button class="mainButton"
-onclick="parseCompetitionText()">
-
+<button class="mainButton" onclick="parseCompetitionText()">
 📥 Block importieren
-
 </button>
 
 </div>
@@ -245,8 +228,7 @@ onclick="parseCompetitionText()">
 
 <h2>🕒 Kategorien</h2>
 
-<div id="categoryList"
-class="grid"></div>
+<div id="categoryList" class="grid"></div>
 
 </div>
 
@@ -254,8 +236,7 @@ class="grid"></div>
 
 <h2>👥 Läufer</h2>
 
-<div id="runnerList"
-class="grid"></div>
+<div id="runnerList" class="grid"></div>
 
 </div>
 
@@ -269,8 +250,7 @@ class="grid"></div>
 
 <h2>⏱ Live Modus</h2>
 
-<div id="liveClock"
-class="bigText"></div>
+<div id="liveClock" class="bigText"></div>
 
 <input
 type="number"
@@ -278,11 +258,8 @@ id="timeOffset"
 value="0"
 placeholder="Zeitkorrektur Minuten">
 
-<button class="mainButton"
-onclick="updateLiveMode()">
-
+<button class="mainButton" onclick="renderLiveMode()">
 🔄 Aktualisieren
-
 </button>
 
 </div>
@@ -291,10 +268,7 @@ onclick="updateLiveMode()">
 
 <h2>🏁 Aktuelle Kategorie</h2>
 
-<div id="liveCategory"
-class="bigText">
--
-</div>
+<div id="liveCategory" class="bigText">-</div>
 
 </div>
 
@@ -302,9 +276,7 @@ class="bigText">
 
 <h2>👤 Aktueller Läufer</h2>
 
-<div id="liveRunner">
--
-</div>
+<div id="liveRunner">-</div>
 
 </div>
 
@@ -312,18 +284,12 @@ class="bigText">
 
 <h2>➡ Nächster Läufer</h2>
 
-<div id="nextRunner"
-class="bigText">
--
-</div>
+<div id="nextRunner" class="bigText">-</div>
 
 </div>
 
-<button class="confirmButton"
-onclick="confirmRunner()">
-
+<button class="confirmButton" onclick="confirmRunner()">
 ✅ Wertung bestätigen / Nächster Läufer
-
 </button>
 
 </div>
@@ -333,6 +299,8 @@ onclick="confirmRunner()">
 let competitions = [];
 let activeCompetition = null;
 let currentRunnerIndex = 0;
+
+/* Vereine */
 
 const knownClubs = [
 
@@ -346,7 +314,7 @@ const knownClubs = [
 
 ];
 
-/* ABZÜGE */
+/* Abzüge */
 
 const deductions = {
 
@@ -373,7 +341,7 @@ document.getElementById(pageId)
 
 if(pageId==="livePage"){
 
-updateLiveMode();
+renderLiveMode();
 
 }
 
@@ -500,7 +468,6 @@ activeCompetition.id === id
 ){
 
 activeCompetition = null;
-
 currentRunnerIndex = 0;
 
 }
@@ -536,6 +503,8 @@ text
 let currentCategory = null;
 
 lines.forEach(line=>{
+
+/* Kategorie */
 
 const categoryMatch =
 line.match(
@@ -577,6 +546,8 @@ return;
 
 }
 
+/* Läufer */
+
 const runnerMatch =
 line.match(/^(\d+)\s+(.+)$/);
 
@@ -612,7 +583,7 @@ break;
 
 }
 
-if(club==="") return;
+/* NICHT RETURN */
 
 activeCompetition.runners.push({
 
@@ -622,7 +593,7 @@ start:start,
 
 name:name,
 
-club:club,
+club:club || "-",
 
 category:currentCategory.name,
 
@@ -806,7 +777,7 @@ ${scoringHtml}
 
 }
 
-/* WERTUNG SPEICHERN */
+/* Punkte speichern */
 
 function saveRunnerScore(id){
 
@@ -833,33 +804,19 @@ parseFloat(document.getElementById("b2_"+id).value) || 0;
 runner.b3 =
 parseFloat(document.getElementById("b3_"+id).value) || 0;
 
-/* ABZUGSNUMMER */
+/* ABZUG */
 
 runner.deductionNumber =
 document.getElementById(
 "deductionNumber_"+id
 ).value.trim();
 
-/* ABZUG */
-
-if(
-deductions.hasOwnProperty(
-runner.deductionNumber
-)
-){
-
 runner.deduction =
 deductions[
 runner.deductionNumber
-];
+] || 0;
 
-}else{
-
-runner.deduction = 0;
-
-}
-
-/* GESAMT */
+/* Gesamt */
 
 const total =
 
@@ -879,54 +836,41 @@ total.toFixed(2);
 saveData();
 
 renderRunners();
-
-updateLiveMode();
+renderLiveMode();
 
 }
 
-/* BESTÄTIGEN */
+/* Bestätigen */
 
 function confirmRunner(){
 
 if(!activeCompetition) return;
 
-const runners =
-activeCompetition.runners;
+const category =
+getCurrentCategory();
 
-if(runners.length===0) return;
+if(!category) return;
 
-const runner =
-runners[currentRunnerIndex];
+const categoryRunners =
+activeCompetition.runners.filter(
+r=>r.categoryId===category.id
+);
 
-if(runner){
-
-runner.confirmed = true;
-
-}
+if(currentRunnerIndex < categoryRunners.length-1){
 
 currentRunnerIndex++;
 
-saveData();
+}
 
-renderRunners();
-
-updateLiveMode();
+renderLiveMode();
 
 }
 
-/* LIVE */
+/* Kategorie */
 
-function updateLiveMode(){
+function getCurrentCategory(){
 
-if(!activeCompetition){
-
-document.getElementById("liveCategory").innerHTML="-";
-document.getElementById("liveRunner").innerHTML="-";
-document.getElementById("nextRunner").innerHTML="-";
-
-return;
-
-}
+if(!activeCompetition) return null;
 
 const now = new Date();
 
@@ -939,10 +883,6 @@ now.setMinutes(now.getMinutes()+offset);
 
 const currentTime =
 now.toTimeString().substring(0,5);
-
-document.getElementById("liveClock")
-.innerHTML =
-"🕒 "+currentTime;
 
 let activeCategory = null;
 
@@ -959,10 +899,32 @@ activeCategory = cat;
 
 });
 
-if(!activeCategory){
+return activeCategory;
+
+}
+
+/* LIVE */
+
+function renderLiveMode(){
+
+if(!activeCompetition){
+
+document.getElementById("liveCategory").innerHTML="-";
+document.getElementById("liveRunner").innerHTML="-";
+document.getElementById("nextRunner").innerHTML="-";
+
+return;
+
+}
+
+const category =
+getCurrentCategory();
+
+if(!category){
 
 document.getElementById("liveCategory")
-.innerHTML="Keine aktive Kategorie";
+.innerHTML =
+"Keine aktive Kategorie";
 
 return;
 
@@ -970,24 +932,20 @@ return;
 
 document.getElementById("liveCategory")
 .innerHTML =
-activeCategory.name;
+category.name;
 
 const categoryRunners =
 activeCompetition.runners.filter(
-r=>r.categoryId===activeCategory.id
+r=>r.categoryId===category.id
 );
 
 if(categoryRunners.length===0) return;
 
 const currentRunner =
-categoryRunners[currentRunnerIndex]
-|| categoryRunners[0];
+categoryRunners[currentRunnerIndex];
 
 const nextRunner =
-categoryRunners[currentRunnerIndex+1]
-|| null;
-
-/* LIVE WERTUNG */
+categoryRunners[currentRunnerIndex+1];
 
 let liveHtml = `
 
@@ -1030,8 +988,7 @@ liveHtml += `
 <input
 id="deductionNumber_${currentRunner.id}"
 type="text"
-placeholder="Abzugsnummer"
-value="${currentRunner.deductionNumber || ""}">
+placeholder="Abzugsnummer">
 
 <input
 type="text"
@@ -1076,6 +1033,28 @@ ${nextRunner.name}
 :
 
 "Kein nächster Läufer";
+
+}
+
+/* Uhr separat */
+
+function updateClock(){
+
+const now = new Date();
+
+const offset =
+parseInt(
+document.getElementById("timeOffset").value
+) || 0;
+
+now.setMinutes(now.getMinutes()+offset);
+
+const currentTime =
+now.toTimeString().substring(0,5);
+
+document.getElementById("liveClock")
+.innerHTML =
+"🕒 "+currentTime;
 
 }
 
@@ -1135,7 +1114,9 @@ renderCompetitions();
 
 showPage("competitionPage");
 
-setInterval(updateLiveMode,1000);
+/* NUR UHR */
+
+setInterval(updateClock,1000);
 
 };
 
