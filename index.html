@@ -207,7 +207,7 @@ class="grid"></div>
 
 </div>
 
-<!-- Wettbewerb Detail -->
+<!-- Wettbewerb -->
 
 <div id="detailPage" class="page">
 
@@ -232,7 +232,7 @@ accept=".pdf">
 <button class="mainButton"
 onclick="readPDF()">
 
-PDF laden
+PDF laden & analysieren
 
 </button>
 
@@ -246,7 +246,8 @@ PDF laden
 
 <h2>🕒 Kategorien</h2>
 
-<div id="categoryList"></div>
+<div id="categoryList"
+class="grid"></div>
 
 </div>
 
@@ -256,7 +257,8 @@ PDF laden
 
 <h2>👥 Läufer</h2>
 
-<div id="runnerList"></div>
+<div id="runnerList"
+class="grid"></div>
 
 </div>
 
@@ -276,9 +278,7 @@ function showPage(pageId){
 document
 .querySelectorAll(".page")
 .forEach(page=>{
-
 page.style.display = "none";
-
 });
 
 document.getElementById(pageId)
@@ -336,10 +336,8 @@ clearCompetitionForm();
 
 function deleteCompetition(id){
 
-const confirmDelete =
-confirm("Wettbewerb löschen?");
-
-if(!confirmDelete) return;
+if(!confirm("Wettbewerb löschen?"))
+return;
 
 competitions =
 competitions.filter(c => c.id !== id);
@@ -392,22 +390,6 @@ const output =
 document.getElementById("competitionList");
 
 output.innerHTML = "";
-
-if(competitions.length === 0){
-
-output.innerHTML = `
-
-<div class="item">
-
-Noch keine Wettbewerbe gespeichert
-
-</div>
-
-`;
-
-return;
-
-}
 
 competitions.forEach(comp=>{
 
@@ -497,7 +479,7 @@ renderRunners();
 
 }
 
-/* PDF lesen */
+/* PDF */
 
 async function readPDF(){
 
@@ -530,7 +512,7 @@ await pdfjsLib
 .getDocument(typedarray)
 .promise;
 
-let fullText = "";
+let text = "";
 
 for(let i=1;i<=pdf.numPages;i++){
 
@@ -540,53 +522,150 @@ await pdf.getPage(i);
 const content =
 await page.getTextContent();
 
-const text =
+text += "\n" +
 content.items
 .map(item=>item.str)
 .join(" ");
 
-fullText += "\n" + text;
+}
+
+parsePDF(text);
+
+};
+
+reader.readAsArrayBuffer(file);
 
 }
 
-/* NUR SPEICHERN */
+/* PDF PARSER */
 
-activeCompetition.pdfText =
-fullText;
+function parsePDF(text){
+
+activeCompetition.categories = [];
+activeCompetition.runners = [];
+
+const cleaned =
+text
+.replace(/\r/g," ")
+.replace(/\n/g," ")
+.replace(/\s+/g," ")
+.trim();
+
+/* Kategorien */
+
+const categoryRegex =
+/(\d{2}:\d{2})\s+
+(\d{2}:\d{2})\s+
+\d{2}:\d{2}:\d{2}\s+
+\d{2}:\d{2}:\d{2}\s+
+\d+\s+
+\d+\s+
+([A-Za-zÄÖÜäöüß0-9 \.\-]+)/g;
+
+const categoryMatches =
+[...cleaned.matchAll(categoryRegex)];
+
+categoryMatches.forEach(match=>{
+
+const category = {
+
+id:Date.now()+Math.random(),
+
+begin:match[1],
+
+end:match[2],
+
+name:
+match[3]
+.replace(/• Startfolge Kür/gi,"")
+.replace(/• Startfolge Kurzkür/gi,"")
+.trim()
+
+};
+
+activeCompetition.categories.push(category);
+
+});
+
+/* Läufer */
+
+const runnerRegex =
+/(\d+)\s+
+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+
+(SSG Ronsdorf|
+RRD Wuppertal|
+Wattenscheider RSC|
+TG Westhofen|
+TV Datteln 09|
+RESG Walsum|
+1\. RC Recklinghausen|
+TV Walsum-Aldenrade 07)/g;
+
+const runnerMatches =
+[...cleaned.matchAll(runnerRegex)];
+
+let categoryIndex = 0;
+let counter = 0;
+
+runnerMatches.forEach(match=>{
+
+if(counter >= 8){
+
+categoryIndex++;
+counter = 0;
+
+}
+
+const currentCategory =
+activeCompetition.categories[categoryIndex];
+
+activeCompetition.runners.push({
+
+id:Date.now()+Math.random(),
+
+start:match[1],
+
+name:match[2].trim(),
+
+club:match[3].trim(),
+
+category:
+currentCategory
+? currentCategory.name
+: "Keine Kategorie"
+
+});
+
+counter++;
+
+});
 
 saveCompetitions();
+
+renderCategories();
+
+renderRunners();
 
 document.getElementById("pdfInfo")
 .innerHTML = `
 
 <div class="item">
 
-✅ PDF geladen
+✅ PDF analysiert
 
 <br><br>
 
-📄 Zeichen:
-${fullText.length}
+🕒 Kategorien:
+${activeCompetition.categories.length}
 
-</div>
+<br>
 
-<div class="item">
-
-<h3>PDF Vorschau</h3>
-
-<pre>
-
-${fullText.substring(0,3000)}
-
-</pre>
+👥 Läufer:
+${activeCompetition.runners.length}
 
 </div>
 
 `;
-
-};
-
-reader.readAsArrayBuffer(file);
 
 }
 
@@ -597,8 +676,9 @@ function renderCategories(){
 const output =
 document.getElementById("categoryList");
 
+output.innerHTML = "";
+
 if(
-!activeCompetition ||
 activeCompetition.categories.length === 0
 ){
 
@@ -606,7 +686,7 @@ output.innerHTML = `
 
 <div class="placeholder">
 
-Noch keine Kategorien
+Keine Kategorien
 
 </div>
 
@@ -616,7 +696,23 @@ return;
 
 }
 
-output.innerHTML = "";
+activeCompetition.categories.forEach(cat=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+<h3>
+${cat.name}
+</h3>
+
+🕒 ${cat.begin} - ${cat.end}
+
+</div>
+
+`;
+
+});
 
 }
 
@@ -627,8 +723,9 @@ function renderRunners(){
 const output =
 document.getElementById("runnerList");
 
+output.innerHTML = "";
+
 if(
-!activeCompetition ||
 activeCompetition.runners.length === 0
 ){
 
@@ -636,7 +733,7 @@ output.innerHTML = `
 
 <div class="placeholder">
 
-Noch keine Läufer
+Keine Läufer
 
 </div>
 
@@ -646,7 +743,31 @@ return;
 
 }
 
-output.innerHTML = "";
+activeCompetition.runners.forEach(runner=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+<h3>
+Start ${runner.start}
+</h3>
+
+👤 ${runner.name}
+
+<br><br>
+
+🏢 ${runner.club}
+
+<br><br>
+
+📂 ${runner.category}
+
+</div>
+
+`;
+
+});
 
 }
 
