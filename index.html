@@ -335,7 +335,6 @@ onclick="confirmRunner()">
 
 let competitions = [];
 let activeCompetition = null;
-
 let currentRunnerIndex = 0;
 
 const knownClubs = [
@@ -497,8 +496,6 @@ return;
 competitions =
 competitions.filter(c=>c.id!==id);
 
-/* LIVE RESET */
-
 if(
 activeCompetition &&
 activeCompetition.id === id
@@ -548,8 +545,6 @@ text
 let currentCategory = null;
 
 lines.forEach(line=>{
-
-/* Kategorie */
 
 const categoryMatch =
 line.match(
@@ -653,9 +648,9 @@ b2:"",
 b3:"",
 
 deductionNumber:"",
-deduction:"0.00",
+deduction:"",
 
-total:"0.00",
+total:"",
 
 confirmed:false
 
@@ -754,9 +749,9 @@ scoringHtml = `
 
 <div class="scoreGrid">
 
-<input id="a1_${runner.id}" type="number" step="0.01" placeholder="A1" value="${runner.a1}">
-<input id="a2_${runner.id}" type="number" step="0.01" placeholder="A2" value="${runner.a2}">
-<input id="a3_${runner.id}" type="number" step="0.01" placeholder="A3" value="${runner.a3}">
+<input id="a1_${runner.id}" type="number" step="0.01" placeholder="A1" value="${runner.a1 || ""}">
+<input id="a2_${runner.id}" type="number" step="0.01" placeholder="A2" value="${runner.a2 || ""}">
+<input id="a3_${runner.id}" type="number" step="0.01" placeholder="A3" value="${runner.a3 || ""}">
 
 </div>
 
@@ -764,9 +759,9 @@ scoringHtml = `
 
 <div class="scoreGrid">
 
-<input id="b1_${runner.id}" type="number" step="0.01" placeholder="B1" value="${runner.b1}">
-<input id="b2_${runner.id}" type="number" step="0.01" placeholder="B2" value="${runner.b2}">
-<input id="b3_${runner.id}" type="number" step="0.01" placeholder="B3" value="${runner.b3}">
+<input id="b1_${runner.id}" type="number" step="0.01" placeholder="B1" value="${runner.b1 || ""}">
+<input id="b2_${runner.id}" type="number" step="0.01" placeholder="B2" value="${runner.b2 || ""}">
+<input id="b3_${runner.id}" type="number" step="0.01" placeholder="B3" value="${runner.b3 || ""}">
 
 </div>
 
@@ -778,17 +773,17 @@ scoringHtml = `
 id="deductionNumber_${runner.id}"
 type="number"
 placeholder="Nr"
-value="${runner.deductionNumber}">
+value="${runner.deductionNumber || ""}">
 
 <input
 type="text"
 disabled
-value="Abzug: ${runner.deduction}">
+value="${runner.deduction || ""}">
 
 <input
 type="text"
 disabled
-value="Gesamt: ${runner.total}">
+value="${runner.total || ""}">
 
 </div>
 
@@ -843,7 +838,7 @@ ${scoringHtml}
 
 }
 
-/* Punkte */
+/* Punkte speichern */
 
 function saveRunnerScore(id){
 
@@ -870,21 +865,29 @@ parseFloat(document.getElementById("b2_"+id).value) || 0;
 runner.b3 =
 parseFloat(document.getElementById("b3_"+id).value) || 0;
 
-/* ABZUGSNUMMER */
+/* Abzugsnummer */
 
 runner.deductionNumber =
 document.getElementById(
 "deductionNumber_"+id
 ).value;
 
-/* ABZUG */
+/* Abzug */
+
+if(
+deductions[runner.deductionNumber] !== undefined
+){
 
 runner.deduction =
-deductions[runner.deductionNumber]
-? deductions[runner.deductionNumber]
-: 0;
+deductions[runner.deductionNumber];
 
-/* SUMME */
+}else{
+
+runner.deduction = 0;
+
+}
+
+/* Gesamt */
 
 const total =
 
@@ -965,9 +968,7 @@ document.getElementById("timeOffset").value
 now.setMinutes(now.getMinutes()+offset);
 
 const currentTime =
-now
-.toTimeString()
-.substring(0,5);
+now.toTimeString().substring(0,5);
 
 document.getElementById("liveClock")
 .innerHTML =
@@ -1104,12 +1105,12 @@ value="${currentRunner.deductionNumber || ""}">
 <input
 type="text"
 disabled
-value="Abzug: ${currentRunner.deduction || 0}">
+value="Abzug ${currentRunner.deduction || ""}">
 
 <input
 type="text"
 disabled
-value="Gesamt: ${currentRunner.total || "0.00"}">
+value="Gesamt ${currentRunner.total || ""}">
 
 </div>
 
