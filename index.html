@@ -17,7 +17,7 @@ color:white;
 }
 
 .app{
-max-width:1700px;
+max-width:1800px;
 margin:auto;
 padding:20px;
 }
@@ -139,6 +139,19 @@ background:#2563eb;
 color:white;
 }
 
+.liveBox{
+background:#0f766e;
+padding:20px;
+border-radius:20px;
+margin-top:20px;
+}
+
+.bigText{
+font-size:28px;
+font-weight:bold;
+margin-top:10px;
+}
+
 .infoBox{
 background:#1d4ed8;
 padding:16px;
@@ -182,6 +195,10 @@ border-radius:14px;
 
 <button onclick="showPage('detailPage')">
 📂 Wettbewerb
+</button>
+
+<button onclick="showPage('livePage')">
+⏱ Live
 </button>
 
 </div>
@@ -246,8 +263,6 @@ class="grid"></div>
 
 </div>
 
-<!-- TEXT IMPORT -->
-
 <div class="card">
 
 <h2>📋 Wettbewerbstext einfügen</h2>
@@ -266,8 +281,6 @@ onclick="parseCompetitionText()">
 <div id="importInfo"></div>
 
 </div>
-
-<!-- Kategorien -->
 
 <div class="card">
 
@@ -289,35 +302,73 @@ class="grid"></div>
 
 </div>
 
-<!-- Läufer -->
-
 <div class="card">
 
 <h2>👥 Läufer & Wertung</h2>
 
-<input type="text"
-id="newRunnerName"
-placeholder="Name">
+<div id="runnerList"
+class="grid"></div>
 
-<input type="text"
-id="newRunnerClub"
-placeholder="Verein">
+</div>
 
-<input type="number"
-id="newRunnerStart"
-placeholder="Startnummer">
+</div>
 
-<select id="newRunnerCategory"></select>
+<!-- LIVE -->
+
+<div id="livePage" class="page">
+
+<div class="liveBox">
+
+<h2>⏱ Live Wettbewerbsmodus</h2>
+
+<div id="liveClock"></div>
+
+<label>Zeitkorrektur Minuten</label>
+
+<input
+type="number"
+id="timeOffset"
+value="0">
 
 <button class="mainButton"
-onclick="addRunner()">
+onclick="updateLiveMode()">
 
-➕ Läufer hinzufügen
+🔄 Live aktualisieren
 
 </button>
 
-<div id="runnerList"
-class="grid"></div>
+</div>
+
+<div class="liveBox">
+
+<h2>🏁 Aktuelle Kategorie</h2>
+
+<div id="liveCategory"
+class="bigText">
+-
+</div>
+
+</div>
+
+<div class="liveBox">
+
+<h2>👤 Aktueller Läufer</h2>
+
+<div id="liveRunner"
+class="bigText">
+-
+</div>
+
+</div>
+
+<div class="liveBox">
+
+<h2>➡ Nächster Läufer</h2>
+
+<div id="nextRunner"
+class="bigText">
+-
+</div>
 
 </div>
 
@@ -329,6 +380,7 @@ class="grid"></div>
 
 let competitions = [];
 let activeCompetition = null;
+let liveRunnerIndex = 0;
 
 /* Seiten */
 
@@ -342,6 +394,12 @@ page.style.display = "none";
 
 document.getElementById(pageId)
 .style.display = "block";
+
+if(pageId === "livePage"){
+
+updateLiveMode();
+
+}
 
 }
 
@@ -370,7 +428,6 @@ const competition =
 competitions.find(c => c.id == editId);
 
 competition.name = name;
-
 competition.place =
 document.getElementById("competitionPlace").value;
 
@@ -398,7 +455,6 @@ to:
 document.getElementById("competitionTo").value,
 
 categories:[],
-
 runners:[]
 
 });
@@ -413,7 +469,22 @@ clearCompetitionForm();
 
 }
 
-/* Wettbewerb bearbeiten */
+/* Wettbewerb */
+
+function openCompetition(id){
+
+activeCompetition =
+competitions.find(c => c.id === id);
+
+saveCompetitions();
+
+renderCompetitions();
+
+renderActiveCompetition();
+
+showPage("detailPage");
+
+}
 
 function editCompetition(id){
 
@@ -429,19 +500,15 @@ document.getElementById("competitionName").value =
 competition.name;
 
 document.getElementById("competitionPlace").value =
-competition.place || "";
+competition.place;
 
 document.getElementById("competitionFrom").value =
-competition.from || "";
+competition.from;
 
 document.getElementById("competitionTo").value =
-competition.to || "";
-
-showPage("competitionPage");
+competition.to;
 
 }
-
-/* Wettbewerb löschen */
 
 function deleteCompetition(id){
 
@@ -451,43 +518,13 @@ return;
 competitions =
 competitions.filter(c => c.id !== id);
 
-if(
-activeCompetition &&
-activeCompetition.id === id
-){
-
-activeCompetition = null;
-
-}
-
 saveCompetitions();
 
 renderCompetitions();
 
-renderActiveCompetition();
-
 }
 
-/* Wettbewerb öffnen */
-
-function openCompetition(id){
-
-const competition =
-competitions.find(c => c.id === id);
-
-if(!competition) return;
-
-activeCompetition = competition;
-
-saveCompetitions();
-
-renderActiveCompetition();
-
-showPage("detailPage");
-
-}
-
-/* Wettbewerbe anzeigen */
+/* Anzeigen */
 
 function renderCompetitions(){
 
@@ -496,26 +533,13 @@ document.getElementById("competitionList");
 
 output.innerHTML = "";
 
-if(competitions.length === 0){
-
-output.innerHTML =
-`<div class="placeholder">
-Noch keine Wettbewerbe gespeichert
-</div>`;
-
-return;
-
-}
-
 competitions.forEach(comp=>{
 
 output.innerHTML += `
 
 <div class="item">
 
-<h3>
-🏆 ${comp.name}
-</h3>
+<h3>${comp.name}</h3>
 
 📍 ${comp.place || "-"}
 
@@ -552,8 +576,6 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
-/* Aktiver Wettbewerb */
-
 function renderActiveCompetition(){
 
 const output =
@@ -574,9 +596,7 @@ output.innerHTML = `
 
 <div class="infoBox">
 
-<h2>
-🏆 ${activeCompetition.name}
-</h2>
+<h2>${activeCompetition.name}</h2>
 
 📍 ${activeCompetition.place || "-"}
 
@@ -595,7 +615,7 @@ renderRunners();
 
 }
 
-/* BLOCK IMPORT */
+/* TEXT IMPORT */
 
 function parseCompetitionText(){
 
@@ -607,15 +627,7 @@ return;
 }
 
 const text =
-document.getElementById("competitionText")
-.value;
-
-if(text.trim() === ""){
-
-alert("Bitte Text einfügen");
-return;
-
-}
+document.getElementById("competitionText").value;
 
 const lines =
 text
@@ -625,91 +637,6 @@ text
 
 let currentCategory = null;
 
-lines.forEach(line=>{
-
-const categoryMatch =
-line.match(
-/(\d{2}:\d{2})\s+(\d{2}:\d{2}).+?([A-Za-zÄÖÜäöüß]+\s?[0-9A-Za-z\.\- ]+)$/
-);
-
-if(categoryMatch){
-
-let categoryName =
-categoryMatch[3]
-.replace(/• Startfolge Kür/gi,"")
-.trim();
-
-let existingCategory =
-activeCompetition.categories.find(
-cat => cat.name === categoryName
-);
-
-if(existingCategory){
-
-currentCategory = existingCategory;
-
-}else{
-
-currentCategory = {
-
-id:Date.now()+Math.random(),
-
-begin:categoryMatch[1],
-
-end:categoryMatch[2],
-
-name:categoryName
-
-};
-
-activeCompetition.categories.push(currentCategory);
-
-}
-
-return;
-
-}
-
-if(line.includes("• Startfolge Kür")){
-
-const categoryName =
-line
-.replace("• Startfolge Kür","")
-.trim();
-
-let existingCategory =
-activeCompetition.categories.find(
-cat => cat.name === categoryName
-);
-
-if(existingCategory){
-
-currentCategory = existingCategory;
-
-}else{
-
-currentCategory = {
-
-id:Date.now()+Math.random(),
-
-begin:"--:--",
-
-end:"--:--",
-
-name:categoryName
-
-};
-
-activeCompetition.categories.push(currentCategory);
-
-}
-
-return;
-
-}
-
-/* Läufer */
-
 const knownClubs = [
 
 "SSG Ronsdorf",
@@ -718,20 +645,60 @@ const knownClubs = [
 "TG Westhofen",
 "TV Datteln 09",
 "RESG Walsum",
-"1. RC Recklinghausen",
-"TV Walsum-Aldenrade 07"
+"1. RC Recklinghausen"
 
 ];
+
+lines.forEach(line=>{
+
+const categoryMatch =
+line.match(
+/(\d{2}:\d{2})\s+(\d{2}:\d{2}).+?([A-Za-zÄÖÜäöüß0-9\.\- ]+)$/
+);
+
+if(categoryMatch){
+
+const name =
+categoryMatch[3]
+.replace(/• Startfolge Kür/gi,"")
+.trim();
+
+let existing =
+activeCompetition.categories.find(
+c => c.name === name
+);
+
+if(existing){
+
+currentCategory = existing;
+
+}else{
+
+currentCategory = {
+
+id:Date.now()+Math.random(),
+
+begin:categoryMatch[1],
+end:categoryMatch[2],
+name:name
+
+};
+
+activeCompetition.categories.push(currentCategory);
+
+}
+
+return;
+
+}
 
 const runnerMatch =
 line.match(/^(\d+)\s+(.+)$/);
 
 if(runnerMatch && currentCategory){
 
-const start = runnerMatch[1];
-
-let rest =
-runnerMatch[2];
+let start = runnerMatch[1];
+let rest = runnerMatch[2];
 
 let club = "";
 let name = rest;
@@ -751,30 +718,16 @@ rest
 
 });
 
-const alreadyExists =
-activeCompetition.runners.find(
-r =>
-
-r.start == start &&
-r.name == name &&
-r.category == currentCategory.name
-);
-
-if(alreadyExists) return;
-
 activeCompetition.runners.push({
 
 id:Date.now()+Math.random(),
 
 start:start,
-
 name:name,
-
 club:club,
 
-categoryId:currentCategory.id,
-
 category:currentCategory.name,
+categoryId:currentCategory.id,
 
 a1:"",
 a2:"",
@@ -795,14 +748,11 @@ total:""
 saveCompetitions();
 
 renderCategories();
-
 renderRunners();
 
-document.getElementById("competitionText")
-.value = "";
+document.getElementById("competitionText").value = "";
 
-document.getElementById("importInfo")
-.innerHTML = `
+document.getElementById("importInfo").innerHTML = `
 
 <div class="item">
 
@@ -828,8 +778,6 @@ ${activeCompetition.runners.length}
 
 function addCategory(){
 
-if(!activeCompetition) return;
-
 const name =
 document.getElementById("newCategoryName")
 .value
@@ -842,9 +790,7 @@ activeCompetition.categories.push({
 id:Date.now()+Math.random(),
 
 name:name,
-
 begin:"--:--",
-
 end:"--:--"
 
 });
@@ -852,29 +798,6 @@ end:"--:--"
 saveCompetitions();
 
 renderCategories();
-
-updateCategorySelect();
-
-document.getElementById("newCategoryName")
-.value = "";
-
-}
-
-function deleteCategory(id){
-
-if(!confirm("Kategorie löschen?"))
-return;
-
-activeCompetition.categories =
-activeCompetition.categories.filter(
-cat => cat.id != id
-);
-
-saveCompetitions();
-
-renderCategories();
-
-updateCategorySelect();
 
 }
 
@@ -885,19 +808,7 @@ document.getElementById("categoryList");
 
 output.innerHTML = "";
 
-if(
-!activeCompetition ||
-activeCompetition.categories.length === 0
-){
-
-output.innerHTML =
-`<div class="placeholder">
-Keine Kategorien
-</div>`;
-
-return;
-
-}
+if(!activeCompetition) return;
 
 activeCompetition.categories.forEach(cat=>{
 
@@ -909,166 +820,37 @@ output.innerHTML += `
 
 🕒 ${cat.begin} - ${cat.end}
 
-<button class="deleteButton"
-onclick="deleteCategory('${cat.id}')">
-
-🗑 Kategorie löschen
-
-</button>
-
 </div>
 
 `;
 
 });
 
-updateCategorySelect();
+}
+
+/* Wertung aktiv? */
+
+function scoringEnabled(category){
+
+const scoringCategories = [
+
+"Figurenläufer",
+"Kunstläufer",
+"Nachwuchs",
+"Cup",
+"Schüler",
+"Jugend",
+"Meisterklasse"
+
+];
+
+return scoringCategories.some(c =>
+category.includes(c)
+);
 
 }
 
 /* Läufer */
-
-function addRunner(){
-
-if(!activeCompetition) return;
-
-const name =
-document.getElementById("newRunnerName")
-.value
-.trim();
-
-if(name === "") return;
-
-const club =
-document.getElementById("newRunnerClub")
-.value
-.trim();
-
-const start =
-document.getElementById("newRunnerStart")
-.value;
-
-const categoryId =
-document.getElementById("newRunnerCategory")
-.value;
-
-const category =
-activeCompetition.categories.find(
-cat => cat.id == categoryId
-);
-
-activeCompetition.runners.push({
-
-id:Date.now()+Math.random(),
-
-start:start,
-
-name:name,
-
-club:club,
-
-categoryId:category ? category.id : null,
-
-category:category ? category.name : "Keine Kategorie",
-
-a1:"",
-a2:"",
-a3:"",
-b1:"",
-b2:"",
-b3:"",
-deductionNumber:"",
-deduction:"",
-total:""
-
-});
-
-saveCompetitions();
-
-renderRunners();
-
-}
-
-/* Punkte speichern */
-
-function saveRunnerScore(id){
-
-const runner =
-activeCompetition.runners.find(
-r => r.id == id
-);
-
-if(!runner) return;
-
-/* A */
-
-runner.a1 =
-Number(document.getElementById("a1_"+id).value) || 0;
-
-runner.a2 =
-Number(document.getElementById("a2_"+id).value) || 0;
-
-runner.a3 =
-Number(document.getElementById("a3_"+id).value) || 0;
-
-/* B */
-
-runner.b1 =
-Number(document.getElementById("b1_"+id).value) || 0;
-
-runner.b2 =
-Number(document.getElementById("b2_"+id).value) || 0;
-
-runner.b3 =
-Number(document.getElementById("b3_"+id).value) || 0;
-
-/* Abzug */
-
-runner.deductionNumber =
-document.getElementById("deductionNumber_"+id).value;
-
-runner.deduction =
-Number(document.getElementById("deduction_"+id).value) || 0;
-
-/* Durchschnitt */
-
-const avgA =
-(runner.a1 + runner.a2 + runner.a3) / 3;
-
-const avgB =
-(runner.b1 + runner.b2 + runner.b3) / 3;
-
-/* Gesamt */
-
-runner.total =
-(avgA + avgB - runner.deduction)
-.toFixed(2);
-
-saveCompetitions();
-
-renderRunners();
-
-}
-
-/* Läufer löschen */
-
-function deleteRunner(id){
-
-if(!confirm("Läufer löschen?"))
-return;
-
-activeCompetition.runners =
-activeCompetition.runners.filter(
-runner => runner.id != id
-);
-
-saveCompetitions();
-
-renderRunners();
-
-}
-
-/* Läufer anzeigen */
 
 function renderRunners(){
 
@@ -1077,39 +859,15 @@ document.getElementById("runnerList");
 
 output.innerHTML = "";
 
-if(
-!activeCompetition ||
-activeCompetition.runners.length === 0
-){
-
-output.innerHTML =
-`<div class="placeholder">
-Keine Läufer
-</div>`;
-
-return;
-
-}
+if(!activeCompetition) return;
 
 activeCompetition.runners.forEach(runner=>{
 
-output.innerHTML += `
+let scoringHtml = "";
 
-<div class="item">
+if(scoringEnabled(runner.category)){
 
-<h3>
-Start ${runner.start}
-</h3>
-
-👤 ${runner.name}
-
-<br><br>
-
-🏢 ${runner.club}
-
-<br><br>
-
-📂 ${runner.category}
+scoringHtml = `
 
 <div class="scoreBox">
 
@@ -1117,26 +875,9 @@ Start ${runner.start}
 
 <div class="scoreGrid">
 
-<input
-id="a1_${runner.id}"
-type="number"
-step="0.01"
-placeholder="A1"
-value="${runner.a1 || ""}">
-
-<input
-id="a2_${runner.id}"
-type="number"
-step="0.01"
-placeholder="A2"
-value="${runner.a2 || ""}">
-
-<input
-id="a3_${runner.id}"
-type="number"
-step="0.01"
-placeholder="A3"
-value="${runner.a3 || ""}">
+<input id="a1_${runner.id}" type="number" step="0.01" placeholder="A1" value="${runner.a1 || ""}">
+<input id="a2_${runner.id}" type="number" step="0.01" placeholder="A2" value="${runner.a2 || ""}">
+<input id="a3_${runner.id}" type="number" step="0.01" placeholder="A3" value="${runner.a3 || ""}">
 
 </div>
 
@@ -1144,26 +885,9 @@ value="${runner.a3 || ""}">
 
 <div class="scoreGrid">
 
-<input
-id="b1_${runner.id}"
-type="number"
-step="0.01"
-placeholder="B1"
-value="${runner.b1 || ""}">
-
-<input
-id="b2_${runner.id}"
-type="number"
-step="0.01"
-placeholder="B2"
-value="${runner.b2 || ""}">
-
-<input
-id="b3_${runner.id}"
-type="number"
-step="0.01"
-placeholder="B3"
-value="${runner.b3 || ""}">
+<input id="b1_${runner.id}" type="number" step="0.01" placeholder="B1" value="${runner.b1 || ""}">
+<input id="b2_${runner.id}" type="number" step="0.01" placeholder="B2" value="${runner.b2 || ""}">
+<input id="b3_${runner.id}" type="number" step="0.01" placeholder="B3" value="${runner.b3 || ""}">
 
 </div>
 
@@ -1201,12 +925,27 @@ onclick="saveRunnerScore('${runner.id}')">
 
 </div>
 
-<button class="deleteButton"
-onclick="deleteRunner('${runner.id}')">
+`;
 
-🗑 Läufer löschen
+}
 
-</button>
+output.innerHTML += `
+
+<div class="item">
+
+<h3>Start ${runner.start}</h3>
+
+👤 ${runner.name}
+
+<br><br>
+
+🏢 ${runner.club}
+
+<br><br>
+
+📂 ${runner.category}
+
+${scoringHtml}
 
 </div>
 
@@ -1216,40 +955,135 @@ onclick="deleteRunner('${runner.id}')">
 
 }
 
-/* Kategorie Select */
+/* Punkte */
 
-function updateCategorySelect(){
+function saveRunnerScore(id){
 
-const select =
-document.getElementById("newRunnerCategory");
+const runner =
+activeCompetition.runners.find(
+r => r.id == id
+);
 
-if(!select) return;
+runner.a1 =
+Number(document.getElementById("a1_"+id).value) || 0;
 
-select.innerHTML = "";
+runner.a2 =
+Number(document.getElementById("a2_"+id).value) || 0;
+
+runner.a3 =
+Number(document.getElementById("a3_"+id).value) || 0;
+
+runner.b1 =
+Number(document.getElementById("b1_"+id).value) || 0;
+
+runner.b2 =
+Number(document.getElementById("b2_"+id).value) || 0;
+
+runner.b3 =
+Number(document.getElementById("b3_"+id).value) || 0;
+
+runner.deductionNumber =
+document.getElementById("deductionNumber_"+id).value;
+
+runner.deduction =
+Number(document.getElementById("deduction_"+id).value) || 0;
+
+const avgA =
+(runner.a1 + runner.a2 + runner.a3) / 3;
+
+const avgB =
+(runner.b1 + runner.b2 + runner.b3) / 3;
+
+runner.total =
+(avgA + avgB - runner.deduction)
+.toFixed(2);
+
+saveCompetitions();
+
+renderRunners();
+
+}
+
+/* LIVE */
+
+function updateLiveMode(){
+
+if(!activeCompetition) return;
+
+const now = new Date();
+
+const offset =
+Number(document.getElementById("timeOffset").value) || 0;
+
+now.setMinutes(now.getMinutes() + offset);
+
+const currentTime =
+now.toTimeString().substring(0,5);
+
+document.getElementById("liveClock").innerHTML =
+"🕒 " + currentTime;
+
+let activeCategory = null;
+
+activeCompetition.categories.forEach(cat=>{
 
 if(
-!activeCompetition ||
-activeCompetition.categories.length === 0
+currentTime >= cat.begin &&
+currentTime <= cat.end
 ){
 
-select.innerHTML =
-`<option>Keine Kategorien</option>`;
+activeCategory = cat;
+
+}
+
+});
+
+if(!activeCategory){
+
+document.getElementById("liveCategory").innerHTML =
+"Keine aktive Kategorie";
 
 return;
 
 }
 
-activeCompetition.categories.forEach(cat=>{
+document.getElementById("liveCategory").innerHTML =
+activeCategory.name;
 
-select.innerHTML += `
+const runners =
+activeCompetition.runners.filter(
+r => r.categoryId == activeCategory.id
+);
 
-<option value="${cat.id}">
-${cat.name}
-</option>
+if(runners.length === 0) return;
 
+const currentRunner =
+runners[liveRunnerIndex] || runners[0];
+
+const nextRunner =
+runners[liveRunnerIndex + 1] || null;
+
+document.getElementById("liveRunner").innerHTML =
+
+`
+Start ${currentRunner.start}
+<br>
+${currentRunner.name}
 `;
 
-});
+document.getElementById("nextRunner").innerHTML =
+
+nextRunner ?
+
+`
+Start ${nextRunner.start}
+<br>
+${nextRunner.name}
+`
+
+:
+
+"Kein nächster Läufer";
 
 }
 
@@ -1304,7 +1138,6 @@ JSON.parse(savedActive);
 function clearCompetitionForm(){
 
 document.getElementById("editCompetitionId").value = "";
-
 document.getElementById("competitionName").value = "";
 document.getElementById("competitionPlace").value = "";
 document.getElementById("competitionFrom").value = "";
@@ -1323,6 +1156,8 @@ renderCompetitions();
 renderActiveCompetition();
 
 showPage("competitionPage");
+
+setInterval(updateLiveMode,1000);
 
 };
 
