@@ -1,12 +1,14 @@
-```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RollArt Score Pro</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <style>
+
 body{
 margin:0;
 padding:0;
@@ -14,22 +16,26 @@ font-family:Arial,sans-serif;
 background:#0f172a;
 color:white;
 }
+
 .app{
 max-width:1600px;
 margin:auto;
 padding:20px;
 }
+
 .logo{
 font-size:34px;
 font-weight:bold;
 margin-bottom:20px;
 }
+
 .tabs{
 display:flex;
 flex-wrap:wrap;
 gap:10px;
 margin-bottom:20px;
 }
+
 .tabs button{
 background:#1e293b;
 border:none;
@@ -39,26 +45,31 @@ border-radius:14px;
 cursor:pointer;
 font-size:16px;
 }
+
 .page{
 display:none;
 }
+
 .card{
 background:#1e293b;
 padding:20px;
 border-radius:20px;
 margin-top:20px;
 }
+
 .item{
 background:#334155;
 padding:16px;
 border-radius:16px;
 margin-top:15px;
 }
+
 .grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
 gap:15px;
 }
+
 input{
 width:100%;
 padding:14px;
@@ -70,6 +81,7 @@ color:white;
 box-sizing:border-box;
 font-size:16px;
 }
+
 button{
 padding:14px;
 border:none;
@@ -78,30 +90,35 @@ cursor:pointer;
 font-size:16px;
 font-weight:bold;
 }
+
 .mainButton{
 width:100%;
 margin-top:15px;
 background:linear-gradient(135deg,#2563eb,#7c3aed);
 color:white;
 }
+
 .deleteButton{
 width:100%;
 margin-top:10px;
 background:#dc2626;
 color:white;
 }
+
 .openButton{
 width:100%;
 margin-top:10px;
 background:#16a34a;
 color:white;
 }
+
 .infoBox{
 background:#1d4ed8;
 padding:16px;
 border-radius:16px;
 margin-top:15px;
 }
+
 .placeholder{
 border:2px dashed #64748b;
 padding:20px;
@@ -110,8 +127,11 @@ margin-top:15px;
 text-align:center;
 color:#cbd5e1;
 }
+
 </style>
+
 </head>
+
 <body>
 
 <div class="app">
@@ -121,60 +141,116 @@ color:#cbd5e1;
 </div>
 
 <div class="tabs">
-<button onclick="showPage('competitionPage')">🏟 Wettbewerbe</button>
-<button onclick="showPage('detailPage')">📂 Wettbewerb</button>
+
+<button onclick="showPage('competitionPage')">
+🏟 Wettbewerbe
+</button>
+
+<button onclick="showPage('detailPage')">
+📂 Wettbewerb
+</button>
+
 </div>
+
+<!-- Wettbewerbe -->
 
 <div id="competitionPage" class="page">
 
 <div class="card">
+
 <h2>🏟 Neuer Wettbewerb</h2>
 
-<input type="text" id="competitionName" placeholder="Wettbewerb">
-<input type="text" id="competitionPlace" placeholder="Ort">
+<input type="text"
+id="competitionName"
+placeholder="Wettbewerb">
+
+<input type="text"
+id="competitionPlace"
+placeholder="Ort">
 
 <label>Von</label>
-<input type="date" id="competitionFrom">
+
+<input type="date"
+id="competitionFrom">
 
 <label>Bis</label>
-<input type="date" id="competitionTo">
 
-<button class="mainButton" onclick="addCompetition()">
+<input type="date"
+id="competitionTo">
+
+<button class="mainButton"
+onclick="addCompetition()">
+
 💾 Wettbewerb speichern
+
 </button>
+
 </div>
 
 <div class="card">
+
 <h2>📋 Gespeicherte Wettbewerbe</h2>
-<div id="competitionList" class="grid"></div>
+
+<div id="competitionList"
+class="grid"></div>
+
 </div>
 
 </div>
+
+<!-- Wettbewerb -->
 
 <div id="detailPage" class="page">
 
 <div class="card">
+
 <h2>📂 Aktiver Wettbewerb</h2>
+
 <div id="activeCompetition"></div>
+
 </div>
 
+<!-- PDF -->
+
 <div class="card">
+
 <h2>📄 PDF Import</h2>
-<input type="file" id="pdfUpload" accept=".pdf">
-<button class="mainButton" onclick="readPDF()">
+
+<input type="file"
+id="pdfUpload"
+accept=".pdf">
+
+<button class="mainButton"
+onclick="readPDF()">
+
 PDF laden & analysieren
+
 </button>
+
 <div id="pdfInfo"></div>
+
 </div>
 
+<!-- Kategorien -->
+
 <div class="card">
+
 <h2>🕒 Kategorien</h2>
-<div id="categoryList" class="grid"></div>
+
+<div id="categoryList"
+class="grid"></div>
+
 </div>
 
+<!-- Läufer -->
+
 <div class="card">
+
 <h2>👥 Läufer</h2>
-<div id="runnerList" class="grid"></div>
+
+<div id="runnerList"
+class="grid"></div>
+
 </div>
 
 </div>
@@ -186,312 +262,603 @@ PDF laden & analysieren
 let competitions = [];
 let activeCompetition = null;
 
+/* Seiten */
+
 function showPage(pageId){
 
- document.querySelectorAll('.page').forEach(page=>{
-  page.style.display = 'none';
- });
+document
+.querySelectorAll(".page")
+.forEach(page=>{
+page.style.display = "none";
+});
 
- document.getElementById(pageId).style.display = 'block';
+document.getElementById(pageId)
+.style.display = "block";
+
 }
+
+/* Wettbewerb hinzufügen */
 
 function addCompetition(){
 
- const name = document.getElementById('competitionName').value.trim();
+const name =
+document.getElementById("competitionName").value.trim();
 
- if(name === ''){
-  alert('Bitte Wettbewerb eingeben');
-  return;
- }
+if(name === ""){
 
- const competition = {
-  id: Date.now(),
-  name: name,
-  place: document.getElementById('competitionPlace').value,
-  from: document.getElementById('competitionFrom').value,
-  to: document.getElementById('competitionTo').value,
-  categories: [],
-  runners: [],
-  pdfText: ''
- };
+alert("Bitte Wettbewerb eingeben");
+return;
 
- competitions.push(competition);
-
- saveCompetitions();
- renderCompetitions();
- clearCompetitionForm();
 }
+
+const competition = {
+
+id:Date.now(),
+
+name:name,
+
+place:
+document.getElementById("competitionPlace").value,
+
+from:
+document.getElementById("competitionFrom").value,
+
+to:
+document.getElementById("competitionTo").value,
+
+categories:[],
+runners:[],
+scores:[],
+pdfText:""
+
+};
+
+competitions.push(competition);
+
+saveCompetitions();
+
+renderCompetitions();
+
+clearCompetitionForm();
+
+}
+
+/* Wettbewerb löschen */
 
 function deleteCompetition(id){
 
- if(!confirm('Wettbewerb löschen?')) return;
+if(!confirm("Wettbewerb löschen?"))
+return;
 
- competitions = competitions.filter(c => c.id !== id);
+competitions =
+competitions.filter(c => c.id !== id);
 
- if(activeCompetition && activeCompetition.id === id){
-  activeCompetition = null;
-  localStorage.removeItem('rollart_active_competition');
- }
+if(
+activeCompetition &&
+activeCompetition.id === id
+){
 
- saveCompetitions();
- renderCompetitions();
- renderActiveCompetition();
+activeCompetition = null;
+
+localStorage.removeItem(
+"rollart_active_competition"
+);
+
 }
+
+saveCompetitions();
+
+renderCompetitions();
+
+renderActiveCompetition();
+
+}
+
+/* Wettbewerb öffnen */
 
 function openCompetition(id){
 
- const competition = competitions.find(c => c.id === id);
- if(!competition) return;
+const competition =
+competitions.find(c => c.id === id);
 
- activeCompetition = competition;
+if(!competition) return;
 
- saveCompetitions();
- renderActiveCompetition();
- showPage('detailPage');
+activeCompetition = competition;
+
+saveCompetitions();
+
+renderActiveCompetition();
+
+showPage("detailPage");
+
 }
+
+/* Wettbewerbe anzeigen */
 
 function renderCompetitions(){
 
- const output = document.getElementById('competitionList');
- output.innerHTML = '';
+const output =
+document.getElementById("competitionList");
 
- if(competitions.length === 0){
-  output.innerHTML = '<div class="item">Noch keine Wettbewerbe gespeichert</div>';
-  return;
- }
+output.innerHTML = "";
 
- competitions.forEach(comp=>{
+if(competitions.length === 0){
 
-  output.innerHTML += `
-  <div class="item">
-   <h3>🏆 ${comp.name}</h3>
-   📍 ${comp.place || '-'}
-   <br><br>
-   📅 ${comp.from || '-'} bis ${comp.to || '-'}
+output.innerHTML = `
 
-   <button class="openButton" onclick="openCompetition(${comp.id})">
-   📂 Öffnen
-   </button>
+<div class="item">
 
-   <button class="deleteButton" onclick="deleteCompetition(${comp.id})">
-   🗑 Löschen
-   </button>
-  </div>
-  `;
+Noch keine Wettbewerbe gespeichert
 
- });
+</div>
+
+`;
+
+return;
+
 }
+
+competitions.forEach(comp=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+<h3>
+🏆 ${comp.name}
+</h3>
+
+📍 ${comp.place || "-"}
+
+<br><br>
+
+📅 ${comp.from || "-"}
+bis
+${comp.to || "-"}
+
+<button class="openButton"
+onclick="openCompetition(${comp.id})">
+
+📂 Öffnen
+
+</button>
+
+<button class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
+
+🗑 Löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+/* Aktiver Wettbewerb */
 
 function renderActiveCompetition(){
 
- const output = document.getElementById('activeCompetition');
+const output =
+document.getElementById("activeCompetition");
 
- if(!activeCompetition){
-  output.innerHTML = '<div class="item">Kein Wettbewerb ausgewählt</div>';
-  return;
- }
+if(!activeCompetition){
 
- output.innerHTML = `
- <div class="infoBox">
- <h2>🏆 ${activeCompetition.name}</h2>
- 📍 ${activeCompetition.place || '-'}
- <br><br>
- 📅 ${activeCompetition.from || '-'} bis ${activeCompetition.to || '-'}
- </div>
- `;
+output.innerHTML = `
 
- renderCategories();
- renderRunners();
+<div class="item">
+
+Kein Wettbewerb ausgewählt
+
+</div>
+
+`;
+
+return;
+
 }
+
+output.innerHTML = `
+
+<div class="infoBox">
+
+<h2>
+🏆 ${activeCompetition.name}
+</h2>
+
+📍 ${activeCompetition.place || "-"}
+
+<br><br>
+
+📅 ${activeCompetition.from || "-"}
+bis
+${activeCompetition.to || "-"}
+
+</div>
+
+`;
+
+renderCategories();
+renderRunners();
+
+}
+
+/* PDF */
 
 async function readPDF(){
 
- if(!activeCompetition){
-  alert('Bitte Wettbewerb öffnen');
-  return;
- }
+if(!activeCompetition){
 
- const file = document.getElementById('pdfUpload').files[0];
+alert("Bitte Wettbewerb öffnen");
+return;
 
- if(!file){
-  alert('Bitte PDF auswählen');
-  return;
- }
-
- const reader = new FileReader();
-
- reader.onload = async function(){
-
-  const typedarray = new Uint8Array(this.result);
-
-  const pdf = await pdfjsLib.getDocument(typedarray).promise;
-
-  let text = '';
-
-  for(let i=1;i<=pdf.numPages;i++){
-
-   const page = await pdf.getPage(i);
-   const content = await page.getTextContent();
-
-   text += ' ' + content.items.map(item => item.str).join(' ');
-  }
-
-  parsePDF(text);
- };
-
- reader.readAsArrayBuffer(file);
 }
+
+const file =
+document.getElementById("pdfUpload").files[0];
+
+if(!file){
+
+alert("Bitte PDF auswählen");
+return;
+
+}
+
+const reader = new FileReader();
+
+reader.onload = async function(){
+
+const typedarray =
+new Uint8Array(this.result);
+
+const pdf =
+await pdfjsLib
+.getDocument(typedarray)
+.promise;
+
+let text = "";
+
+for(let i=1;i<=pdf.numPages;i++){
+
+const page =
+await pdf.getPage(i);
+
+const content =
+await page.getTextContent();
+
+text += " " +
+content.items
+.map(item=>item.str)
+.join(" ");
+
+}
+
+parsePDF(text);
+
+};
+
+reader.readAsArrayBuffer(file);
+
+}
+
+/* PDF PARSER */
 
 function parsePDF(text){
 
- activeCompetition.categories = [];
- activeCompetition.runners = [];
+activeCompetition.categories = [];
+activeCompetition.runners = [];
 
- const cleaned = text.replace(/\s+/g,' ').trim();
+const cleaned =
+text
+.replace(/\r/g," ")
+.replace(/\n/g," ")
+.replace(/\s+/g," ")
+.trim();
 
- const categoryRegex = /(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+\d{2}:\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}\s+\d+\s+\d+\s+([A-Za-zÄÖÜäöüß0-9\.\- ]+)/g;
+/* KATEGORIE BLÖCKE */
 
- let match;
+const categoryRegex =
+/(\d{2}:\d{2})\s+
+(\d{2}:\d{2})\s+
+\d{2}:\d{2}:\d{2}\s+
+\d{2}:\d{2}:\d{2}\s+
+\d+\s+
+\d+\s+
+([A-Za-zÄÖÜäöüß0-9\.\- ]+?)
+(?=
+\d{2}:\d{2}\s+\d{2}:\d{2}
+|$)/g;
 
- while((match = categoryRegex.exec(cleaned)) !== null){
+const categoryMatches =
+[...cleaned.matchAll(categoryRegex)];
 
-  let categoryName = match[3]
-   .split(/\s+\d+\s+/)[0]
-   .replace('• Startfolge Kür','')
-   .trim();
+categoryMatches.forEach((match,index)=>{
 
-  activeCompetition.categories.push({
-   id: Date.now() + Math.random(),
-   begin: match[1],
-   end: match[2],
-   name: categoryName
-  });
- }
+let categoryName =
+match[3]
+.replace(/• Startfolge Kür/gi,"")
+.replace(/• Startfolge Kurzkür/gi,"")
+.replace(/Westhofener Kürpokal/gi,"")
+.trim();
 
- const runnerRegex = /(\d+)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+(SSG Ronsdorf|RRD Wuppertal|Wattenscheider RSC|TG Westhofen|TV Datteln 09|RESG Walsum|1\. RC Recklinghausen|TV Walsum-Aldenrade 07)/g;
+/* MÜLL ABSCHNEIDEN */
 
- let runnerMatch;
- let categoryIndex = 0;
- let runnerCounter = 0;
+categoryName =
+categoryName
+.split(/\s+1\s+[A-ZÄÖÜ]/)[0]
+.trim();
 
- while((runnerMatch = runnerRegex.exec(cleaned)) !== null){
+const category = {
 
-  if(runnerCounter >= 8){
-   categoryIndex++;
-   runnerCounter = 0;
-  }
+id:Date.now()+Math.random(),
 
-  activeCompetition.runners.push({
-   id: Date.now() + Math.random(),
-   start: runnerMatch[1],
-   name: runnerMatch[2].trim(),
-   club: runnerMatch[3].trim(),
-   category: activeCompetition.categories[categoryIndex]
-    ? activeCompetition.categories[categoryIndex].name
-    : 'Keine Kategorie'
-  });
+begin:match[1],
 
-  runnerCounter++;
- }
+end:match[2],
 
- saveCompetitions();
- renderCategories();
- renderRunners();
+name:categoryName
 
- document.getElementById('pdfInfo').innerHTML = `
- <div class="item">
- ✅ PDF analysiert
- <br><br>
- 🕒 Kategorien: ${activeCompetition.categories.length}
- <br>
- 👥 Läufer: ${activeCompetition.runners.length}
- </div>
- `;
+};
+
+activeCompetition.categories.push(category);
+
+/* BLOCK */
+
+const blockStart = match.index;
+
+const blockEnd =
+index < categoryMatches.length - 1
+? categoryMatches[index+1].index
+: cleaned.length;
+
+const blockText =
+cleaned.substring(blockStart,blockEnd);
+
+/* LÄUFER */
+
+const runnerRegex =
+/(\d+)\s+
+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]+?)\s+
+(SSG Ronsdorf|
+RRD Wuppertal|
+Wattenscheider RSC|
+TG Westhofen|
+TV Datteln 09|
+RESG Walsum|
+1\. RC Recklinghausen|
+TV Walsum-Aldenrade 07)/g;
+
+const runnerMatches =
+[...blockText.matchAll(runnerRegex)];
+
+runnerMatches.forEach(runner=>{
+
+activeCompetition.runners.push({
+
+id:Date.now()+Math.random(),
+
+start:runner[1],
+
+name:runner[2].trim(),
+
+club:runner[3].trim(),
+
+category:category.name
+
+});
+
+});
+
+});
+
+saveCompetitions();
+
+renderCategories();
+
+renderRunners();
+
+document.getElementById("pdfInfo")
+.innerHTML = `
+
+<div class="item">
+
+✅ PDF analysiert
+
+<br><br>
+
+🕒 Kategorien:
+${activeCompetition.categories.length}
+
+<br>
+
+👥 Läufer:
+${activeCompetition.runners.length}
+
+</div>
+
+`;
+
 }
+
+/* Kategorien */
 
 function renderCategories(){
 
- const output = document.getElementById('categoryList');
- output.innerHTML = '';
+const output =
+document.getElementById("categoryList");
 
- if(activeCompetition.categories.length === 0){
-  output.innerHTML = '<div class="placeholder">Keine Kategorien</div>';
-  return;
- }
+output.innerHTML = "";
 
- activeCompetition.categories.forEach(cat=>{
+if(
+!activeCompetition ||
+activeCompetition.categories.length === 0
+){
 
-  output.innerHTML += `
-  <div class="item">
-   <h3>${cat.name}</h3>
-   🕒 ${cat.begin} - ${cat.end}
-  </div>
-  `;
- });
+output.innerHTML = `
+
+<div class="placeholder">
+
+Keine Kategorien
+
+</div>
+
+`;
+
+return;
+
 }
+
+activeCompetition.categories.forEach(cat=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+<h3>
+${cat.name}
+</h3>
+
+🕒 ${cat.begin} - ${cat.end}
+
+</div>
+
+`;
+
+});
+
+}
+
+/* Läufer */
 
 function renderRunners(){
 
- const output = document.getElementById('runnerList');
- output.innerHTML = '';
+const output =
+document.getElementById("runnerList");
 
- if(activeCompetition.runners.length === 0){
-  output.innerHTML = '<div class="placeholder">Keine Läufer</div>';
-  return;
- }
+output.innerHTML = "";
 
- activeCompetition.runners.forEach(runner=>{
+if(
+!activeCompetition ||
+activeCompetition.runners.length === 0
+){
 
-  output.innerHTML += `
-  <div class="item">
-   <h3>Start ${runner.start}</h3>
-   👤 ${runner.name}
-   <br><br>
-   🏢 ${runner.club}
-   <br><br>
-   📂 ${runner.category}
-  </div>
-  `;
- });
+output.innerHTML = `
+
+<div class="placeholder">
+
+Keine Läufer
+
+</div>
+
+`;
+
+return;
+
 }
+
+activeCompetition.runners.forEach(runner=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+<h3>
+Start ${runner.start}
+</h3>
+
+👤 ${runner.name}
+
+<br><br>
+
+🏢 ${runner.club}
+
+<br><br>
+
+📂 ${runner.category}
+
+</div>
+
+`;
+
+});
+
+}
+
+/* Speichern */
 
 function saveCompetitions(){
 
- localStorage.setItem('rollart_competitions',JSON.stringify(competitions));
- localStorage.setItem('rollart_active_competition',JSON.stringify(activeCompetition));
+localStorage.setItem(
+"rollart_competitions",
+JSON.stringify(competitions)
+);
+
+localStorage.setItem(
+"rollart_active_competition",
+JSON.stringify(activeCompetition)
+);
+
 }
+
+/* Laden */
 
 function loadCompetitions(){
 
- const saved = localStorage.getItem('rollart_competitions');
- if(saved){
-  competitions = JSON.parse(saved);
- }
+const saved =
+localStorage.getItem(
+"rollart_competitions"
+);
 
- const savedActive = localStorage.getItem('rollart_active_competition');
- if(savedActive){
-  activeCompetition = JSON.parse(savedActive);
- }
+if(saved){
+
+competitions =
+JSON.parse(saved);
+
 }
+
+const savedActive =
+localStorage.getItem(
+"rollart_active_competition"
+);
+
+if(savedActive){
+
+activeCompetition =
+JSON.parse(savedActive);
+
+}
+
+}
+
+/* Formular leeren */
 
 function clearCompetitionForm(){
 
- document.getElementById('competitionName').value = '';
- document.getElementById('competitionPlace').value = '';
- document.getElementById('competitionFrom').value = '';
- document.getElementById('competitionTo').value = '';
+document.getElementById("competitionName").value = "";
+document.getElementById("competitionPlace").value = "";
+document.getElementById("competitionFrom").value = "";
+document.getElementById("competitionTo").value = "";
+
 }
+
+/* Start */
 
 window.onload = function(){
 
- loadCompetitions();
- renderCompetitions();
- renderActiveCompetition();
- showPage('competitionPage');
-}
+loadCompetitions();
+
+renderCompetitions();
+
+renderActiveCompetition();
+
+showPage("competitionPage");
+
+};
 
 </script>
 
 </body>
 </html>
-```
