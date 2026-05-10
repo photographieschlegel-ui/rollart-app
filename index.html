@@ -149,6 +149,12 @@ background:#1e293b;
 border-radius:14px;
 }
 
+.ok{
+color:#4ade80;
+font-weight:bold;
+margin-top:10px;
+}
+
 </style>
 
 </head>
@@ -349,14 +355,11 @@ function saveCompetition(){
 
 const name =
 document.getElementById("competitionName")
-.value
-.trim();
+.value.trim();
 
 if(name===""){
-
 alert("Bitte Wettbewerb eingeben");
 return;
-
 }
 
 competitions.push({
@@ -444,8 +447,6 @@ renderRunners();
 
 showPage("detailPage");
 
-saveData();
-
 }
 
 /* Wettbewerb löschen */
@@ -464,15 +465,12 @@ activeCompetition.id === id
 ){
 
 activeCompetition = null;
-currentRunnerIndex = 0;
 
 }
 
 saveData();
 
 renderCompetitions();
-renderCategories();
-renderRunners();
 
 }
 
@@ -548,7 +546,6 @@ line.match(/^(\d+)\s+(.+)$/);
 if(runnerMatch && currentCategory){
 
 let start = runnerMatch[1];
-
 let rest = runnerMatch[2];
 
 let club = "";
@@ -600,8 +597,8 @@ b2:"",
 b3:"",
 
 deductionNumber:"",
-deduction:"",
-total:"",
+deduction:0,
+total:0,
 
 confirmed:false
 
@@ -626,8 +623,6 @@ function renderCategories(){
 
 const output =
 document.getElementById("categoryList");
-
-if(!output) return;
 
 output.innerHTML="";
 
@@ -696,17 +691,17 @@ scoringHtml = `
 
 <div class="scoreGrid">
 
-<input id="a1_${runner.id}" type="number" step="0.01" placeholder="A1" value="${runner.a1 || ""}">
-<input id="a2_${runner.id}" type="number" step="0.01" placeholder="A2" value="${runner.a2 || ""}">
-<input id="a3_${runner.id}" type="number" step="0.01" placeholder="A3" value="${runner.a3 || ""}">
+<input id="a1_${runner.id}" type="number" step="0.01" value="${runner.a1}">
+<input id="a2_${runner.id}" type="number" step="0.01" value="${runner.a2}">
+<input id="a3_${runner.id}" type="number" step="0.01" value="${runner.a3}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="b1_${runner.id}" type="number" step="0.01" placeholder="B1" value="${runner.b1 || ""}">
-<input id="b2_${runner.id}" type="number" step="0.01" placeholder="B2" value="${runner.b2 || ""}">
-<input id="b3_${runner.id}" type="number" step="0.01" placeholder="B3" value="${runner.b3 || ""}">
+<input id="b1_${runner.id}" type="number" step="0.01" value="${runner.b1}">
+<input id="b2_${runner.id}" type="number" step="0.01" value="${runner.b2}">
+<input id="b3_${runner.id}" type="number" step="0.01" value="${runner.b3}">
 
 </div>
 
@@ -715,18 +710,18 @@ scoringHtml = `
 <input
 id="deductionNumber_${runner.id}"
 type="text"
-placeholder="Abzugsnummer"
-value="${runner.deductionNumber || ""}">
+placeholder="Abzug"
+value="${runner.deductionNumber}">
 
 <input
 type="text"
 disabled
-value="Abzug ${runner.deduction || ""}">
+value="-${runner.deduction}">
 
 <input
 type="text"
 disabled
-value="Gesamt ${runner.total || ""}">
+value="${runner.total}">
 
 </div>
 
@@ -736,6 +731,8 @@ onclick="saveRunnerScore('${runner.id}')">
 💾 Speichern
 
 </button>
+
+${runner.confirmed ? '<div class="ok">✅ Gespeichert</div>' : ''}
 
 </div>
 
@@ -778,23 +775,41 @@ activeCompetition.runners.find(
 r=>r.id==id
 );
 
+if(!runner) return;
+
+/* A */
+
 runner.a1 =
-parseFloat(document.getElementById("a1_"+id).value) || 0;
+parseFloat(
+document.getElementById("a1_"+id).value
+) || 0;
 
 runner.a2 =
-parseFloat(document.getElementById("a2_"+id).value) || 0;
+parseFloat(
+document.getElementById("a2_"+id).value
+) || 0;
 
 runner.a3 =
-parseFloat(document.getElementById("a3_"+id).value) || 0;
+parseFloat(
+document.getElementById("a3_"+id).value
+) || 0;
+
+/* B */
 
 runner.b1 =
-parseFloat(document.getElementById("b1_"+id).value) || 0;
+parseFloat(
+document.getElementById("b1_"+id).value
+) || 0;
 
 runner.b2 =
-parseFloat(document.getElementById("b2_"+id).value) || 0;
+parseFloat(
+document.getElementById("b2_"+id).value
+) || 0;
 
 runner.b3 =
-parseFloat(document.getElementById("b3_"+id).value) || 0;
+parseFloat(
+document.getElementById("b3_"+id).value
+) || 0;
 
 /* ABZUG */
 
@@ -803,12 +818,26 @@ document.getElementById(
 "deductionNumber_"+id
 ).value.trim();
 
-runner.deduction =
+if(
 deductions[
 runner.deductionNumber
-] || 0;
+] !== undefined
+){
 
-/* Gesamt */
+runner.deduction =
+parseFloat(
+deductions[
+runner.deductionNumber
+]
+);
+
+}else{
+
+runner.deduction = 0;
+
+}
+
+/* GESAMT */
 
 const total =
 
@@ -825,9 +854,16 @@ runner.deduction;
 runner.total =
 total.toFixed(2);
 
+runner.confirmed = true;
+
 saveData();
 
-alert("Wertung gespeichert");
+renderRunners();
+
+alert(
+"Gesamt: " +
+runner.total
+);
 
 }
 
@@ -960,17 +996,17 @@ liveHtml += `
 
 <div class="scoreGrid">
 
-<input id="a1_${currentRunner.id}" type="number" step="0.01" placeholder="A1" value="${currentRunner.a1 || ""}">
-<input id="a2_${currentRunner.id}" type="number" step="0.01" placeholder="A2" value="${currentRunner.a2 || ""}">
-<input id="a3_${currentRunner.id}" type="number" step="0.01" placeholder="A3" value="${currentRunner.a3 || ""}">
+<input id="a1_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.a1}">
+<input id="a2_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.a2}">
+<input id="a3_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.a3}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="b1_${currentRunner.id}" type="number" step="0.01" placeholder="B1" value="${currentRunner.b1 || ""}">
-<input id="b2_${currentRunner.id}" type="number" step="0.01" placeholder="B2" value="${currentRunner.b2 || ""}">
-<input id="b3_${currentRunner.id}" type="number" step="0.01" placeholder="B3" value="${currentRunner.b3 || ""}">
+<input id="b1_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.b1}">
+<input id="b2_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.b2}">
+<input id="b3_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.b3}">
 
 </div>
 
@@ -979,18 +1015,18 @@ liveHtml += `
 <input
 id="deductionNumber_${currentRunner.id}"
 type="text"
-placeholder="Abzugsnummer"
-value="${currentRunner.deductionNumber || ""}">
+placeholder="Abzug"
+value="${currentRunner.deductionNumber}">
 
 <input
 type="text"
 disabled
-value="Abzug ${currentRunner.deduction || ""}">
+value="-${currentRunner.deduction}">
 
 <input
 type="text"
 disabled
-value="Gesamt ${currentRunner.total || ""}">
+value="${currentRunner.total}">
 
 </div>
 
@@ -1028,7 +1064,7 @@ ${nextRunner.name}
 
 }
 
-/* Uhr separat */
+/* Uhr */
 
 function updateClock(){
 
@@ -1059,11 +1095,6 @@ localStorage.setItem(
 JSON.stringify(competitions)
 );
 
-localStorage.setItem(
-"rollart_active",
-JSON.stringify(activeCompetition)
-);
-
 }
 
 /* Laden */
@@ -1079,18 +1110,6 @@ if(saved){
 
 competitions =
 JSON.parse(saved);
-
-}
-
-const active =
-localStorage.getItem(
-"rollart_active"
-);
-
-if(active){
-
-activeCompetition =
-JSON.parse(active);
 
 }
 
