@@ -167,8 +167,7 @@ color:#cbd5e1;
 
 <h2>🏟 Wettbewerb</h2>
 
-<input type="hidden"
-id="editCompetitionId">
+<input type="hidden" id="editCompetitionId">
 
 <input type="text"
 id="competitionName"
@@ -208,7 +207,7 @@ class="grid"></div>
 
 </div>
 
-<!-- Wettbewerb Detail -->
+<!-- Wettbewerb -->
 
 <div id="detailPage" class="page">
 
@@ -660,6 +659,7 @@ match[3]
 .replace(/• Startfolge Kür/gi,"")
 .replace(/• Startfolge Kurzkür/gi,"")
 .replace(/Westhofener Kürpokal/gi,"")
+.replace(/\s+/g," ")
 .trim();
 
 categoryName =
@@ -667,35 +667,32 @@ categoryName
 .split(/\s+1\s+[A-ZÄÖÜ]/)[0]
 .trim();
 
-/* Sonderfälle */
+const specialCategories = [
 
-if(categoryName.includes("Freiläufer 1")){
-categoryName = "Freiläufer 1";
+"Freiläufer 1",
+"Freiläufer 2",
+"Minis 1",
+"Minis 2",
+"Schüler D Mädchen",
+"Schüler C Mädchen",
+"Schüler B Mädchen",
+"Schüler A Mädchen",
+"Cup A",
+"Cup B",
+"Erstlinge 1",
+"Erstlinge 2"
+
+];
+
+specialCategories.forEach(name=>{
+
+if(categoryName.includes(name)){
+
+categoryName = name;
+
 }
 
-if(categoryName.includes("Freiläufer 2")){
-categoryName = "Freiläufer 2";
-}
-
-if(categoryName.includes("Minis 2")){
-categoryName = "Minis 2";
-}
-
-if(categoryName.includes("Schüler D Mädchen")){
-categoryName = "Schüler D Mädchen";
-}
-
-if(categoryName.includes("Schüler C Mädchen")){
-categoryName = "Schüler C Mädchen";
-}
-
-if(categoryName.includes("Schüler B Mädchen")){
-categoryName = "Schüler B Mädchen";
-}
-
-if(categoryName.includes("Schüler A Mädchen")){
-categoryName = "Schüler A Mädchen";
-}
+});
 
 const category = {
 
@@ -710,6 +707,27 @@ name:categoryName
 };
 
 activeCompetition.categories.push(category);
+
+/* Doppelkategorien */
+
+if(
+match[0].includes("Schüler B Mädchen") &&
+match[0].includes("Schüler A Mädchen")
+){
+
+activeCompetition.categories.push({
+
+id:Date.now()+Math.random(),
+
+begin:match[1],
+
+end:match[2],
+
+name:"Schüler A Mädchen"
+
+});
+
+}
 
 /* Block */
 
@@ -752,6 +770,18 @@ category:category.name
 });
 
 });
+
+/* Doppelte Kategorien entfernen */
+
+activeCompetition.categories =
+activeCompetition.categories.filter(
+(cat,index,self)=>
+
+index === self.findIndex(
+c => c.name === cat.name
+)
+
+);
 
 saveCompetitions();
 
@@ -1030,7 +1060,7 @@ onclick="deleteRunner('${runner.id}')">
 
 }
 
-/* Select */
+/* Kategorie Select */
 
 function updateCategorySelect(){
 
