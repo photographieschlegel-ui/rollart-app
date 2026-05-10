@@ -6,6 +6,8 @@
 
 <title>RollArt Score Pro</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <style>
 
 body{
@@ -131,6 +133,11 @@ text-align:center;
 color:#cbd5e1;
 }
 
+pre{
+white-space:pre-wrap;
+word-break:break-word;
+}
+
 </style>
 </head>
 
@@ -218,11 +225,18 @@ class="grid"></div>
 
 <h2>📄 PDF Import</h2>
 
-<div class="placeholder">
+<input type="file"
+id="pdfUpload"
+accept=".pdf">
 
-PDF Upload kommt als nächstes
+<button class="mainButton"
+onclick="readPDF()">
 
-</div>
+PDF laden
+
+</button>
+
+<div id="pdfInfo"></div>
 
 </div>
 
@@ -254,6 +268,8 @@ PDF Upload kommt als nächstes
 
 let competitions = [];
 let activeCompetition = null;
+
+/* Seiten */
 
 function showPage(pageId){
 
@@ -301,7 +317,8 @@ document.getElementById("competitionTo").value,
 
 categories:[],
 runners:[],
-scores:[]
+scores:[],
+pdfText:""
 
 };
 
@@ -359,10 +376,7 @@ if(!competition) return;
 
 activeCompetition = competition;
 
-localStorage.setItem(
-"rollart_active_competition",
-JSON.stringify(activeCompetition)
-);
+saveCompetitions();
 
 renderActiveCompetition();
 
@@ -454,12 +468,6 @@ Kein Wettbewerb ausgewählt
 
 `;
 
-document.getElementById("categoryList")
-.innerHTML = "";
-
-document.getElementById("runnerList")
-.innerHTML = "";
-
 return;
 
 }
@@ -486,6 +494,99 @@ ${activeCompetition.to || "-"}
 
 renderCategories();
 renderRunners();
+
+}
+
+/* PDF lesen */
+
+async function readPDF(){
+
+if(!activeCompetition){
+
+alert("Bitte Wettbewerb öffnen");
+return;
+
+}
+
+const file =
+document.getElementById("pdfUpload").files[0];
+
+if(!file){
+
+alert("Bitte PDF auswählen");
+return;
+
+}
+
+const reader = new FileReader();
+
+reader.onload = async function(){
+
+const typedarray =
+new Uint8Array(this.result);
+
+const pdf =
+await pdfjsLib
+.getDocument(typedarray)
+.promise;
+
+let fullText = "";
+
+for(let i=1;i<=pdf.numPages;i++){
+
+const page =
+await pdf.getPage(i);
+
+const content =
+await page.getTextContent();
+
+const text =
+content.items
+.map(item=>item.str)
+.join(" ");
+
+fullText += "\n" + text;
+
+}
+
+/* NUR SPEICHERN */
+
+activeCompetition.pdfText =
+fullText;
+
+saveCompetitions();
+
+document.getElementById("pdfInfo")
+.innerHTML = `
+
+<div class="item">
+
+✅ PDF geladen
+
+<br><br>
+
+📄 Zeichen:
+${fullText.length}
+
+</div>
+
+<div class="item">
+
+<h3>PDF Vorschau</h3>
+
+<pre>
+
+${fullText.substring(0,3000)}
+
+</pre>
+
+</div>
+
+`;
+
+};
+
+reader.readAsArrayBuffer(file);
 
 }
 
@@ -517,20 +618,6 @@ return;
 
 output.innerHTML = "";
 
-activeCompetition.categories.forEach(cat=>{
-
-output.innerHTML += `
-
-<div class="item">
-
-🕒 ${cat.name}
-
-</div>
-
-`;
-
-});
-
 }
 
 /* Läufer */
@@ -561,20 +648,6 @@ return;
 
 output.innerHTML = "";
 
-activeCompetition.runners.forEach(runner=>{
-
-output.innerHTML += `
-
-<div class="item">
-
-👤 ${runner.name}
-
-</div>
-
-`;
-
-});
-
 }
 
 /* Speichern */
@@ -586,14 +659,10 @@ localStorage.setItem(
 JSON.stringify(competitions)
 );
 
-if(activeCompetition){
-
 localStorage.setItem(
 "rollart_active_competition",
 JSON.stringify(activeCompetition)
 );
-
-}
 
 }
 
