@@ -17,7 +17,7 @@ color:white;
 }
 
 .app{
-max-width:1500px;
+max-width:1600px;
 margin:auto;
 padding:20px;
 }
@@ -122,6 +122,15 @@ border-radius:16px;
 margin-top:15px;
 }
 
+.placeholder{
+border:2px dashed #64748b;
+padding:20px;
+border-radius:16px;
+margin-top:15px;
+text-align:center;
+color:#cbd5e1;
+}
+
 </style>
 </head>
 
@@ -191,7 +200,7 @@ class="grid"></div>
 
 </div>
 
-<!-- Wettbewerb Details -->
+<!-- Wettbewerb Detail -->
 
 <div id="detailPage" class="page">
 
@@ -203,26 +212,37 @@ class="grid"></div>
 
 </div>
 
+<!-- PDF -->
+
 <div class="card">
 
-<h2>🚧 Nächste Schritte</h2>
+<h2>📄 PDF Import</h2>
 
-<div class="item">
+<div class="placeholder">
 
-Hier kommen später:
-<br><br>
-
-• PDF Import
-<br>
-• Kategorien
-<br>
-• Läufer
-<br>
-• Wertung
-<br>
-• Export
+PDF Upload kommt als nächstes
 
 </div>
+
+</div>
+
+<!-- Kategorien -->
+
+<div class="card">
+
+<h2>🕒 Kategorien</h2>
+
+<div id="categoryList"></div>
+
+</div>
+
+<!-- Läufer -->
+
+<div class="card">
+
+<h2>👥 Läufer</h2>
+
+<div id="runnerList"></div>
 
 </div>
 
@@ -233,7 +253,6 @@ Hier kommen später:
 <script>
 
 let competitions = [];
-
 let activeCompetition = null;
 
 function showPage(pageId){
@@ -278,7 +297,11 @@ from:
 document.getElementById("competitionFrom").value,
 
 to:
-document.getElementById("competitionTo").value
+document.getElementById("competitionTo").value,
+
+categories:[],
+runners:[],
+scores:[]
 
 };
 
@@ -412,7 +435,7 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
-/* Aktiven Wettbewerb anzeigen */
+/* Aktiver Wettbewerb */
 
 function renderActiveCompetition(){
 
@@ -430,6 +453,12 @@ Kein Wettbewerb ausgewählt
 </div>
 
 `;
+
+document.getElementById("categoryList")
+.innerHTML = "";
+
+document.getElementById("runnerList")
+.innerHTML = "";
 
 return;
 
@@ -455,6 +484,97 @@ ${activeCompetition.to || "-"}
 
 `;
 
+renderCategories();
+renderRunners();
+
+}
+
+/* Kategorien */
+
+function renderCategories(){
+
+const output =
+document.getElementById("categoryList");
+
+if(
+!activeCompetition ||
+activeCompetition.categories.length === 0
+){
+
+output.innerHTML = `
+
+<div class="placeholder">
+
+Noch keine Kategorien
+
+</div>
+
+`;
+
+return;
+
+}
+
+output.innerHTML = "";
+
+activeCompetition.categories.forEach(cat=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+🕒 ${cat.name}
+
+</div>
+
+`;
+
+});
+
+}
+
+/* Läufer */
+
+function renderRunners(){
+
+const output =
+document.getElementById("runnerList");
+
+if(
+!activeCompetition ||
+activeCompetition.runners.length === 0
+){
+
+output.innerHTML = `
+
+<div class="placeholder">
+
+Noch keine Läufer
+
+</div>
+
+`;
+
+return;
+
+}
+
+output.innerHTML = "";
+
+activeCompetition.runners.forEach(runner=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+👤 ${runner.name}
+
+</div>
+
+`;
+
+});
+
 }
 
 /* Speichern */
@@ -465,6 +585,15 @@ localStorage.setItem(
 "rollart_competitions",
 JSON.stringify(competitions)
 );
+
+if(activeCompetition){
+
+localStorage.setItem(
+"rollart_active_competition",
+JSON.stringify(activeCompetition)
+);
+
+}
 
 }
 
