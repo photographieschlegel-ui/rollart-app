@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>🏆 RollArt Score Pro Online</title>
+
+<!-- ========================================= -->
+<!-- PWA -->
+<!-- ========================================= -->
+
+<link rel="manifest" href="./manifest.json">
+
+<meta name="theme-color" content="#2563eb">
 
 <style>
 
@@ -509,10 +519,6 @@ let competitions = [];
 let activeCompetition = null;
 let currentRunnerIndex = 0;
 
-/* ========================================= */
-/* VEREINE */
-/* ========================================= */
-
 const knownClubs = [
 
 "SSG Ronsdorf",
@@ -526,10 +532,6 @@ const knownClubs = [
 
 ];
 
-/* ========================================= */
-/* ABZÜGE */
-/* ========================================= */
-
 const deductions = {
 
 "1":0.3,
@@ -540,7 +542,6 @@ const deductions = {
 "6":0.3,
 "7":0.3,
 "8":0.3,
-
 "9":0.5,
 "10":0.5,
 "11":0.3,
@@ -550,7 +551,6 @@ const deductions = {
 "15":0.3,
 "16":0.5,
 "17":0.2,
-
 "18":0.5,
 "19":0.5,
 "20":0.5,
@@ -559,8 +559,6 @@ const deductions = {
 "23":0.2
 
 };
-
-/* ========================================= */
 
 function showPage(pageId){
 
@@ -574,14 +572,10 @@ document.getElementById(pageId)
 .style.display="block";
 
 if(pageId==="livePage"){
-
 renderLiveMode();
-
 }
 
 }
-
-/* ========================================= */
 
 async function saveData(){
 
@@ -591,8 +585,6 @@ competitions
 
 }
 
-/* ========================================= */
-
 async function loadData(){
 
 competitions =
@@ -601,8 +593,6 @@ await loadOnline();
 renderCompetitions();
 
 }
-
-/* ========================================= */
 
 function saveCompetition(){
 
@@ -641,8 +631,6 @@ renderCompetitions();
 
 }
 
-/* ========================================= */
-
 function deleteCompetition(id){
 
 if(!confirm("Wettbewerb wirklich löschen?"))
@@ -653,22 +641,11 @@ competitions.filter(
 c=>c.id!==id
 );
 
-if(
-activeCompetition &&
-activeCompetition.id===id
-){
-
-activeCompetition = null;
-
-}
-
 saveData();
 
 renderCompetitions();
 
 }
-
-/* ========================================= */
 
 function renderCompetitions(){
 
@@ -715,8 +692,6 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
-/* ========================================= */
-
 function openCompetition(id){
 
 activeCompetition =
@@ -730,8 +705,6 @@ renderRunners();
 showPage("detailPage");
 
 }
-
-/* ========================================= */
 
 function parseCompetitionText(){
 
@@ -839,7 +812,6 @@ categoryId:currentCategory.id,
 a1:"",
 a2:"",
 a3:"",
-
 b1:"",
 b2:"",
 b3:"",
@@ -865,8 +837,6 @@ renderCategories();
 renderRunners();
 
 }
-
-/* ========================================= */
 
 function renderCategories(){
 
@@ -895,8 +865,6 @@ output.innerHTML += `
 
 }
 
-/* ========================================= */
-
 function scoringEnabled(category){
 
 const scoringCategories = [
@@ -917,8 +885,6 @@ c=>category.includes(c)
 
 }
 
-/* ========================================= */
-
 function updateRanking(categoryId){
 
 const runners =
@@ -934,8 +900,6 @@ r.place=index+1;
 });
 
 }
-
-/* ========================================= */
 
 function getPlaceHtml(place){
 
@@ -976,8 +940,6 @@ return `
 `;
 
 }
-
-/* ========================================= */
 
 function renderRunners(){
 
@@ -1076,8 +1038,6 @@ ${scoreHtml}
 
 }
 
-/* ========================================= */
-
 function saveRunnerScore(id,isLive=false){
 
 const runner =
@@ -1140,13 +1100,10 @@ runner.total = Number(
 runner.a1 +
 runner.a2 +
 runner.a3 +
-
 runner.b1 +
 runner.b2 +
 runner.b3 -
-
 runner.deduction
-
 ).toFixed(2)
 
 );
@@ -1162,14 +1119,10 @@ saveData();
 renderRunners();
 
 if(isLive){
-
 renderLiveMode();
-
 }
 
 }
-
-/* ========================================= */
 
 function getCurrentCategory(){
 
@@ -1208,8 +1161,6 @@ activeCategory = cat;
 return activeCategory;
 
 }
-
-/* ========================================= */
 
 function renderLiveMode(){
 
@@ -1261,9 +1212,7 @@ if(
 active &&
 active.tagName==="INPUT"
 ){
-
 return;
-
 }
 
 let html = `
@@ -1383,8 +1332,6 @@ ${nextRunner.name}
 
 }
 
-/* ========================================= */
-
 function confirmRunner(){
 
 const category =
@@ -1406,8 +1353,6 @@ currentRunnerIndex++;
 renderLiveMode();
 
 }
-
-/* ========================================= */
 
 function updateClock(){
 
@@ -1431,15 +1376,11 @@ document.getElementById("liveClock")
 
 }
 
-/* ========================================= */
-
 function printResults(){
 
 window.print();
 
 }
-
-/* ========================================= */
 
 window.onload = async function(){
 
@@ -1477,6 +1418,18 @@ showPage("competitionPage");
 setInterval(updateClock,1000);
 
 };
+
+/* ========================================= */
+/* PWA SERVICE WORKER */
+/* ========================================= */
+
+if("serviceWorker" in navigator){
+
+navigator.serviceWorker.register(
+"./service-worker.js"
+);
+
+}
 
 </script>
 
