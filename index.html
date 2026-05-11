@@ -319,6 +319,8 @@ let competitions = [];
 let activeCompetition = null;
 let currentRunnerIndex = 0;
 
+/* Vereine */
+
 const knownClubs = [
 
 "SSG Ronsdorf",
@@ -327,9 +329,18 @@ const knownClubs = [
 "TG Westhofen",
 "TV Datteln 09",
 "RESG Walsum",
-"1. RC Recklinghausen"
+"1. RC Recklinghausen",
+
+"TV Walsum-Aldenrade 07",
+"Rollkunstlauf Akademie",
+"ERC Westfalen",
+"REV Gruga",
+"TuS Wiehl",
+"SC Fortuna Bonn"
 
 ];
+
+/* Abzüge */
 
 const deductions = {
 
@@ -753,45 +764,17 @@ scoringHtml = `
 
 <div class="scoreGrid">
 
-<input
-id="a1_${runner.id}"
-type="number"
-step="0.01"
-value="${runner.a1 || ""}">
-
-<input
-id="a2_${runner.id}"
-type="number"
-step="0.01"
-value="${runner.a2 || ""}">
-
-<input
-id="a3_${runner.id}"
-type="number"
-step="0.01"
-value="${runner.a3 || ""}">
+<input id="a1_${runner.id}" type="text" value="${runner.a1 || ""}">
+<input id="a2_${runner.id}" type="text" value="${runner.a2 || ""}">
+<input id="a3_${runner.id}" type="text" value="${runner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input
-id="b1_${runner.id}"
-type="number"
-step="0.01"
-value="${runner.b1 || ""}">
-
-<input
-id="b2_${runner.id}"
-type="number"
-step="0.01"
-value="${runner.b2 || ""}">
-
-<input
-id="b3_${runner.id}"
-type="number"
-step="0.01"
-value="${runner.b3 || ""}">
+<input id="b1_${runner.id}" type="text" value="${runner.b1 || ""}">
+<input id="b2_${runner.id}" type="text" value="${runner.b2 || ""}">
+<input id="b3_${runner.id}" type="text" value="${runner.b3 || ""}">
 
 </div>
 
@@ -879,48 +862,79 @@ isLive ? "live_" : "";
 
 runner.a1 =
 parseFloat(
+String(
 document.getElementById(prefix+"a1_"+id).value
+).replace(",",".")
 ) || 0;
 
 runner.a2 =
 parseFloat(
+String(
 document.getElementById(prefix+"a2_"+id).value
+).replace(",",".")
 ) || 0;
 
 runner.a3 =
 parseFloat(
+String(
 document.getElementById(prefix+"a3_"+id).value
+).replace(",",".")
 ) || 0;
 
 /* B */
 
 runner.b1 =
 parseFloat(
+String(
 document.getElementById(prefix+"b1_"+id).value
+).replace(",",".")
 ) || 0;
 
 runner.b2 =
 parseFloat(
+String(
 document.getElementById(prefix+"b2_"+id).value
+).replace(",",".")
 ) || 0;
 
 runner.b3 =
 parseFloat(
+String(
 document.getElementById(prefix+"b3_"+id).value
+).replace(",",".")
 ) || 0;
 
 /* ABZUG */
 
 runner.deductionNumber =
+String(
 document.getElementById(
 prefix+"deduction_"+id
-).value.trim();
+).value
+)
+.trim();
 
 const deductionKey =
-String(runner.deductionNumber);
+runner.deductionNumber;
+
+if(
+deductions[deductionKey] !== undefined
+){
 
 runner.deduction =
-deductions[deductionKey] || 0;
+parseFloat(
+deductions[deductionKey]
+);
+
+}else{
+
+runner.deduction =
+parseFloat(
+runner.deductionNumber
+.replace(",",".")
+) || 0;
+
+}
 
 /* GESAMT */
 
@@ -937,11 +951,13 @@ runner.b3 -
 runner.deduction;
 
 runner.total =
-parseFloat(total.toFixed(2));
+parseFloat(
+total.toFixed(2)
+);
 
 runner.confirmed = true;
 
-/* RANKING */
+/* Ranking */
 
 updateRanking(
 runner.categoryId
@@ -949,13 +965,19 @@ runner.categoryId
 
 saveData();
 
-/* WETTKAMPF ANSICHT AKTUALISIEREN */
-
 renderRunners();
+
+if(isLive){
+
+renderLiveMode();
+
+}
 
 alert(
 "Gesamt: " +
-runner.total
+runner.total +
+"\nAbzug: -" +
+runner.deduction
 );
 
 }
@@ -1091,45 +1113,17 @@ liveHtml += `
 
 <div class="scoreGrid">
 
-<input
-id="live_a1_${currentRunner.id}"
-type="number"
-step="0.01"
-value="${currentRunner.a1 || ""}">
-
-<input
-id="live_a2_${currentRunner.id}"
-type="number"
-step="0.01"
-value="${currentRunner.a2 || ""}">
-
-<input
-id="live_a3_${currentRunner.id}"
-type="number"
-step="0.01"
-value="${currentRunner.a3 || ""}">
+<input id="live_a1_${currentRunner.id}" type="text" value="${currentRunner.a1 || ""}">
+<input id="live_a2_${currentRunner.id}" type="text" value="${currentRunner.a2 || ""}">
+<input id="live_a3_${currentRunner.id}" type="text" value="${currentRunner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input
-id="live_b1_${currentRunner.id}"
-type="number"
-step="0.01"
-value="${currentRunner.b1 || ""}">
-
-<input
-id="live_b2_${currentRunner.id}"
-type="number"
-step="0.01"
-value="${currentRunner.b2 || ""}">
-
-<input
-id="live_b3_${currentRunner.id}"
-type="number"
-step="0.01"
-value="${currentRunner.b3 || ""}">
+<input id="live_b1_${currentRunner.id}" type="text" value="${currentRunner.b1 || ""}">
+<input id="live_b2_${currentRunner.id}" type="text" value="${currentRunner.b2 || ""}">
+<input id="live_b3_${currentRunner.id}" type="text" value="${currentRunner.b3 || ""}">
 
 </div>
 
