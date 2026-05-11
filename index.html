@@ -78,7 +78,6 @@ background:#475569;
 color:white;
 box-sizing:border-box;
 font-size:16px;
-color:white;
 }
 
 textarea{
@@ -342,9 +341,7 @@ const deductions = {
 
 };
 
-/* =========================================
-SEITEN
-========================================= */
+/* ========================================= */
 
 function showPage(pageId){
 
@@ -365,9 +362,7 @@ renderLiveMode();
 
 }
 
-/* =========================================
-WETTKAMPF
-========================================= */
+/* ========================================= */
 
 function saveCompetition(){
 
@@ -635,9 +630,7 @@ document.getElementById("competitionText").value="";
 
 }
 
-/* =========================================
-KATEGORIEN
-========================================= */
+/* ========================================= */
 
 function renderCategories(){
 
@@ -666,9 +659,7 @@ output.innerHTML += `
 
 }
 
-/* =========================================
-WERTUNG AKTIV
-========================================= */
+/* ========================================= */
 
 function scoringEnabled(category){
 
@@ -690,9 +681,7 @@ c=>category.includes(c)
 
 }
 
-/* =========================================
-RANKING
-========================================= */
+/* ========================================= */
 
 function updateRanking(categoryId){
 
@@ -719,9 +708,7 @@ saveData();
 
 }
 
-/* =========================================
-LÄUFER
-========================================= */
+/* ========================================= */
 
 function renderRunners(){
 
@@ -811,7 +798,7 @@ value="${runner.b3 || ""}">
 <div class="scoreGrid">
 
 <input
-id="deductionNumber_${runner.id}"
+id="deduction_${runner.id}"
 type="text"
 placeholder="Abzug"
 value="${runner.deductionNumber || ""}">
@@ -873,10 +860,10 @@ ${scoringHtml}
 }
 
 /* =========================================
-PUNKTE SPEICHERN
+SAVE SCORE
 ========================================= */
 
-function saveRunnerScore(id){
+function saveRunnerScore(id,isLive=false){
 
 const runner =
 activeCompetition.runners.find(
@@ -885,66 +872,55 @@ r=>r.id==id
 
 if(!runner) return;
 
+const prefix =
+isLive ? "live_" : "";
+
 /* A */
 
 runner.a1 =
 parseFloat(
-document.getElementById("a1_"+id).value
+document.getElementById(prefix+"a1_"+id).value
 ) || 0;
 
 runner.a2 =
 parseFloat(
-document.getElementById("a2_"+id).value
+document.getElementById(prefix+"a2_"+id).value
 ) || 0;
 
 runner.a3 =
 parseFloat(
-document.getElementById("a3_"+id).value
+document.getElementById(prefix+"a3_"+id).value
 ) || 0;
 
 /* B */
 
 runner.b1 =
 parseFloat(
-document.getElementById("b1_"+id).value
+document.getElementById(prefix+"b1_"+id).value
 ) || 0;
 
 runner.b2 =
 parseFloat(
-document.getElementById("b2_"+id).value
+document.getElementById(prefix+"b2_"+id).value
 ) || 0;
 
 runner.b3 =
 parseFloat(
-document.getElementById("b3_"+id).value
+document.getElementById(prefix+"b3_"+id).value
 ) || 0;
 
 /* ABZUG */
 
 runner.deductionNumber =
 document.getElementById(
-"deductionNumber_"+id
+prefix+"deduction_"+id
 ).value.trim();
 
 const deductionKey =
 String(runner.deductionNumber);
 
-if(
-deductions.hasOwnProperty(
-deductionKey
-)
-){
-
 runner.deduction =
-parseFloat(
-deductions[deductionKey]
-);
-
-}else{
-
-runner.deduction = 0;
-
-}
+deductions[deductionKey] || 0;
 
 /* GESAMT */
 
@@ -971,11 +947,9 @@ updateRanking(
 runner.categoryId
 );
 
-/* SPEICHERN */
-
 saveData();
 
-/* AKTUALISIEREN */
+/* WETTKAMPF ANSICHT AKTUALISIEREN */
 
 renderRunners();
 
@@ -986,9 +960,7 @@ runner.total
 
 }
 
-/* =========================================
-BESTÄTIGEN
-========================================= */
+/* ========================================= */
 
 function confirmRunner(){
 
@@ -1014,9 +986,7 @@ renderLiveMode();
 
 }
 
-/* =========================================
-AKTUELLE KATEGORIE
-========================================= */
+/* ========================================= */
 
 function getCurrentCategory(){
 
@@ -1122,19 +1092,19 @@ liveHtml += `
 <div class="scoreGrid">
 
 <input
-id="a1_${currentRunner.id}"
+id="live_a1_${currentRunner.id}"
 type="number"
 step="0.01"
 value="${currentRunner.a1 || ""}">
 
 <input
-id="a2_${currentRunner.id}"
+id="live_a2_${currentRunner.id}"
 type="number"
 step="0.01"
 value="${currentRunner.a2 || ""}">
 
 <input
-id="a3_${currentRunner.id}"
+id="live_a3_${currentRunner.id}"
 type="number"
 step="0.01"
 value="${currentRunner.a3 || ""}">
@@ -1144,19 +1114,19 @@ value="${currentRunner.a3 || ""}">
 <div class="scoreGrid">
 
 <input
-id="b1_${currentRunner.id}"
+id="live_b1_${currentRunner.id}"
 type="number"
 step="0.01"
 value="${currentRunner.b1 || ""}">
 
 <input
-id="b2_${currentRunner.id}"
+id="live_b2_${currentRunner.id}"
 type="number"
 step="0.01"
 value="${currentRunner.b2 || ""}">
 
 <input
-id="b3_${currentRunner.id}"
+id="live_b3_${currentRunner.id}"
 type="number"
 step="0.01"
 value="${currentRunner.b3 || ""}">
@@ -1166,7 +1136,7 @@ value="${currentRunner.b3 || ""}">
 <div class="scoreGrid">
 
 <input
-id="deductionNumber_${currentRunner.id}"
+id="live_deduction_${currentRunner.id}"
 type="text"
 placeholder="Abzug"
 value="${currentRunner.deductionNumber || ""}">
@@ -1185,7 +1155,7 @@ value="${currentRunner.total || 0}">
 
 <button
 class="saveButton"
-onclick="saveRunnerScore('${currentRunner.id}')">
+onclick="saveRunnerScore('${currentRunner.id}',true)">
 
 💾 LIVE Wertung speichern
 
@@ -1218,9 +1188,7 @@ ${nextRunner.name}
 
 }
 
-/* =========================================
-UHR
-========================================= */
+/* ========================================= */
 
 function updateClock(){
 
@@ -1242,9 +1210,7 @@ document.getElementById("liveClock")
 
 }
 
-/* =========================================
-SPEICHER
-========================================= */
+/* ========================================= */
 
 function saveData(){
 
@@ -1271,9 +1237,7 @@ JSON.parse(saved);
 
 }
 
-/* =========================================
-START
-========================================= */
+/* ========================================= */
 
 window.onload = function(){
 
