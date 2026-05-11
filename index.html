@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>🏆 RollArt Score Pro</title>
 
 <style>
@@ -173,18 +172,6 @@ margin-top:10px;
 font-size:20px;
 }
 
-.place1{
-color:gold;
-}
-
-.place2{
-color:silver;
-}
-
-.place3{
-color:#cd7f32;
-}
-
 @media(max-width:700px){
 
 .tabs button{
@@ -281,7 +268,7 @@ onerror="this.style.display='none'">
 
 <textarea
 id="competitionText"
-placeholder="Startliste oder PDF-Text hier einfügen"></textarea>
+placeholder="PDF Text hier einfügen"></textarea>
 
 <button class="mainButton" onclick="parseCompetitionText()">
 📥 Importieren
@@ -323,7 +310,7 @@ placeholder="Startliste oder PDF-Text hier einfügen"></textarea>
 type="number"
 id="timeOffset"
 value="0"
-placeholder="Zeitkorrektur">
+placeholder="Zeitkorrektur Minuten">
 
 <button
 class="mainButton"
@@ -337,7 +324,7 @@ onclick="renderLiveMode()">
 
 <div class="liveBox">
 
-<h2>🏁 Kategorie</h2>
+<h2>🏁 Aktuelle Kategorie</h2>
 
 <div id="liveCategory" class="bigText">-</div>
 
@@ -370,8 +357,6 @@ onclick="confirmRunner()">
 </div>
 
 <script>
-
-/* ========================================= */
 
 let competitions = [];
 let activeCompetition = null;
@@ -816,45 +801,17 @@ scoreHtml = `
 
 <div class="scoreGrid">
 
-<input
-id="a1_${runner.id}"
-type="text"
-placeholder="A1"
-value="${runner.a1 || ""}">
-
-<input
-id="a2_${runner.id}"
-type="text"
-placeholder="A2"
-value="${runner.a2 || ""}">
-
-<input
-id="a3_${runner.id}"
-type="text"
-placeholder="A3"
-value="${runner.a3 || ""}">
+<input id="a1_${runner.id}" type="text" placeholder="A1" value="${runner.a1 || ""}">
+<input id="a2_${runner.id}" type="text" placeholder="A2" value="${runner.a2 || ""}">
+<input id="a3_${runner.id}" type="text" placeholder="A3" value="${runner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input
-id="b1_${runner.id}"
-type="text"
-placeholder="B1"
-value="${runner.b1 || ""}">
-
-<input
-id="b2_${runner.id}"
-type="text"
-placeholder="B2"
-value="${runner.b2 || ""}">
-
-<input
-id="b3_${runner.id}"
-type="text"
-placeholder="B3"
-value="${runner.b3 || ""}">
+<input id="b1_${runner.id}" type="text" placeholder="B1" value="${runner.b1 || ""}">
+<input id="b2_${runner.id}" type="text" placeholder="B2" value="${runner.b2 || ""}">
+<input id="b3_${runner.id}" type="text" placeholder="B3" value="${runner.b3 || ""}">
 
 </div>
 
@@ -1028,12 +985,16 @@ return null;
 
 const now = new Date();
 
+/* ZEITKORREKTUR */
+
 const offset =
 parseInt(
 document.getElementById("timeOffset").value
 ) || 0;
 
-now.setMinutes(now.getMinutes()+offset);
+now.setMinutes(
+now.getMinutes() + offset
+);
 
 const currentTime =
 now.toTimeString().substring(0,5);
@@ -1220,10 +1181,29 @@ function updateClock(){
 
 const now = new Date();
 
+/* ZEITKORREKTUR */
+
+const offset =
+parseInt(
+document.getElementById("timeOffset").value
+) || 0;
+
+/* PLUS / MINUS */
+
+now.setMinutes(
+now.getMinutes() + offset
+);
+
+const currentTime =
+now.toTimeString().substring(0,5);
+
 document.getElementById("liveClock")
 .innerHTML =
-"🕒 " +
-now.toTimeString().substring(0,5);
+"🕒 " + currentTime;
+
+/* LIVE UPDATE */
+
+renderLiveMode();
 
 }
 
