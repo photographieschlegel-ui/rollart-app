@@ -211,7 +211,7 @@ width:100%;
 <div class="topbar">
 
 <img
-src="logo.png"
+src="logo TV Walsum Aldenrade 07.jpg"
 class="logoImage">
 
 <div class="logo">
@@ -370,18 +370,24 @@ const knownClubs = [
 "TV Datteln 09",
 "RESG Walsum",
 "1. RC Recklinghausen",
-"TV Walsum-Aldenrade 07",
-"Rollkunstlauf Akademie",
-"ERC Westfalen",
-"REV Gruga",
-"TuS Wiehl",
-"SC Fortuna Bonn"
+"TV Walsum-Aldenrade 07"
 
 ];
 
 /* Abzüge */
 
 const deductions = {
+
+"1":0.1,
+"2":0.2,
+"3":0.3,
+"4":0.4,
+"5":0.5,
+"6":0.6,
+"7":0.7,
+"8":0.8,
+"9":0.9,
+"10":1.0,
 
 "101":0.2,
 "102":0.3,
@@ -779,18 +785,10 @@ let rankingHtml = "";
 
 if(runner.place){
 
-let placeClass = "";
-
-if(runner.place===1) placeClass="place1";
-if(runner.place===2) placeClass="place2";
-if(runner.place===3) placeClass="place3";
-
 rankingHtml = `
-
-<div class="ok ${placeClass}">
+<div class="ok">
 🏆 Platz ${runner.place}
 </div>
-
 `;
 
 }
@@ -805,17 +803,17 @@ scoringHtml = `
 
 <div class="scoreGrid">
 
-<input id="a1_${runner.id}" type="text" value="${runner.a1 || ""}">
-<input id="a2_${runner.id}" type="text" value="${runner.a2 || ""}">
-<input id="a3_${runner.id}" type="text" value="${runner.a3 || ""}">
+<input id="a1_${runner.id}" type="text" placeholder="A1" value="${runner.a1 || ""}">
+<input id="a2_${runner.id}" type="text" placeholder="A2" value="${runner.a2 || ""}">
+<input id="a3_${runner.id}" type="text" placeholder="A3" value="${runner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="b1_${runner.id}" type="text" value="${runner.b1 || ""}">
-<input id="b2_${runner.id}" type="text" value="${runner.b2 || ""}">
-<input id="b3_${runner.id}" type="text" value="${runner.b3 || ""}">
+<input id="b1_${runner.id}" type="text" placeholder="B1" value="${runner.b1 || ""}">
+<input id="b2_${runner.id}" type="text" placeholder="B2" value="${runner.b2 || ""}">
+<input id="b3_${runner.id}" type="text" placeholder="B3" value="${runner.b3 || ""}">
 
 </div>
 
@@ -824,7 +822,7 @@ scoringHtml = `
 <input
 id="deduction_${runner.id}"
 type="text"
-placeholder="Abzug"
+placeholder="Abzugsschlüssel"
 value="${runner.deductionNumber || ""}">
 
 <input
@@ -881,9 +879,7 @@ ${scoringHtml}
 
 }
 
-/* =========================================
-SAVE SCORE
-========================================= */
+/* ========================================= */
 
 function saveRunnerScore(id,isLive=false){
 
@@ -896,8 +892,6 @@ if(!runner) return;
 
 const prefix =
 isLive ? "live_" : "";
-
-/* A */
 
 runner.a1 =
 parseFloat(
@@ -919,8 +913,6 @@ String(
 document.getElementById(prefix+"a3_"+id).value
 ).replace(",",".")
 ) || 0;
-
-/* B */
 
 runner.b1 =
 parseFloat(
@@ -968,40 +960,28 @@ runner.deductionNumber
 
 }else{
 
-runner.deduction =
-parseFloat(
-runner.deductionNumber
-.replace(",",".")
-) || 0;
+runner.deduction = 0;
 
 }
 
 /* GESAMT */
 
-const aTotal =
+const total =
 
 runner.a1 +
 runner.a2 +
-runner.a3;
-
-const bTotal =
+runner.a3 +
 
 runner.b1 +
 runner.b2 +
-runner.b3;
+runner.b3 -
 
-const total =
-
-aTotal +
-bTotal -
 runner.deduction;
 
 runner.total =
 Number(total.toFixed(2));
 
 runner.confirmed = true;
-
-/* Ranking */
 
 updateRanking(
 runner.categoryId
@@ -1018,19 +998,10 @@ renderLiveMode();
 }
 
 alert(
-
 "Gesamt: " +
 runner.total +
-
-"\nA: " +
-aTotal.toFixed(2) +
-
-"\nB: " +
-bTotal.toFixed(2) +
-
 "\nAbzug: -" +
 runner.deduction
-
 );
 
 }
@@ -1162,17 +1133,17 @@ liveHtml += `
 
 <div class="scoreGrid">
 
-<input id="live_a1_${currentRunner.id}" type="text" value="${currentRunner.a1 || ""}">
-<input id="live_a2_${currentRunner.id}" type="text" value="${currentRunner.a2 || ""}">
-<input id="live_a3_${currentRunner.id}" type="text" value="${currentRunner.a3 || ""}">
+<input id="live_a1_${currentRunner.id}" type="text" placeholder="A1" value="${currentRunner.a1 || ""}">
+<input id="live_a2_${currentRunner.id}" type="text" placeholder="A2" value="${currentRunner.a2 || ""}">
+<input id="live_a3_${currentRunner.id}" type="text" placeholder="A3" value="${currentRunner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="live_b1_${currentRunner.id}" type="text" value="${currentRunner.b1 || ""}">
-<input id="live_b2_${currentRunner.id}" type="text" value="${currentRunner.b2 || ""}">
-<input id="live_b3_${currentRunner.id}" type="text" value="${currentRunner.b3 || ""}">
+<input id="live_b1_${currentRunner.id}" type="text" placeholder="B1" value="${currentRunner.b1 || ""}">
+<input id="live_b2_${currentRunner.id}" type="text" placeholder="B2" value="${currentRunner.b2 || ""}">
+<input id="live_b3_${currentRunner.id}" type="text" placeholder="B3" value="${currentRunner.b3 || ""}">
 
 </div>
 
@@ -1181,7 +1152,7 @@ liveHtml += `
 <input
 id="live_deduction_${currentRunner.id}"
 type="text"
-placeholder="Abzug"
+placeholder="Abzugsschlüssel"
 value="${currentRunner.deductionNumber || ""}">
 
 <input
