@@ -21,10 +21,26 @@ margin:auto;
 padding:20px;
 }
 
+.topbar{
+display:flex;
+align-items:center;
+gap:20px;
+margin-bottom:20px;
+flex-wrap:wrap;
+}
+
+.logoImage{
+width:110px;
+height:110px;
+object-fit:contain;
+background:white;
+padding:10px;
+border-radius:20px;
+}
+
 .logo{
 font-size:34px;
 font-weight:bold;
-margin-bottom:20px;
 }
 
 .tabs{
@@ -168,6 +184,22 @@ color:silver;
 color:#cd7f32;
 }
 
+@media(max-width:700px){
+
+.logo{
+font-size:24px;
+}
+
+.bigText{
+font-size:22px;
+}
+
+.tabs button{
+width:100%;
+}
+
+}
+
 </style>
 
 </head>
@@ -176,8 +208,16 @@ color:#cd7f32;
 
 <div class="app">
 
+<div class="topbar">
+
+<img
+src="logo.png"
+class="logoImage">
+
 <div class="logo">
 🏆 RollArt Score Pro
+</div>
+
 </div>
 
 <div class="tabs">
@@ -330,7 +370,6 @@ const knownClubs = [
 "TV Datteln 09",
 "RESG Walsum",
 "1. RC Recklinghausen",
-
 "TV Walsum-Aldenrade 07",
 "Rollkunstlauf Akademie",
 "ERC Westfalen",
@@ -412,6 +451,8 @@ renderCompetitions();
 
 }
 
+/* ========================================= */
+
 function renderCompetitions(){
 
 const output =
@@ -457,6 +498,8 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
+/* ========================================= */
+
 function openCompetition(id){
 
 activeCompetition =
@@ -470,6 +513,8 @@ renderRunners();
 showPage("detailPage");
 
 }
+
+/* ========================================= */
 
 function deleteCompetition(id){
 
@@ -494,9 +539,7 @@ renderCompetitions();
 
 }
 
-/* =========================================
-PDF IMPORT
-========================================= */
+/* ========================================= */
 
 function parseCompetitionText(){
 
@@ -745,9 +788,7 @@ if(runner.place===3) placeClass="place3";
 rankingHtml = `
 
 <div class="ok ${placeClass}">
-
 🏆 Platz ${runner.place}
-
 </div>
 
 `;
@@ -818,9 +859,7 @@ output.innerHTML += `
 
 <div class="item">
 
-<h3>
-Start ${runner.start}
-</h3>
+<h3>Start ${runner.start}</h3>
 
 👤 ${runner.name}
 
@@ -914,16 +953,17 @@ prefix+"deduction_"+id
 )
 .trim();
 
-const deductionKey =
-runner.deductionNumber;
-
 if(
-deductions[deductionKey] !== undefined
+deductions[
+runner.deductionNumber
+] !== undefined
 ){
 
 runner.deduction =
 parseFloat(
-deductions[deductionKey]
+deductions[
+runner.deductionNumber
+]
 );
 
 }else{
@@ -938,22 +978,26 @@ runner.deductionNumber
 
 /* GESAMT */
 
-const total =
+const aTotal =
 
 runner.a1 +
 runner.a2 +
-runner.a3 +
+runner.a3;
+
+const bTotal =
 
 runner.b1 +
 runner.b2 +
-runner.b3 -
+runner.b3;
 
+const total =
+
+aTotal +
+bTotal -
 runner.deduction;
 
 runner.total =
-parseFloat(
-total.toFixed(2)
-);
+Number(total.toFixed(2));
 
 runner.confirmed = true;
 
@@ -974,10 +1018,19 @@ renderLiveMode();
 }
 
 alert(
+
 "Gesamt: " +
 runner.total +
+
+"\nA: " +
+aTotal.toFixed(2) +
+
+"\nB: " +
+bTotal.toFixed(2) +
+
 "\nAbzug: -" +
 runner.deduction
+
 );
 
 }
@@ -1045,9 +1098,7 @@ return activeCategory;
 
 }
 
-/* =========================================
-LIVE
-========================================= */
+/* ========================================= */
 
 function renderLiveMode(){
 
@@ -1093,9 +1144,7 @@ categoryRunners[currentRunnerIndex+1];
 
 let liveHtml = `
 
-<h3>
-Start ${currentRunner.start}
-</h3>
+<h3>Start ${currentRunner.start}</h3>
 
 👤 ${currentRunner.name}
 
