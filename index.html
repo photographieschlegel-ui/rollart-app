@@ -113,7 +113,7 @@ font-weight:bold;
 
 .mainButton{
 width:100%;
-margin-top:15px;
+margin-top:10px;
 background:linear-gradient(135deg,#2563eb,#7c3aed);
 color:white;
 }
@@ -170,6 +170,43 @@ color:#4ade80;
 font-weight:bold;
 margin-top:10px;
 font-size:20px;
+}
+
+/* ========================================= */
+/* MEDAILLEN */
+/* ========================================= */
+
+.place1{
+background:linear-gradient(135deg,#facc15,#ca8a04);
+color:white;
+padding:10px;
+border-radius:14px;
+font-size:22px;
+font-weight:bold;
+text-align:center;
+margin-top:10px;
+}
+
+.place2{
+background:linear-gradient(135deg,#d1d5db,#6b7280);
+color:white;
+padding:10px;
+border-radius:14px;
+font-size:22px;
+font-weight:bold;
+text-align:center;
+margin-top:10px;
+}
+
+.place3{
+background:linear-gradient(135deg,#d97706,#92400e);
+color:white;
+padding:10px;
+border-radius:14px;
+font-size:22px;
+font-weight:bold;
+text-align:center;
+margin-top:10px;
 }
 
 @media(max-width:700px){
@@ -272,6 +309,10 @@ placeholder="PDF Text hier einfügen"></textarea>
 
 <button class="mainButton" onclick="parseCompetitionText()">
 📥 Importieren
+</button>
+
+<button class="mainButton" onclick="printResults()">
+🏆 Ergebnisliste / PDF
 </button>
 
 </div>
@@ -778,6 +819,102 @@ r.place=index+1;
 
 /* ========================================= */
 
+function getPlaceHtml(place){
+
+if(place==1){
+
+return `
+<div class="place1">
+🥇 Platz 1
+</div>
+`;
+
+}
+
+if(place==2){
+
+return `
+<div class="place2">
+🥈 Platz 2
+</div>
+`;
+
+}
+
+if(place==3){
+
+return `
+<div class="place3">
+🥉 Platz 3
+</div>
+`;
+
+}
+
+return `
+<div class="ok">
+🏆 Platz ${place}
+</div>
+`;
+
+}
+
+/* ========================================= */
+
+function editRunner(id){
+
+const runner =
+activeCompetition.runners.find(
+r=>r.id==id
+);
+
+if(!runner) return;
+
+const newName =
+prompt(
+"Name bearbeiten",
+runner.name
+);
+
+if(newName===null) return;
+
+const newClub =
+prompt(
+"Verein bearbeiten",
+runner.club
+);
+
+if(newClub===null) return;
+
+runner.name = newName;
+runner.club = newClub;
+
+saveData();
+
+renderRunners();
+
+}
+
+/* ========================================= */
+
+function deleteRunner(id){
+
+if(!confirm("Läufer löschen?"))
+return;
+
+activeCompetition.runners =
+activeCompetition.runners.filter(
+r=>r.id!=id
+);
+
+saveData();
+
+renderRunners();
+
+}
+
+/* ========================================= */
+
 function renderRunners(){
 
 const output =
@@ -841,9 +978,7 @@ onclick="saveRunnerScore('${runner.id}')">
 
 </button>
 
-<div class="ok">
-🏆 Platz ${runner.place || "-"}
-</div>
+${runner.place ? getPlaceHtml(runner.place) : ""}
 
 </div>
 
@@ -868,6 +1003,22 @@ output.innerHTML += `
 📂 ${runner.category}
 
 ${scoreHtml}
+
+<button
+class="mainButton"
+onclick="editRunner('${runner.id}')">
+
+✏ Bearbeiten
+
+</button>
+
+<button
+class="deleteButton"
+onclick="deleteRunner('${runner.id}')">
+
+🗑 Löschen
+
+</button>
 
 </div>
 
@@ -1010,8 +1161,6 @@ return activeCategory;
 
 }
 
-/* ========================================= */
-/* LIVE */
 /* ========================================= */
 
 function renderLiveMode(){
@@ -1231,6 +1380,138 @@ now.toTimeString().substring(0,5);
 document.getElementById("liveClock")
 .innerHTML =
 "🕒 " + currentTime;
+
+}
+
+/* ========================================= */
+/* PDF / DRUCK */
+/* ========================================= */
+
+function printResults(){
+
+if(!activeCompetition) return;
+
+let html = `
+
+<html>
+
+<head>
+
+<title>Ergebnisse</title>
+
+<style>
+
+body{
+font-family:Arial;
+padding:30px;
+}
+
+h1{
+margin-bottom:40px;
+}
+
+.category{
+margin-top:40px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:10px;
+text-align:left;
+}
+
+th{
+background:#eee;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+🏆 ${activeCompetition.name}
+</h1>
+
+`;
+
+activeCompetition.categories.forEach(cat=>{
+
+html += `
+
+<div class="category">
+
+<h2>
+${cat.name}
+</h2>
+
+<table>
+
+<tr>
+
+<th>Platz</th>
+<th>Name</th>
+<th>Verein</th>
+<th>Punkte</th>
+
+</tr>
+
+`;
+
+const runners =
+activeCompetition.runners
+.filter(r=>r.categoryId===cat.id)
+.sort((a,b)=>b.total-a.total);
+
+runners.forEach(r=>{
+
+html += `
+
+<tr>
+
+<td>${r.place || "-"}</td>
+<td>${r.name}</td>
+<td>${r.club}</td>
+<td>${r.total || 0}</td>
+
+</tr>
+
+`;
+
+});
+
+html += `
+
+</table>
+
+</div>
+
+`;
+
+});
+
+html += `
+
+</body>
+</html>
+
+`;
+
+const win =
+window.open("","","width=1000,height=900");
+
+win.document.write(html);
+
+win.document.close();
+
+win.print();
 
 }
 
