@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏆 RollArt Score Pro</title>
+
+<title>🏆 RollArt Score Pro Online</title>
 
 <style>
 
@@ -227,6 +228,116 @@ font-size:22px;
 
 </style>
 
+<!-- ========================================= -->
+<!-- FIREBASE -->
+<!-- ========================================= -->
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+doc,
+setDoc,
+getDoc,
+onSnapshot
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ========================================= */
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+
+authDomain: "rollart-score-5319a.firebaseapp.com",
+
+projectId: "rollart-score-5319a",
+
+storageBucket: "rollart-score-5319a.firebasestorage.app",
+
+messagingSenderId: "658963624980",
+
+appId: "1:658963624980:web:2e4d153f5df087c4f42301",
+
+measurementId: "G-7DXHCKP3QZ"
+
+};
+
+/* ========================================= */
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
+
+/* ========================================= */
+
+window.saveOnline = async function(data){
+
+await setDoc(
+
+doc(db,"rollart","main"),
+
+{
+
+updated:Date.now(),
+competitions:data
+
+}
+
+);
+
+};
+
+/* ========================================= */
+
+window.loadOnline = async function(){
+
+const snap =
+await getDoc(
+doc(db,"rollart","main")
+);
+
+if(snap.exists()){
+
+return snap.data().competitions || [];
+
+}
+
+return [];
+
+};
+
+/* ========================================= */
+
+window.liveSync = function(callback){
+
+onSnapshot(
+
+doc(db,"rollart","main"),
+
+(docSnap)=>{
+
+if(docSnap.exists()){
+
+callback(
+docSnap.data().competitions || []
+);
+
+}
+
+}
+
+);
+
+};
+
+</script>
+
 </head>
 
 <body>
@@ -241,7 +352,7 @@ class="logoImage"
 onerror="this.style.display='none'">
 
 <div class="logo">
-🏆 RollArt Score Pro
+🏆 RollArt Score Pro Online
 </div>
 
 </div>
@@ -477,6 +588,27 @@ renderLiveMode();
 
 /* ========================================= */
 
+async function saveData(){
+
+await saveOnline(
+competitions
+);
+
+}
+
+/* ========================================= */
+
+async function loadData(){
+
+competitions =
+await loadOnline();
+
+renderCompetitions();
+
+}
+
+/* ========================================= */
+
 function saveCompetition(){
 
 const name =
@@ -545,14 +677,6 @@ onclick="openCompetition(${comp.id})">
 
 </button>
 
-<button
-class="deleteButton"
-onclick="deleteCompetition(${comp.id})">
-
-🗑 Löschen
-
-</button>
-
 </div>
 
 `;
@@ -577,33 +701,6 @@ showPage("detailPage");
 
 }
 
-/* ========================================= */
-
-function deleteCompetition(id){
-
-if(!confirm("Wirklich löschen?"))
-return;
-
-competitions =
-competitions.filter(c=>c.id!==id);
-
-if(
-activeCompetition &&
-activeCompetition.id===id
-){
-
-activeCompetition = null;
-
-}
-
-saveData();
-
-renderCompetitions();
-
-}
-
-/* ========================================= */
-/* IMPORT */
 /* ========================================= */
 
 function parseCompetitionText(){
@@ -653,16 +750,9 @@ name:categoryName
 
 };
 
-const exists =
-activeCompetition.categories.find(
-c=>c.name===categoryName
+activeCompetition.categories.push(
+currentCategory
 );
-
-if(!exists){
-
-activeCompetition.categories.push(currentCategory);
-
-}
 
 return;
 
@@ -743,8 +833,6 @@ saveData();
 
 renderCategories();
 renderRunners();
-
-document.getElementById("competitionText").value="";
 
 }
 
@@ -861,60 +949,6 @@ return `
 
 /* ========================================= */
 
-function editRunner(id){
-
-const runner =
-activeCompetition.runners.find(
-r=>r.id==id
-);
-
-if(!runner) return;
-
-const newName =
-prompt(
-"Name bearbeiten",
-runner.name
-);
-
-if(newName===null) return;
-
-const newClub =
-prompt(
-"Verein bearbeiten",
-runner.club
-);
-
-if(newClub===null) return;
-
-runner.name = newName;
-runner.club = newClub;
-
-saveData();
-
-renderRunners();
-
-}
-
-/* ========================================= */
-
-function deleteRunner(id){
-
-if(!confirm("Läufer löschen?"))
-return;
-
-activeCompetition.runners =
-activeCompetition.runners.filter(
-r=>r.id!=id
-);
-
-saveData();
-
-renderRunners();
-
-}
-
-/* ========================================= */
-
 function renderRunners(){
 
 const output =
@@ -1003,22 +1037,6 @@ output.innerHTML += `
 📂 ${runner.category}
 
 ${scoreHtml}
-
-<button
-class="mainButton"
-onclick="editRunner('${runner.id}')">
-
-✏ Bearbeiten
-
-</button>
-
-<button
-class="deleteButton"
-onclick="deleteRunner('${runner.id}')">
-
-🗑 Löschen
-
-</button>
 
 </div>
 
@@ -1384,171 +1402,45 @@ document.getElementById("liveClock")
 }
 
 /* ========================================= */
-/* PDF / DRUCK */
-/* ========================================= */
 
-function printResults(){
+async function printResults(){
 
-if(!activeCompetition) return;
-
-let html = `
-
-<html>
-
-<head>
-
-<title>Ergebnisse</title>
-
-<style>
-
-body{
-font-family:Arial;
-padding:30px;
-}
-
-h1{
-margin-bottom:40px;
-}
-
-.category{
-margin-top:40px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
-}
-
-th,td{
-border:1px solid #ccc;
-padding:10px;
-text-align:left;
-}
-
-th{
-background:#eee;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<h1>
-🏆 ${activeCompetition.name}
-</h1>
-
-`;
-
-activeCompetition.categories.forEach(cat=>{
-
-html += `
-
-<div class="category">
-
-<h2>
-${cat.name}
-</h2>
-
-<table>
-
-<tr>
-
-<th>Platz</th>
-<th>Name</th>
-<th>Verein</th>
-<th>Punkte</th>
-
-</tr>
-
-`;
-
-const runners =
-activeCompetition.runners
-.filter(r=>r.categoryId===cat.id)
-.sort((a,b)=>b.total-a.total);
-
-runners.forEach(r=>{
-
-html += `
-
-<tr>
-
-<td>${r.place || "-"}</td>
-<td>${r.name}</td>
-<td>${r.club}</td>
-<td>${r.total || 0}</td>
-
-</tr>
-
-`;
-
-});
-
-html += `
-
-</table>
-
-</div>
-
-`;
-
-});
-
-html += `
-
-</body>
-</html>
-
-`;
-
-const win =
-window.open("","","width=1000,height=900");
-
-win.document.write(html);
-
-win.document.close();
-
-win.print();
+window.print();
 
 }
 
 /* ========================================= */
 
-function saveData(){
+window.onload = async function(){
 
-localStorage.setItem(
-"rollart_competitions",
-JSON.stringify(competitions)
-);
+await loadData();
 
-}
+liveSync((data)=>{
 
-function loadData(){
-
-const saved =
-localStorage.getItem(
-"rollart_competitions"
-);
-
-if(saved){
-
-competitions =
-JSON.parse(saved);
-
-}
-
-}
-
-/* ========================================= */
-
-window.onload = function(){
-
-loadData();
+competitions = data;
 
 renderCompetitions();
+
+if(activeCompetition){
+
+const found =
+competitions.find(
+c=>c.id===activeCompetition.id
+);
+
+if(found){
+
+activeCompetition = found;
+
+renderCategories();
+renderRunners();
+renderLiveMode();
+
+}
+
+}
+
+});
 
 showPage("competitionPage");
 
