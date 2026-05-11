@@ -78,6 +78,7 @@ background:#475569;
 color:white;
 box-sizing:border-box;
 font-size:16px;
+color:white;
 }
 
 textarea{
@@ -153,6 +154,19 @@ border-radius:14px;
 color:#4ade80;
 font-weight:bold;
 margin-top:10px;
+font-size:20px;
+}
+
+.place1{
+color:gold;
+}
+
+.place2{
+color:silver;
+}
+
+.place3{
+color:#cd7f32;
 }
 
 </style>
@@ -328,7 +342,9 @@ const deductions = {
 
 };
 
-/* Seiten */
+/* =========================================
+SEITEN
+========================================= */
 
 function showPage(pageId){
 
@@ -349,7 +365,9 @@ renderLiveMode();
 
 }
 
-/* Wettbewerb speichern */
+/* =========================================
+WETTKAMPF
+========================================= */
 
 function saveCompetition(){
 
@@ -388,8 +406,6 @@ renderCompetitions();
 
 }
 
-/* Wettbewerbe */
-
 function renderCompetitions(){
 
 const output =
@@ -411,14 +427,16 @@ output.innerHTML += `
 
 📅 ${comp.from} bis ${comp.to}
 
-<button class="mainButton"
+<button
+class="mainButton"
 onclick="openCompetition(${comp.id})">
 
 📂 Öffnen
 
 </button>
 
-<button class="deleteButton"
+<button
+class="deleteButton"
 onclick="deleteCompetition(${comp.id})">
 
 🗑 Löschen
@@ -432,8 +450,6 @@ onclick="deleteCompetition(${comp.id})">
 });
 
 }
-
-/* Wettbewerb öffnen */
 
 function openCompetition(id){
 
@@ -449,8 +465,6 @@ showPage("detailPage");
 
 }
 
-/* Wettbewerb löschen */
-
 function deleteCompetition(id){
 
 if(!confirm("Wirklich löschen?"))
@@ -461,7 +475,7 @@ competitions.filter(c=>c.id!==id);
 
 if(
 activeCompetition &&
-activeCompetition.id === id
+activeCompetition.id===id
 ){
 
 activeCompetition = null;
@@ -474,7 +488,9 @@ renderCompetitions();
 
 }
 
-/* Parser */
+/* =========================================
+PDF IMPORT
+========================================= */
 
 function parseCompetitionText(){
 
@@ -600,6 +616,8 @@ deductionNumber:"",
 deduction:0,
 total:0,
 
+place:"",
+
 confirmed:false
 
 });
@@ -617,7 +635,9 @@ document.getElementById("competitionText").value="";
 
 }
 
-/* Kategorien */
+/* =========================================
+KATEGORIEN
+========================================= */
 
 function renderCategories(){
 
@@ -646,7 +666,9 @@ output.innerHTML += `
 
 }
 
-/* Wertung aktiv */
+/* =========================================
+WERTUNG AKTIV
+========================================= */
 
 function scoringEnabled(category){
 
@@ -668,7 +690,38 @@ c=>category.includes(c)
 
 }
 
-/* Läufer */
+/* =========================================
+RANKING
+========================================= */
+
+function updateRanking(categoryId){
+
+if(!activeCompetition) return;
+
+const runners =
+activeCompetition.runners
+.filter(r=>r.categoryId===categoryId)
+.filter(r=>!isNaN(parseFloat(r.total)));
+
+runners.sort((a,b)=>{
+
+return parseFloat(b.total) - parseFloat(a.total);
+
+});
+
+runners.forEach((runner,index)=>{
+
+runner.place = index + 1;
+
+});
+
+saveData();
+
+}
+
+/* =========================================
+LÄUFER
+========================================= */
 
 function renderRunners(){
 
@@ -681,6 +734,28 @@ if(!activeCompetition) return;
 
 activeCompetition.runners.forEach(runner=>{
 
+let rankingHtml = "";
+
+if(runner.place){
+
+let placeClass = "";
+
+if(runner.place===1) placeClass="place1";
+if(runner.place===2) placeClass="place2";
+if(runner.place===3) placeClass="place3";
+
+rankingHtml = `
+
+<div class="ok ${placeClass}">
+
+🏆 Platz ${runner.place}
+
+</div>
+
+`;
+
+}
+
 let scoringHtml = "";
 
 if(scoringEnabled(runner.category)){
@@ -691,17 +766,45 @@ scoringHtml = `
 
 <div class="scoreGrid">
 
-<input id="a1_${runner.id}" type="number" step="0.01" value="${runner.a1}">
-<input id="a2_${runner.id}" type="number" step="0.01" value="${runner.a2}">
-<input id="a3_${runner.id}" type="number" step="0.01" value="${runner.a3}">
+<input
+id="a1_${runner.id}"
+type="number"
+step="0.01"
+value="${runner.a1 || ""}">
+
+<input
+id="a2_${runner.id}"
+type="number"
+step="0.01"
+value="${runner.a2 || ""}">
+
+<input
+id="a3_${runner.id}"
+type="number"
+step="0.01"
+value="${runner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="b1_${runner.id}" type="number" step="0.01" value="${runner.b1}">
-<input id="b2_${runner.id}" type="number" step="0.01" value="${runner.b2}">
-<input id="b3_${runner.id}" type="number" step="0.01" value="${runner.b3}">
+<input
+id="b1_${runner.id}"
+type="number"
+step="0.01"
+value="${runner.b1 || ""}">
+
+<input
+id="b2_${runner.id}"
+type="number"
+step="0.01"
+value="${runner.b2 || ""}">
+
+<input
+id="b3_${runner.id}"
+type="number"
+step="0.01"
+value="${runner.b3 || ""}">
 
 </div>
 
@@ -711,28 +814,29 @@ scoringHtml = `
 id="deductionNumber_${runner.id}"
 type="text"
 placeholder="Abzug"
-value="${runner.deductionNumber}">
+value="${runner.deductionNumber || ""}">
 
 <input
 type="text"
 disabled
-value="-${runner.deduction}">
+value="-${runner.deduction || 0}">
 
 <input
 type="text"
 disabled
-value="${runner.total}">
+value="${runner.total || 0}">
 
 </div>
 
-<button class="saveButton"
+<button
+class="saveButton"
 onclick="saveRunnerScore('${runner.id}')">
 
 💾 Speichern
 
 </button>
 
-${runner.confirmed ? '<div class="ok">✅ Gespeichert</div>' : ''}
+${rankingHtml}
 
 </div>
 
@@ -744,7 +848,9 @@ output.innerHTML += `
 
 <div class="item">
 
-<h3>Start ${runner.start}</h3>
+<h3>
+Start ${runner.start}
+</h3>
 
 👤 ${runner.name}
 
@@ -766,7 +872,9 @@ ${scoringHtml}
 
 }
 
-/* Punkte speichern */
+/* =========================================
+PUNKTE SPEICHERN
+========================================= */
 
 function saveRunnerScore(id){
 
@@ -818,17 +926,18 @@ document.getElementById(
 "deductionNumber_"+id
 ).value.trim();
 
+const deductionKey =
+String(runner.deductionNumber);
+
 if(
-deductions[
-runner.deductionNumber
-] !== undefined
+deductions.hasOwnProperty(
+deductionKey
+)
 ){
 
 runner.deduction =
 parseFloat(
-deductions[
-runner.deductionNumber
-]
+deductions[deductionKey]
 );
 
 }else{
@@ -852,11 +961,21 @@ runner.b3 -
 runner.deduction;
 
 runner.total =
-total.toFixed(2);
+parseFloat(total.toFixed(2));
 
 runner.confirmed = true;
 
+/* RANKING */
+
+updateRanking(
+runner.categoryId
+);
+
+/* SPEICHERN */
+
 saveData();
+
+/* AKTUALISIEREN */
 
 renderRunners();
 
@@ -867,7 +986,9 @@ runner.total
 
 }
 
-/* Bestätigen */
+/* =========================================
+BESTÄTIGEN
+========================================= */
 
 function confirmRunner(){
 
@@ -893,7 +1014,9 @@ renderLiveMode();
 
 }
 
-/* Kategorie */
+/* =========================================
+AKTUELLE KATEGORIE
+========================================= */
 
 function getCurrentCategory(){
 
@@ -930,7 +1053,9 @@ return activeCategory;
 
 }
 
-/* LIVE */
+/* =========================================
+LIVE
+========================================= */
 
 function renderLiveMode(){
 
@@ -996,17 +1121,45 @@ liveHtml += `
 
 <div class="scoreGrid">
 
-<input id="a1_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.a1}">
-<input id="a2_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.a2}">
-<input id="a3_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.a3}">
+<input
+id="a1_${currentRunner.id}"
+type="number"
+step="0.01"
+value="${currentRunner.a1 || ""}">
+
+<input
+id="a2_${currentRunner.id}"
+type="number"
+step="0.01"
+value="${currentRunner.a2 || ""}">
+
+<input
+id="a3_${currentRunner.id}"
+type="number"
+step="0.01"
+value="${currentRunner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="b1_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.b1}">
-<input id="b2_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.b2}">
-<input id="b3_${currentRunner.id}" type="number" step="0.01" value="${currentRunner.b3}">
+<input
+id="b1_${currentRunner.id}"
+type="number"
+step="0.01"
+value="${currentRunner.b1 || ""}">
+
+<input
+id="b2_${currentRunner.id}"
+type="number"
+step="0.01"
+value="${currentRunner.b2 || ""}">
+
+<input
+id="b3_${currentRunner.id}"
+type="number"
+step="0.01"
+value="${currentRunner.b3 || ""}">
 
 </div>
 
@@ -1016,21 +1169,22 @@ liveHtml += `
 id="deductionNumber_${currentRunner.id}"
 type="text"
 placeholder="Abzug"
-value="${currentRunner.deductionNumber}">
+value="${currentRunner.deductionNumber || ""}">
 
 <input
 type="text"
 disabled
-value="-${currentRunner.deduction}">
+value="-${currentRunner.deduction || 0}">
 
 <input
 type="text"
 disabled
-value="${currentRunner.total}">
+value="${currentRunner.total || 0}">
 
 </div>
 
-<button class="saveButton"
+<button
+class="saveButton"
 onclick="saveRunnerScore('${currentRunner.id}')">
 
 💾 LIVE Wertung speichern
@@ -1064,7 +1218,9 @@ ${nextRunner.name}
 
 }
 
-/* Uhr */
+/* =========================================
+UHR
+========================================= */
 
 function updateClock(){
 
@@ -1086,7 +1242,9 @@ document.getElementById("liveClock")
 
 }
 
-/* Speicher */
+/* =========================================
+SPEICHER
+========================================= */
 
 function saveData(){
 
@@ -1096,8 +1254,6 @@ JSON.stringify(competitions)
 );
 
 }
-
-/* Laden */
 
 function loadData(){
 
@@ -1115,7 +1271,9 @@ JSON.parse(saved);
 
 }
 
-/* Start */
+/* =========================================
+START
+========================================= */
 
 window.onload = function(){
 
