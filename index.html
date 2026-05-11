@@ -627,8 +627,6 @@ return;
 
 }
 
-/* Läufer */
-
 const runnerMatch =
 line.match(/^(\d+)\s+(.+)$/);
 
@@ -927,8 +925,6 @@ parseFloat(
 .replace(",",".")
 ) || 0;
 
-/* ABZUG */
-
 runner.deductionNumber =
 document.getElementById(
 prefix+"deduction_"+id
@@ -938,8 +934,6 @@ runner.deduction =
 deductions[
 runner.deductionNumber
 ] || 0;
-
-/* GESAMT */
 
 runner.total = Number(
 
@@ -985,8 +979,6 @@ return null;
 
 const now = new Date();
 
-/* ZEITKORREKTUR */
-
 const offset =
 parseInt(
 document.getElementById("timeOffset").value
@@ -1018,6 +1010,8 @@ return activeCategory;
 
 }
 
+/* ========================================= */
+/* LIVE */
 /* ========================================= */
 
 function renderLiveMode(){
@@ -1063,6 +1057,18 @@ categoryRunners[currentRunnerIndex];
 const nextRunner =
 categoryRunners[currentRunnerIndex+1];
 
+const active =
+document.activeElement;
+
+if(
+active &&
+active.tagName==="INPUT"
+){
+
+return;
+
+}
+
 let html = `
 
 <h3>Start ${currentRunner.start}</h3>
@@ -1083,17 +1089,45 @@ html += `
 
 <div class="scoreGrid">
 
-<input id="live_a1_${currentRunner.id}" type="text" placeholder="A1">
-<input id="live_a2_${currentRunner.id}" type="text" placeholder="A2">
-<input id="live_a3_${currentRunner.id}" type="text" placeholder="A3">
+<input
+id="live_a1_${currentRunner.id}"
+type="text"
+placeholder="A1"
+value="${currentRunner.a1 || ""}">
+
+<input
+id="live_a2_${currentRunner.id}"
+type="text"
+placeholder="A2"
+value="${currentRunner.a2 || ""}">
+
+<input
+id="live_a3_${currentRunner.id}"
+type="text"
+placeholder="A3"
+value="${currentRunner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="live_b1_${currentRunner.id}" type="text" placeholder="B1">
-<input id="live_b2_${currentRunner.id}" type="text" placeholder="B2">
-<input id="live_b3_${currentRunner.id}" type="text" placeholder="B3">
+<input
+id="live_b1_${currentRunner.id}"
+type="text"
+placeholder="B1"
+value="${currentRunner.b1 || ""}">
+
+<input
+id="live_b2_${currentRunner.id}"
+type="text"
+placeholder="B2"
+value="${currentRunner.b2 || ""}">
+
+<input
+id="live_b3_${currentRunner.id}"
+type="text"
+placeholder="B3"
+value="${currentRunner.b3 || ""}">
 
 </div>
 
@@ -1102,7 +1136,8 @@ html += `
 <input
 id="live_deduction_${currentRunner.id}"
 type="text"
-placeholder="Abzug">
+placeholder="Abzug"
+value="${currentRunner.deductionNumber || ""}">
 
 <input
 type="text"
@@ -1181,14 +1216,10 @@ function updateClock(){
 
 const now = new Date();
 
-/* ZEITKORREKTUR */
-
 const offset =
 parseInt(
 document.getElementById("timeOffset").value
 ) || 0;
-
-/* PLUS / MINUS */
 
 now.setMinutes(
 now.getMinutes() + offset
@@ -1200,10 +1231,6 @@ now.toTimeString().substring(0,5);
 document.getElementById("liveClock")
 .innerHTML =
 "🕒 " + currentTime;
-
-/* LIVE UPDATE */
-
-renderLiveMode();
 
 }
 
