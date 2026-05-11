@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>🏆 RollArt Score Pro</title>
 
 <style>
@@ -30,8 +31,8 @@ flex-wrap:wrap;
 }
 
 .logoImage{
-width:110px;
-height:110px;
+width:120px;
+height:120px;
 object-fit:contain;
 background:white;
 padding:10px;
@@ -58,6 +59,7 @@ padding:14px 20px;
 border-radius:14px;
 cursor:pointer;
 font-size:16px;
+font-weight:bold;
 }
 
 .page{
@@ -92,8 +94,8 @@ border:none;
 border-radius:14px;
 background:#475569;
 color:white;
-box-sizing:border-box;
 font-size:16px;
+box-sizing:border-box;
 }
 
 textarea{
@@ -117,17 +119,17 @@ background:linear-gradient(135deg,#2563eb,#7c3aed);
 color:white;
 }
 
-.deleteButton{
-width:100%;
-margin-top:10px;
-background:#dc2626;
-color:white;
-}
-
 .saveButton{
 width:100%;
 margin-top:10px;
 background:#2563eb;
+color:white;
+}
+
+.deleteButton{
+width:100%;
+margin-top:10px;
+background:#dc2626;
 color:white;
 }
 
@@ -148,7 +150,6 @@ margin-top:20px;
 .bigText{
 font-size:28px;
 font-weight:bold;
-margin-top:10px;
 }
 
 .scoreGrid{
@@ -159,10 +160,10 @@ margin-top:10px;
 }
 
 .scoreBox{
-margin-top:15px;
-padding:15px;
 background:#1e293b;
-border-radius:14px;
+padding:15px;
+border-radius:16px;
+margin-top:15px;
 }
 
 .ok{
@@ -186,16 +187,16 @@ color:#cd7f32;
 
 @media(max-width:700px){
 
+.tabs button{
+width:100%;
+}
+
 .logo{
 font-size:24px;
 }
 
 .bigText{
 font-size:22px;
-}
-
-.tabs button{
-width:100%;
 }
 
 }
@@ -211,8 +212,9 @@ width:100%;
 <div class="topbar">
 
 <img
-src="logo TV Walsum Aldenrade 07.jpg"
-class="logoImage">
+src="./logo TV Walsum Aldenrade 07.jpg"
+class="logoImage"
+onerror="this.style.display='none'">
 
 <div class="logo">
 🏆 RollArt Score Pro
@@ -236,7 +238,9 @@ class="logoImage">
 
 </div>
 
-<!-- Wettbewerbe -->
+<!-- ========================================= -->
+<!-- WETTBEWERBE -->
+<!-- ========================================= -->
 
 <div id="competitionPage" class="page">
 
@@ -265,20 +269,22 @@ class="logoImage">
 
 </div>
 
-<!-- Wettbewerb -->
+<!-- ========================================= -->
+<!-- DETAILS -->
+<!-- ========================================= -->
 
 <div id="detailPage" class="page">
 
 <div class="card">
 
-<h2>📋 Wettbewerbstext</h2>
+<h2>📋 PDF / Text Import</h2>
 
 <textarea
 id="competitionText"
-placeholder="Block aus PDF einfügen"></textarea>
+placeholder="Startliste oder PDF-Text hier einfügen"></textarea>
 
 <button class="mainButton" onclick="parseCompetitionText()">
-📥 Block importieren
+📥 Importieren
 </button>
 
 </div>
@@ -301,7 +307,9 @@ placeholder="Block aus PDF einfügen"></textarea>
 
 </div>
 
+<!-- ========================================= -->
 <!-- LIVE -->
+<!-- ========================================= -->
 
 <div id="livePage" class="page">
 
@@ -315,17 +323,21 @@ placeholder="Block aus PDF einfügen"></textarea>
 type="number"
 id="timeOffset"
 value="0"
-placeholder="Zeitkorrektur Minuten">
+placeholder="Zeitkorrektur">
 
-<button class="mainButton" onclick="renderLiveMode()">
+<button
+class="mainButton"
+onclick="renderLiveMode()">
+
 🔄 Aktualisieren
+
 </button>
 
 </div>
 
 <div class="liveBox">
 
-<h2>🏁 Aktuelle Kategorie</h2>
+<h2>🏁 Kategorie</h2>
 
 <div id="liveCategory" class="bigText">-</div>
 
@@ -335,7 +347,7 @@ placeholder="Zeitkorrektur Minuten">
 
 <h2>👤 Aktueller Läufer</h2>
 
-<div id="liveRunner">-</div>
+<div id="liveRunner"></div>
 
 </div>
 
@@ -347,19 +359,27 @@ placeholder="Zeitkorrektur Minuten">
 
 </div>
 
-<button class="confirmButton" onclick="confirmRunner()">
-✅ Wertung bestätigen / Nächster Läufer
+<button
+class="confirmButton"
+onclick="confirmRunner()">
+
+✅ Bestätigen / Nächster Läufer
+
 </button>
 
 </div>
 
 <script>
 
+/* ========================================= */
+
 let competitions = [];
 let activeCompetition = null;
 let currentRunnerIndex = 0;
 
-/* Vereine */
+/* ========================================= */
+/* VEREINE */
+/* ========================================= */
 
 const knownClubs = [
 
@@ -374,26 +394,37 @@ const knownClubs = [
 
 ];
 
-/* Abzüge */
+/* ========================================= */
+/* ABZÜGE */
+/* ========================================= */
 
 const deductions = {
 
-"1":0.1,
+"1":0.3,
 "2":0.2,
 "3":0.3,
-"4":0.4,
-"5":0.5,
-"6":0.6,
-"7":0.7,
-"8":0.8,
-"9":0.9,
-"10":1.0,
+"4":0.2,
+"5":0.3,
+"6":0.3,
+"7":0.3,
+"8":0.3,
 
-"101":0.2,
-"102":0.3,
-"201":0.5,
-"205":0.5,
-"301":1.0
+"9":0.5,
+"10":0.5,
+"11":0.3,
+"12":0.3,
+"13":0.3,
+"14":0.3,
+"15":0.3,
+"16":0.5,
+"17":0.2,
+
+"18":0.5,
+"19":0.5,
+"20":0.5,
+"21":0.3,
+"22":0.5,
+"23":0.2
 
 };
 
@@ -427,7 +458,7 @@ document.getElementById("competitionName")
 .value.trim();
 
 if(name===""){
-alert("Bitte Wettbewerb eingeben");
+alert("Bitte Namen eingeben");
 return;
 }
 
@@ -546,6 +577,8 @@ renderCompetitions();
 }
 
 /* ========================================= */
+/* IMPORT */
+/* ========================================= */
 
 function parseCompetitionText(){
 
@@ -571,7 +604,7 @@ lines.forEach(line=>{
 
 const categoryMatch =
 line.match(
-/(\d{2}:\d{2})\s+(\d{2}:\d{2}).*?([A-Za-zÄÖÜäöüß]+.*)$/
+/(\d{2}:\d{2})\s+(\d{2}:\d{2}).*?([A-Za-zÄÖÜäöüß0-9\s.-]+)$/
 );
 
 if(categoryMatch){
@@ -669,6 +702,7 @@ b3:"",
 
 deductionNumber:"",
 deduction:0,
+
 total:0,
 
 place:"",
@@ -745,26 +779,17 @@ c=>category.includes(c)
 
 function updateRanking(categoryId){
 
-if(!activeCompetition) return;
-
 const runners =
 activeCompetition.runners
-.filter(r=>r.categoryId===categoryId)
-.filter(r=>!isNaN(parseFloat(r.total)));
+.filter(r=>r.categoryId===categoryId);
 
-runners.sort((a,b)=>{
+runners.sort((a,b)=>b.total-a.total);
 
-return parseFloat(b.total) - parseFloat(a.total);
+runners.forEach((r,index)=>{
 
-});
-
-runners.forEach((runner,index)=>{
-
-runner.place = index + 1;
+r.place=index+1;
 
 });
-
-saveData();
 
 }
 
@@ -781,39 +806,55 @@ if(!activeCompetition) return;
 
 activeCompetition.runners.forEach(runner=>{
 
-let rankingHtml = "";
-
-if(runner.place){
-
-rankingHtml = `
-<div class="ok">
-🏆 Platz ${runner.place}
-</div>
-`;
-
-}
-
-let scoringHtml = "";
+let scoreHtml = "";
 
 if(scoringEnabled(runner.category)){
 
-scoringHtml = `
+scoreHtml = `
 
 <div class="scoreBox">
 
 <div class="scoreGrid">
 
-<input id="a1_${runner.id}" type="text" placeholder="A1" value="${runner.a1 || ""}">
-<input id="a2_${runner.id}" type="text" placeholder="A2" value="${runner.a2 || ""}">
-<input id="a3_${runner.id}" type="text" placeholder="A3" value="${runner.a3 || ""}">
+<input
+id="a1_${runner.id}"
+type="text"
+placeholder="A1"
+value="${runner.a1 || ""}">
+
+<input
+id="a2_${runner.id}"
+type="text"
+placeholder="A2"
+value="${runner.a2 || ""}">
+
+<input
+id="a3_${runner.id}"
+type="text"
+placeholder="A3"
+value="${runner.a3 || ""}">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="b1_${runner.id}" type="text" placeholder="B1" value="${runner.b1 || ""}">
-<input id="b2_${runner.id}" type="text" placeholder="B2" value="${runner.b2 || ""}">
-<input id="b3_${runner.id}" type="text" placeholder="B3" value="${runner.b3 || ""}">
+<input
+id="b1_${runner.id}"
+type="text"
+placeholder="B1"
+value="${runner.b1 || ""}">
+
+<input
+id="b2_${runner.id}"
+type="text"
+placeholder="B2"
+value="${runner.b2 || ""}">
+
+<input
+id="b3_${runner.id}"
+type="text"
+placeholder="B3"
+value="${runner.b3 || ""}">
 
 </div>
 
@@ -845,7 +886,9 @@ onclick="saveRunnerScore('${runner.id}')">
 
 </button>
 
-${rankingHtml}
+<div class="ok">
+🏆 Platz ${runner.place || "-"}
+</div>
 
 </div>
 
@@ -869,7 +912,7 @@ output.innerHTML += `
 
 📂 ${runner.category}
 
-${scoringHtml}
+${scoreHtml}
 
 </div>
 
@@ -888,86 +931,62 @@ activeCompetition.runners.find(
 r=>r.id==id
 );
 
-if(!runner) return;
-
 const prefix =
 isLive ? "live_" : "";
 
 runner.a1 =
 parseFloat(
-String(
-document.getElementById(prefix+"a1_"+id).value
-).replace(",",".")
+(document.getElementById(prefix+"a1_"+id).value || "0")
+.replace(",",".")
 ) || 0;
 
 runner.a2 =
 parseFloat(
-String(
-document.getElementById(prefix+"a2_"+id).value
-).replace(",",".")
+(document.getElementById(prefix+"a2_"+id).value || "0")
+.replace(",",".")
 ) || 0;
 
 runner.a3 =
 parseFloat(
-String(
-document.getElementById(prefix+"a3_"+id).value
-).replace(",",".")
+(document.getElementById(prefix+"a3_"+id).value || "0")
+.replace(",",".")
 ) || 0;
 
 runner.b1 =
 parseFloat(
-String(
-document.getElementById(prefix+"b1_"+id).value
-).replace(",",".")
+(document.getElementById(prefix+"b1_"+id).value || "0")
+.replace(",",".")
 ) || 0;
 
 runner.b2 =
 parseFloat(
-String(
-document.getElementById(prefix+"b2_"+id).value
-).replace(",",".")
+(document.getElementById(prefix+"b2_"+id).value || "0")
+.replace(",",".")
 ) || 0;
 
 runner.b3 =
 parseFloat(
-String(
-document.getElementById(prefix+"b3_"+id).value
-).replace(",",".")
+(document.getElementById(prefix+"b3_"+id).value || "0")
+.replace(",",".")
 ) || 0;
 
 /* ABZUG */
 
 runner.deductionNumber =
-String(
 document.getElementById(
 prefix+"deduction_"+id
-).value
-)
-.trim();
-
-if(
-deductions[
-runner.deductionNumber
-] !== undefined
-){
+).value.trim();
 
 runner.deduction =
-parseFloat(
 deductions[
 runner.deductionNumber
-]
-);
-
-}else{
-
-runner.deduction = 0;
-
-}
+] || 0;
 
 /* GESAMT */
 
-const total =
+runner.total = Number(
 
+(
 runner.a1 +
 runner.a2 +
 runner.a3 +
@@ -976,10 +995,11 @@ runner.b1 +
 runner.b2 +
 runner.b3 -
 
-runner.deduction;
+runner.deduction
 
-runner.total =
-Number(total.toFixed(2));
+).toFixed(2)
+
+);
 
 runner.confirmed = true;
 
@@ -997,46 +1017,14 @@ renderLiveMode();
 
 }
 
-alert(
-"Gesamt: " +
-runner.total +
-"\nAbzug: -" +
-runner.deduction
-);
-
-}
-
-/* ========================================= */
-
-function confirmRunner(){
-
-if(!activeCompetition) return;
-
-const category =
-getCurrentCategory();
-
-if(!category) return;
-
-const categoryRunners =
-activeCompetition.runners.filter(
-r=>r.categoryId===category.id
-);
-
-if(currentRunnerIndex < categoryRunners.length-1){
-
-currentRunnerIndex++;
-
-}
-
-renderLiveMode();
-
 }
 
 /* ========================================= */
 
 function getCurrentCategory(){
 
-if(!activeCompetition) return null;
+if(!activeCompetition)
+return null;
 
 const now = new Date();
 
@@ -1105,7 +1093,8 @@ activeCompetition.runners.filter(
 r=>r.categoryId===category.id
 );
 
-if(categoryRunners.length===0) return;
+if(categoryRunners.length===0)
+return;
 
 const currentRunner =
 categoryRunners[currentRunnerIndex];
@@ -1113,7 +1102,7 @@ categoryRunners[currentRunnerIndex];
 const nextRunner =
 categoryRunners[currentRunnerIndex+1];
 
-let liveHtml = `
+let html = `
 
 <h3>Start ${currentRunner.start}</h3>
 
@@ -1127,23 +1116,23 @@ let liveHtml = `
 
 if(scoringEnabled(currentRunner.category)){
 
-liveHtml += `
+html += `
 
 <div class="scoreBox">
 
 <div class="scoreGrid">
 
-<input id="live_a1_${currentRunner.id}" type="text" placeholder="A1" value="${currentRunner.a1 || ""}">
-<input id="live_a2_${currentRunner.id}" type="text" placeholder="A2" value="${currentRunner.a2 || ""}">
-<input id="live_a3_${currentRunner.id}" type="text" placeholder="A3" value="${currentRunner.a3 || ""}">
+<input id="live_a1_${currentRunner.id}" type="text" placeholder="A1">
+<input id="live_a2_${currentRunner.id}" type="text" placeholder="A2">
+<input id="live_a3_${currentRunner.id}" type="text" placeholder="A3">
 
 </div>
 
 <div class="scoreGrid">
 
-<input id="live_b1_${currentRunner.id}" type="text" placeholder="B1" value="${currentRunner.b1 || ""}">
-<input id="live_b2_${currentRunner.id}" type="text" placeholder="B2" value="${currentRunner.b2 || ""}">
-<input id="live_b3_${currentRunner.id}" type="text" placeholder="B3" value="${currentRunner.b3 || ""}">
+<input id="live_b1_${currentRunner.id}" type="text" placeholder="B1">
+<input id="live_b2_${currentRunner.id}" type="text" placeholder="B2">
+<input id="live_b3_${currentRunner.id}" type="text" placeholder="B3">
 
 </div>
 
@@ -1152,8 +1141,7 @@ liveHtml += `
 <input
 id="live_deduction_${currentRunner.id}"
 type="text"
-placeholder="Abzugsschlüssel"
-value="${currentRunner.deductionNumber || ""}">
+placeholder="Abzug">
 
 <input
 type="text"
@@ -1171,7 +1159,7 @@ value="${currentRunner.total || 0}">
 class="saveButton"
 onclick="saveRunnerScore('${currentRunner.id}',true)">
 
-💾 LIVE Wertung speichern
+💾 LIVE speichern
 
 </button>
 
@@ -1183,7 +1171,7 @@ onclick="saveRunnerScore('${currentRunner.id}',true)">
 
 document.getElementById("liveRunner")
 .innerHTML =
-liveHtml;
+html;
 
 document.getElementById("nextRunner")
 .innerHTML =
@@ -1204,23 +1192,38 @@ ${nextRunner.name}
 
 /* ========================================= */
 
+function confirmRunner(){
+
+const category =
+getCurrentCategory();
+
+if(!category) return;
+
+const runners =
+activeCompetition.runners.filter(
+r=>r.categoryId===category.id
+);
+
+if(currentRunnerIndex < runners.length-1){
+
+currentRunnerIndex++;
+
+}
+
+renderLiveMode();
+
+}
+
+/* ========================================= */
+
 function updateClock(){
 
 const now = new Date();
 
-const offset =
-parseInt(
-document.getElementById("timeOffset").value
-) || 0;
-
-now.setMinutes(now.getMinutes()+offset);
-
-const currentTime =
-now.toTimeString().substring(0,5);
-
 document.getElementById("liveClock")
 .innerHTML =
-"🕒 "+currentTime;
+"🕒 " +
+now.toTimeString().substring(0,5);
 
 }
 
