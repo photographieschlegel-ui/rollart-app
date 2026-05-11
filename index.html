@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>🏆 RollArt Score Pro Online</title>
 
 <style>
@@ -172,10 +171,6 @@ font-weight:bold;
 margin-top:10px;
 font-size:20px;
 }
-
-/* ========================================= */
-/* MEDAILLEN */
-/* ========================================= */
 
 .place1{
 background:linear-gradient(135deg,#facc15,#ca8a04);
@@ -648,6 +643,33 @@ renderCompetitions();
 
 /* ========================================= */
 
+function deleteCompetition(id){
+
+if(!confirm("Wettbewerb wirklich löschen?"))
+return;
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+if(
+activeCompetition &&
+activeCompetition.id===id
+){
+
+activeCompetition = null;
+
+}
+
+saveData();
+
+renderCompetitions();
+
+}
+
+/* ========================================= */
+
 function renderCompetitions(){
 
 const output =
@@ -674,6 +696,14 @@ class="mainButton"
 onclick="openCompetition(${comp.id})">
 
 📂 Öffnen
+
+</button>
+
+<button
+class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
+
+🗑 Löschen
 
 </button>
 
@@ -1403,7 +1433,7 @@ document.getElementById("liveClock")
 
 /* ========================================= */
 
-async function printResults(){
+function printResults(){
 
 window.print();
 
