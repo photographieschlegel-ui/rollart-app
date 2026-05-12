@@ -218,6 +218,10 @@ placeholder="Zeitkorrektur Minuten (+/-)">
 🔄 Zeit aktualisieren
 </button>
 
+<div id="liveClock" style="font-size:28px;font-weight:bold;margin-top:15px;">
+🕒 --:--
+</div>
+
 <div id="liveInfo"></div>
 
 <button
@@ -593,6 +597,34 @@ return active;
 
 }
 
+function updateClock(){
+
+const now = new Date();
+
+const offset =
+parseInt(
+document.getElementById("timeOffset").value
+) || 0;
+
+now.setMinutes(
+now.getMinutes() + offset
+);
+
+const time =
+now.toLocaleTimeString(
+"de-DE",
+{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+);
+
+document.getElementById("liveClock")
+.innerHTML = "🕒 " + time;
+
+}
+
 function renderLiveInfo(){
 
 const output =
@@ -643,6 +675,8 @@ saveData();
 renderLiveInfo();
 
 }
+
+setInterval(updateClock,1000);
 
 window.onload = async function(){
 
