@@ -81,14 +81,6 @@ font-weight:bold;
 cursor:pointer;
 }
 
-.deleteButton{
-background:#dc2626;
-}
-
-.confirmButton{
-background:#16a34a;
-}
-
 .scoreGrid{
 display:grid;
 grid-template-columns:repeat(3,1fr);
@@ -114,26 +106,17 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
 
 apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-
 authDomain: "rollart-score-5319a.firebaseapp.com",
-
 projectId: "rollart-score-5319a",
-
 storageBucket: "rollart-score-5319a.firebasestorage.app",
-
 messagingSenderId: "658963624980",
-
 appId: "1:658963624980:web:2e4d153f5df087c4f42301",
-
 measurementId: "G-7DXHCKP3QZ"
 
 };
 
-const app =
-initializeApp(firebaseConfig);
-
-const db =
-getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 window.db = db;
 window.doc = doc;
@@ -142,14 +125,11 @@ window.setDoc = setDoc;
 window.saveOnline = async function(data){
 
 await setDoc(
-
 doc(db,"rollart","main"),
-
 {
 updated:Date.now(),
 competitions:data
 }
-
 );
 
 };
@@ -224,7 +204,7 @@ class="grid">
 
 <div class="card">
 
-<h2>📥 PDF / Text Import</h2>
+<h2>📥 Import</h2>
 
 <textarea
 id="competitionText"
@@ -256,11 +236,7 @@ class="grid">
 type="number"
 id="timeOffset"
 value="0"
-placeholder="Zeitkorrektur Minuten (+/-)">
-
-<button onclick="renderLiveInfo()">
-🔄 Zeit aktualisieren
-</button>
+placeholder="Zeitkorrektur Minuten">
 
 <div
 id="liveClock"
@@ -269,9 +245,7 @@ font-size:28px;
 font-weight:bold;
 margin-top:15px;
 ">
-
 🕒 --:--
-
 </div>
 
 <div id="liveInfo"></div>
@@ -329,7 +303,8 @@ async function saveData(){
 
 await saveOnline(competitions);
 
-if(activeCompetition){
+if(!activeCompetition)
+return;
 
 const liveCategory =
 getCurrentCategory();
@@ -351,20 +326,10 @@ Number(a.start)-Number(b.start)
 );
 
 /* ========================================= */
-/* LETZTER BESTÄTIGTER LÄUFER */
+/* LIVE LÄUFER */
 /* ========================================= */
 
 let liveRunner =
-
-runners.find(
-r=>r.confirmed
-);
-
-/* ========================================= */
-
-if(liveRunner){
-
-liveRunner =
 
 runners
 .filter(r=>r.confirmed)
@@ -373,6 +338,13 @@ runners
 (a,b)=>
 Number(b.start)-Number(a.start)
 )[0];
+
+/* ========================================= */
+
+if(!liveRunner){
+
+liveRunner =
+runners[0] || null;
 
 }
 
@@ -385,9 +357,17 @@ r=>r.id===liveRunner?.id
 );
 
 /* ========================================= */
+/* NÄCHSTER */
+/* ========================================= */
 
-const nextRunner =
+let nextRunner = null;
+
+if(liveRunner){
+
+nextRunner =
 runners[currentIndex+1] || null;
+
+}
 
 /* ========================================= */
 
@@ -407,8 +387,6 @@ nextRunner:nextRunner
 
 }
 
-}
-
 async function loadData(){
 
 competitions =
@@ -420,16 +398,14 @@ renderCompetitions();
 
 function saveCompetition(){
 
-const name =
-document.getElementById(
-"competitionName"
-).value;
-
 competitions.push({
 
 id:Date.now(),
 
-name:name,
+name:
+document.getElementById(
+"competitionName"
+).value,
 
 place:
 document.getElementById(
@@ -606,7 +582,6 @@ categoryId:currentCategory.id,
 a1:"",
 a2:"",
 a3:"",
-
 b1:"",
 b2:"",
 b3:"",
@@ -701,7 +676,7 @@ value="${runner.b3 || ''}">
 
 <input
 id="deduction_${runner.id}"
-placeholder="Abzugsschlüssel"
+placeholder="Abzug"
 value="${runner.deductionNumber || ''}">
 
 <input
@@ -736,55 +711,27 @@ r=>r.id==id
 );
 
 runner.a1 =
-parseFloat(
-document.getElementById(
-`a1_${id}`
-).value
-) || 0;
+parseFloat(document.getElementById(`a1_${id}`).value) || 0;
 
 runner.a2 =
-parseFloat(
-document.getElementById(
-`a2_${id}`
-).value
-) || 0;
+parseFloat(document.getElementById(`a2_${id}`).value) || 0;
 
 runner.a3 =
-parseFloat(
-document.getElementById(
-`a3_${id}`
-).value
-) || 0;
+parseFloat(document.getElementById(`a3_${id}`).value) || 0;
 
 runner.b1 =
-parseFloat(
-document.getElementById(
-`b1_${id}`
-).value
-) || 0;
+parseFloat(document.getElementById(`b1_${id}`).value) || 0;
 
 runner.b2 =
-parseFloat(
-document.getElementById(
-`b2_${id}`
-).value
-) || 0;
+parseFloat(document.getElementById(`b2_${id}`).value) || 0;
 
 runner.b3 =
-parseFloat(
-document.getElementById(
-`b3_${id}`
-).value
-) || 0;
+parseFloat(document.getElementById(`b3_${id}`).value) || 0;
 
 runner.deductionNumber =
-
-document.getElementById(
-`deduction_${id}`
-).value;
+document.getElementById(`deduction_${id}`).value;
 
 runner.deduction =
-
 deductions[
 runner.deductionNumber
 ] || 0;
@@ -848,13 +795,10 @@ const now =
 new Date();
 
 const offset =
-
 parseInt(
-
 document.getElementById(
 "timeOffset"
 ).value
-
 ) || 0;
 
 now.setMinutes(
@@ -862,7 +806,6 @@ now.getMinutes() + offset
 );
 
 const currentTime =
-
 now.toTimeString()
 .substring(0,5);
 
@@ -891,38 +834,19 @@ function updateClock(){
 const now =
 new Date();
 
-const offset =
-
-parseInt(
-
-document.getElementById(
-"timeOffset"
-).value
-
-) || 0;
-
-now.setMinutes(
-now.getMinutes() + offset
-);
-
 const time =
-
 now.toLocaleTimeString(
-
 "de-DE",
-
 {
 hour:"2-digit",
 minute:"2-digit",
 second:"2-digit"
 }
-
 );
 
 document.getElementById(
 "liveClock"
 ).innerHTML =
-
 "🕒 " + time;
 
 }
@@ -950,11 +874,20 @@ return;
 
 const runners =
 
-activeCompetition.runners.filter(
+activeCompetition.runners
+
+.filter(
 r=>r.categoryId===category.id
+)
+
+.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
 );
 
-const current =
+/* ========================================= */
+
+let current =
 
 runners
 .filter(r=>r.confirmed)
@@ -963,6 +896,27 @@ runners
 (a,b)=>
 Number(b.start)-Number(a.start)
 )[0];
+
+/* ========================================= */
+
+if(!current){
+
+current =
+runners[0] || null;
+
+}
+
+/* ========================================= */
+
+const currentIndex =
+runners.findIndex(
+r=>r.id===current?.id
+);
+
+const nextRunner =
+runners[currentIndex+1] || null;
+
+/* ========================================= */
 
 if(!current)return;
 
@@ -979,6 +933,10 @@ output.innerHTML = `
 <br><br>
 
 🏆 ${current.total}
+
+<br><br>
+
+➡ ${nextRunner?.name || "-"}
 
 `;
 
