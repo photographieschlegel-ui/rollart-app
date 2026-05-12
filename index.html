@@ -233,27 +233,9 @@ initializeApp(firebaseConfig);
 const db =
 getFirestore(app);
 
-window.liveSync = function(callback){
-
-onSnapshot(
-
-doc(db,"rollart","live"),
-
-(docSnap)=>{
-
-if(docSnap.exists()){
-
-callback(
-docSnap.data()
-);
-
-}
-
-}
-
-);
-
-};
+window.db = db;
+window.doc = doc;
+window.onSnapshot = onSnapshot;
 
 </script>
 
@@ -393,6 +375,10 @@ TV Walsum-Aldenrade 07
 
 let liveData = {};
 
+/* ========================================= */
+/* UHR */
+/* ========================================= */
+
 function updateClock(){
 
 const now = new Date();
@@ -412,6 +398,10 @@ document.getElementById("clock")
 "🕒 " + time;
 
 }
+
+/* ========================================= */
+/* LIVE RENDER */
+/* ========================================= */
 
 function render(){
 
@@ -546,17 +536,43 @@ ${nextRunner.club}
 
 }
 
-liveSync((data)=>{
+/* ========================================= */
+/* FIREBASE LIVE */
+/* ========================================= */
 
-liveData = data;
+onSnapshot(
+
+doc(db,"rollart","live"),
+
+(docSnap)=>{
+
+if(docSnap.exists()){
+
+liveData =
+docSnap.data();
 
 render();
 
-});
+}
 
-setInterval(updateClock,1000);
+}
+
+);
+
+/* ========================================= */
+/* CLOCK */
+/* ========================================= */
+
+setInterval(
+updateClock,
+1000
+);
 
 updateClock();
+
+/* ========================================= */
+/* PWA */
+/* ========================================= */
 
 if("serviceWorker" in navigator){
 
