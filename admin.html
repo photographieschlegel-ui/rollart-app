@@ -88,6 +88,10 @@ background:#dc2626;
 background:#16a34a;
 }
 
+.resetButton{
+background:#dc2626;
+}
+
 .scoreGrid{
 display:grid;
 grid-template-columns:repeat(3,1fr);
@@ -287,6 +291,14 @@ onclick="nextRunner()">
 
 </button>
 
+<button
+class="resetButton"
+onclick="resetCompetition()">
+
+🔄 Wettbewerb zurücksetzen
+
+</button>
+
 </div>
 
 </div>
@@ -374,8 +386,6 @@ runners.findIndex(
 r=>!r.confirmed
 );
 
-/* ========================================= */
-
 if(currentIndex < 0){
 
 await saveLive({
@@ -389,10 +399,6 @@ nextRunner:null
 });
 
 return;
-
-}
-
-/* ========================================= */
 
 }
 
@@ -864,6 +870,42 @@ renderRunners();
 
 }
 
+function resetCompetition(){
+
+if(!activeCompetition)
+return;
+
+activeCompetition.runners.forEach(
+runner=>{
+
+runner.confirmed = false;
+
+runner.place = "";
+
+runner.total = 0;
+
+runner.a1 = "";
+runner.a2 = "";
+runner.a3 = "";
+
+runner.b1 = "";
+runner.b2 = "";
+runner.b3 = "";
+
+runner.deduction = 0;
+runner.deductionNumber = "";
+
+}
+);
+
+saveData();
+
+renderRunners();
+
+renderLiveInfo();
+
+}
+
 function updateRanking(categoryId){
 
 const runners =
@@ -1002,8 +1044,6 @@ runners.findIndex(
 r=>!r.confirmed
 );
 
-/* ========================================= */
-
 if(currentIndex < 0){
 
 output.innerHTML = `
@@ -1019,8 +1059,6 @@ output.innerHTML = `
 return;
 
 }
-
-/* ========================================= */
 
 const current =
 runners[currentIndex];
