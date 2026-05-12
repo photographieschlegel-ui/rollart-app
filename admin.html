@@ -6,10 +6,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RollArt Admin</title>
+<title>🏆 RollArt Admin</title>
 
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#2563eb">
+
+<style>
+
+body{
+margin:0;
+padding:0;
+font-family:Arial,sans-serif;
+background:#0f172a;
+color:white;
+}
+
+.app{
+max-width:1600px;
+margin:auto;
+padding:20px;
+}
+
+.logo{
+width:120px;
+height:120px;
+object-fit:contain;
+background:white;
+padding:10px;
+border-radius:20px;
+margin-bottom:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:20px;
+margin-bottom:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+gap:15px;
+}
+
+.item{
+background:#334155;
+padding:15px;
+border-radius:16px;
+}
+
+input,
+textarea,
+button{
+width:100%;
+padding:14px;
+margin-top:10px;
+border:none;
+border-radius:14px;
+font-size:16px;
+box-sizing:border-box;
+}
+
+input,
+textarea{
+background:#475569;
+color:white;
+}
+
+button{
+background:#2563eb;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.deleteButton{
+background:#dc2626;
+}
+
+.confirmButton{
+background:#16a34a;
+}
+
+.scoreGrid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+margin-top:10px;
+}
+
+</style>
 
 <script type="module">
 
@@ -89,86 +176,6 @@ callback(docSnap.data().competitions || []);
 
 </script>
 
-<style>
-body{
-margin:0;
-padding:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
-}
-
-.app{
-max-width:1600px;
-margin:auto;
-padding:20px;
-}
-
-.card{
-background:#1e293b;
-padding:20px;
-border-radius:20px;
-margin-bottom:20px;
-}
-
-input,textarea,button{
-width:100%;
-padding:14px;
-margin-top:10px;
-border:none;
-border-radius:14px;
-box-sizing:border-box;
-font-size:16px;
-}
-
-input,textarea{
-background:#475569;
-color:white;
-}
-
-button{
-background:#2563eb;
-color:white;
-font-weight:bold;
-cursor:pointer;
-}
-
-.deleteButton{
-background:#dc2626;
-}
-
-.confirmButton{
-background:#16a34a;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-gap:15px;
-}
-
-.item{
-background:#334155;
-padding:15px;
-border-radius:16px;
-}
-
-.scoreGrid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin-top:10px;
-}
-
-.logo{
-width:120px;
-height:120px;
-object-fit:contain;
-background:white;
-padding:10px;
-border-radius:20px;
-}
-</style>
 </head>
 <body>
 
@@ -179,7 +186,7 @@ border-radius:20px;
 <div class="card">
 <h2>🏆 Wettbewerb</h2>
 <input type="text" id="competitionName" placeholder="Wettbewerb">
-<button onclick="saveCompetition()">💾 Speichern</button>
+<button onclick="saveCompetition()">💾 Wettbewerb speichern</button>
 </div>
 
 <div class="card">
@@ -200,10 +207,25 @@ border-radius:20px;
 
 <div class="card">
 <h2>⏱ Live</h2>
+
+<input
+type="number"
+id="timeOffset"
+value="0"
+placeholder="Zeitkorrektur Minuten (+/-)">
+
+<button onclick="renderLiveInfo()">
+🔄 Zeit aktualisieren
+</button>
+
 <div id="liveInfo"></div>
-<button class="confirmButton" onclick="confirmRunner()">
+
+<button
+class="confirmButton"
+onclick="confirmRunner()">
 ✅ Nächster Läufer
 </button>
+
 </div>
 
 </div>
@@ -296,7 +318,8 @@ renderCompetitions();
 
 function saveCompetition(){
 
-const name = document.getElementById("competitionName").value;
+const name =
+document.getElementById("competitionName").value;
 
 competitions.push({
 id:Date.now(),
@@ -312,7 +335,8 @@ renderCompetitions();
 
 function deleteCompetition(id){
 
-competitions = competitions.filter(c=>c.id!==id);
+competitions =
+competitions.filter(c=>c.id!==id);
 
 saveData();
 renderCompetitions();
@@ -321,7 +345,9 @@ renderCompetitions();
 
 function renderCompetitions(){
 
-const output = document.getElementById("competitionList");
+const output =
+document.getElementById("competitionList");
+
 output.innerHTML = "";
 
 competitions.forEach(comp=>{
@@ -329,8 +355,12 @@ competitions.forEach(comp=>{
 output.innerHTML += `
 <div class="item">
 <h3>${comp.name}</h3>
-<button onclick="openCompetition(${comp.id})">📂 Öffnen</button>
-<button class="deleteButton" onclick="deleteCompetition(${comp.id})">🗑 Löschen</button>
+<button onclick="openCompetition(${comp.id})">
+📂 Öffnen
+</button>
+<button class="deleteButton" onclick="deleteCompetition(${comp.id})">
+🗑 Löschen
+</button>
 </div>
 `;
 
@@ -340,8 +370,11 @@ output.innerHTML += `
 
 function openCompetition(id){
 
-activeCompetition = competitions.find(c=>c.id===id);
+activeCompetition =
+competitions.find(c=>c.id===id);
+
 currentRunnerIndex = 0;
+
 renderRunners();
 renderLiveInfo();
 
@@ -351,7 +384,8 @@ function parseCompetitionText(){
 
 if(!activeCompetition)return;
 
-const text = document.getElementById("competitionText").value;
+const text =
+document.getElementById("competitionText").value;
 
 const lines = text.split("\n");
 
@@ -381,7 +415,8 @@ return;
 
 }
 
-const runnerMatch = line.match(/^(\d+)\s+(.+)$/);
+const runnerMatch =
+line.match(/^(\d+)\s+(.+)$/);
 
 if(runnerMatch && currentCategory){
 
@@ -390,10 +425,12 @@ let club = "-";
 let name = rest;
 
 knownClubs.forEach(c=>{
+
 if(rest.endsWith(c)){
 club = c;
 name = rest.replace(c,"").trim();
 }
+
 });
 
 activeCompetition.runners.push({
@@ -403,8 +440,12 @@ name:name,
 club:club,
 category:currentCategory.name,
 categoryId:currentCategory.id,
-a1:0,a2:0,a3:0,
-b1:0,b2:0,b3:0,
+a1:0,
+a2:0,
+a3:0,
+b1:0,
+b2:0,
+b3:0,
 deductionNumber:"",
 deduction:0,
 total:0,
@@ -423,7 +464,9 @@ renderRunners();
 
 function renderRunners(){
 
-const output = document.getElementById("runnerList");
+const output =
+document.getElementById("runnerList");
+
 output.innerHTML = "";
 
 if(!activeCompetition)return;
@@ -432,9 +475,13 @@ activeCompetition.runners.forEach(runner=>{
 
 output.innerHTML += `
 <div class="item">
+
 <h3>Start ${runner.start}</h3>
-👤 ${runner.name}<br><br>
-🏢 ${runner.club}<br><br>
+
+👤 ${runner.name}
+<br><br>
+🏢 ${runner.club}
+<br><br>
 📂 ${runner.category}
 
 <div class="scoreGrid">
@@ -468,7 +515,8 @@ output.innerHTML += `
 
 function saveRunnerScore(id){
 
-const runner = activeCompetition.runners.find(r=>r.id==id);
+const runner =
+activeCompetition.runners.find(r=>r.id==id);
 
 runner.a1 = parseFloat(document.getElementById(`a1_${id}`).value)||0;
 runner.a2 = parseFloat(document.getElementById(`a2_${id}`).value)||0;
@@ -518,7 +566,18 @@ function getCurrentCategory(){
 if(!activeCompetition)return null;
 
 const now = new Date();
-const currentTime = now.toTimeString().substring(0,5);
+
+const offset =
+parseInt(
+document.getElementById("timeOffset").value
+) || 0;
+
+now.setMinutes(
+now.getMinutes() + offset
+);
+
+const currentTime =
+now.toTimeString().substring(0,5);
 
 let active = null;
 
@@ -536,7 +595,8 @@ return active;
 
 function renderLiveInfo(){
 
-const output = document.getElementById("liveInfo");
+const output =
+document.getElementById("liveInfo");
 
 if(!activeCompetition)return;
 
