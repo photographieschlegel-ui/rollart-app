@@ -185,7 +185,15 @@ callback(docSnap.data().competitions || []);
 
 <div class="card">
 <h2>🏆 Wettbewerb</h2>
+
 <input type="text" id="competitionName" placeholder="Wettbewerb">
+
+<input type="text" id="competitionPlace" placeholder="Ort">
+
+<input type="date" id="competitionFrom">
+
+<input type="date" id="competitionTo">
+
 <button onclick="saveCompetition()">💾 Wettbewerb speichern</button>
 </div>
 
@@ -328,6 +336,9 @@ document.getElementById("competitionName").value;
 competitions.push({
 id:Date.now(),
 name:name,
+place:document.getElementById("competitionPlace").value,
+from:document.getElementById("competitionFrom").value,
+to:document.getElementById("competitionTo").value,
 categories:[],
 runners:[]
 });
@@ -359,6 +370,9 @@ competitions.forEach(comp=>{
 output.innerHTML += `
 <div class="item">
 <h3>${comp.name}</h3>
+📍 ${comp.place || "-"}
+<br><br>
+📅 ${comp.from || "-"} bis ${comp.to || "-"}
 <button onclick="openCompetition(${comp.id})">
 📂 Öffnen
 </button>
