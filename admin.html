@@ -88,6 +88,23 @@ gap:10px;
 margin-top:10px;
 }
 
+.liveRunner{
+margin-top:20px;
+padding:20px;
+background:#334155;
+border-radius:20px;
+font-size:20px;
+line-height:1.7;
+}
+
+.nextRunner{
+margin-top:15px;
+padding:15px;
+background:#1d4ed8;
+border-radius:18px;
+font-size:18px;
+}
+
 </style>
 
 <script type="module">
@@ -326,25 +343,21 @@ Number(a.start)-Number(b.start)
 );
 
 /* ========================================= */
-/* LIVE LÄUFER */
+/* AKTUELLER LÄUFER */
 /* ========================================= */
 
 let liveRunner =
 
-runners
-.filter(r=>r.confirmed)
-
-.sort(
-(a,b)=>
-Number(b.start)-Number(a.start)
-)[0];
+runners.find(
+r=>!r.confirmed
+);
 
 /* ========================================= */
 
 if(!liveRunner){
 
 liveRunner =
-runners[0] || null;
+runners[runners.length-1] || null;
 
 }
 
@@ -360,14 +373,8 @@ r=>r.id===liveRunner?.id
 /* NÄCHSTER */
 /* ========================================= */
 
-let nextRunner = null;
-
-if(liveRunner){
-
-nextRunner =
+let nextRunner =
 runners[currentIndex+1] || null;
-
-}
 
 /* ========================================= */
 
@@ -889,20 +896,16 @@ Number(a.start)-Number(b.start)
 
 let current =
 
-runners
-.filter(r=>r.confirmed)
-
-.sort(
-(a,b)=>
-Number(b.start)-Number(a.start)
-)[0];
+runners.find(
+r=>!r.confirmed
+);
 
 /* ========================================= */
 
 if(!current){
 
 current =
-runners[0] || null;
+runners[runners.length-1] || null;
 
 }
 
@@ -922,21 +925,37 @@ if(!current)return;
 
 output.innerHTML = `
 
-<h2>${current.name}</h2>
+<div class="liveRunner">
+
+🏆 AKTUELL
+
+<br><br>
+
+👤 ${current.name}
+
+<br>
 
 🏢 ${current.club}
 
-<br><br>
+<br>
 
 📂 ${current.category}
 
 <br><br>
 
-🏆 ${current.total}
+⭐ ${current.total}
+
+</div>
+
+<div class="nextRunner">
+
+➡ NÄCHSTER:
 
 <br><br>
 
-➡ ${nextRunner?.name || "-"}
+${nextRunner?.name || "-"}
+
+</div>
 
 `;
 
