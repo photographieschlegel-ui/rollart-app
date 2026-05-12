@@ -234,8 +234,6 @@ const db =
 getFirestore(app);
 
 window.db = db;
-window.doc = doc;
-window.onSnapshot = onSnapshot;
 
 </script>
 
@@ -375,10 +373,6 @@ TV Walsum-Aldenrade 07
 
 let liveData = {};
 
-/* ========================================= */
-/* UHR */
-/* ========================================= */
-
 function updateClock(){
 
 const now = new Date();
@@ -398,10 +392,6 @@ document.getElementById("clock")
 "🕒 " + time;
 
 }
-
-/* ========================================= */
-/* LIVE RENDER */
-/* ========================================= */
 
 function render(){
 
@@ -440,13 +430,9 @@ document.getElementById("runnerName")
 .innerHTML =
 runner.name || "-";
 
-/* ========================================= */
-
 document.getElementById("runnerClub")
 .innerHTML =
 runner.club || "-";
-
-/* ========================================= */
 
 document.getElementById("runnerCategory")
 .innerHTML =
@@ -460,8 +446,6 @@ const aValue = Number(
 (runner.a3 || 0)
 ).toFixed(1);
 
-/* ========================================= */
-
 const bValue = Number(
 (runner.b1 || 0) +
 (runner.b2 || 0) +
@@ -474,19 +458,13 @@ document.getElementById("scoreA")
 .innerHTML =
 aValue;
 
-/* ========================================= */
-
 document.getElementById("scoreB")
 .innerHTML =
 bValue;
 
-/* ========================================= */
-
 document.getElementById("deduction")
 .innerHTML =
 "-" + (runner.deduction || 0);
-
-/* ========================================= */
 
 document.getElementById("total")
 .innerHTML =
@@ -537,7 +515,7 @@ ${nextRunner.club}
 }
 
 /* ========================================= */
-/* FIREBASE LIVE */
+/* LIVE FIREBASE */
 /* ========================================= */
 
 onSnapshot(
@@ -559,8 +537,6 @@ render();
 
 );
 
-/* ========================================= */
-/* CLOCK */
 /* ========================================= */
 
 setInterval(

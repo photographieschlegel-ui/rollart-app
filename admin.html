@@ -346,19 +346,54 @@ getCurrentCategory();
 if(!liveCategory)
 return;
 
-let liveRunner = null;
-let nextRunner = null;
+/* ========================================= */
+/* LIVE RUNNER */
+/* ========================================= */
 
 const runners =
-activeCompetition.runners.filter(
+
+activeCompetition.runners
+
+.filter(
 r=>r.categoryId===liveCategory.id
+)
+
+.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
 );
 
-liveRunner =
-runners[currentRunnerIndex] || null;
+/* ========================================= */
 
-nextRunner =
-runners[currentRunnerIndex+1] || null;
+let liveRunner =
+
+runners.find(
+r=>!r.confirmed
+);
+
+/* ========================================= */
+
+if(!liveRunner){
+
+liveRunner =
+runners[runners.length-1] || null;
+
+}
+
+/* ========================================= */
+
+const currentIndex =
+
+runners.findIndex(
+r=>r.id===liveRunner?.id
+);
+
+/* ========================================= */
+
+const nextRunner =
+runners[currentIndex+1] || null;
+
+/* ========================================= */
 
 await setDoc(
 
@@ -797,18 +832,6 @@ runner.deduction
 
 runner.confirmed = true;
 
-const categoryRunners =
-
-activeCompetition.runners.filter(
-r=>r.categoryId===runner.categoryId
-);
-
-currentRunnerIndex =
-
-categoryRunners.findIndex(
-r=>r.id===runner.id
-);
-
 updateRanking(
 runner.categoryId
 );
@@ -959,7 +982,10 @@ r=>r.categoryId===category.id
 );
 
 const current =
-runners[currentRunnerIndex];
+
+runners.find(
+r=>!r.confirmed
+);
 
 if(!current)return;
 
@@ -982,26 +1008,6 @@ output.innerHTML = `
 }
 
 function confirmRunner(){
-
-const category =
-getCurrentCategory();
-
-if(!category)return;
-
-const runners =
-
-activeCompetition.runners.filter(
-r=>r.categoryId===category.id
-);
-
-if(
-currentRunnerIndex <
-runners.length-1
-){
-
-currentRunnerIndex++;
-
-}
 
 saveData();
 
