@@ -23,7 +23,6 @@ padding:0;
 font-family:Arial,sans-serif;
 background:#0f172a;
 color:white;
-overflow-x:hidden;
 }
 
 .app{
@@ -138,21 +137,6 @@ border-radius:22px;
 font-size:34px;
 font-weight:bold;
 text-align:center;
-}
-
-.place1{
-background:linear-gradient(135deg,#facc15,#ca8a04);
-}
-
-.place2{
-background:linear-gradient(135deg,#d1d5db,#6b7280);
-}
-
-.place3{
-background:linear-gradient(135deg,#d97706,#92400e);
-}
-
-.placeOther{
 background:#16a34a;
 }
 
@@ -163,77 +147,7 @@ color:#94a3b8;
 font-size:18px;
 }
 
-@media(max-width:700px){
-
-.runnerName{
-font-size:34px;
-}
-
-.runnerClub{
-font-size:22px;
-}
-
-.category{
-font-size:22px;
-}
-
-.scoreValue{
-font-size:34px;
-}
-
-.totalCard .scoreValue{
-font-size:44px;
-}
-
-.nextRunner{
-font-size:24px;
-}
-
-.placeBox{
-font-size:28px;
-}
-
-}
-
 </style>
-
-<script type="module">
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-doc,
-onSnapshot
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-
-apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-authDomain: "rollart-score-5319a.firebaseapp.com",
-projectId: "rollart-score-5319a",
-storageBucket: "rollart-score-5319a.firebasestorage.app",
-messagingSenderId: "658963624980",
-appId: "1:658963624980:web:2e4d153f5df087c4f42301",
-measurementId: "G-7DXHCKP3QZ"
-
-};
-
-const app =
-initializeApp(firebaseConfig);
-
-const db =
-getFirestore(app);
-
-/* GLOBAL */
-
-window.db = db;
-window.doc = doc;
-window.onSnapshot = onSnapshot;
-
-</script>
 
 </head>
 
@@ -260,11 +174,11 @@ font-size:18px;
 color:#cbd5e1;
 margin-top:8px;
 ">
--
+Warte auf Wettbewerb...
 </div>
 
 <div id="clock" class="liveClock">
-🕒 --
+🕒 --:--
 </div>
 
 </div>
@@ -278,7 +192,7 @@ AKTUELLER LÄUFER
 </div>
 
 <div id="runnerName" class="runnerName">
--
+Warte auf Live-Daten...
 </div>
 
 <div id="runnerClub" class="runnerClub">
@@ -341,7 +255,7 @@ AKTUELLER LÄUFER
 
 </div>
 
-<div id="placeBox" class="placeBox placeOther">
+<div id="placeBox" class="placeBox">
 🏆 Platz -
 </div>
 
@@ -360,16 +274,46 @@ AKTUELLER LÄUFER
 </div>
 
 <div class="footer">
-
 TV Walsum-Aldenrade 07
-
 </div>
 
 </div>
 
-<script>
+<script type="module">
 
-let liveData = {};
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+doc,
+onSnapshot
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ========================================= */
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+authDomain: "rollart-score-5319a.firebaseapp.com",
+projectId: "rollart-score-5319a",
+storageBucket: "rollart-score-5319a.firebasestorage.app",
+messagingSenderId: "658963624980",
+appId: "1:658963624980:web:2e4d153f5df087c4f42301",
+measurementId: "G-7DXHCKP3QZ"
+
+};
+
+/* ========================================= */
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
+
+/* ========================================= */
 
 function updateClock(){
 
@@ -385,35 +329,30 @@ second:"2-digit"
 }
 );
 
-document.getElementById("clock")
-.innerHTML =
+document.getElementById(
+"clock"
+).innerHTML =
 "🕒 " + time;
 
 }
 
-function render(){
+/* ========================================= */
 
-if(!liveData.runner){
+function render(data){
 
-document.getElementById("runnerName")
-.innerHTML =
-"Warte auf Live-Daten";
-
-return;
-
-}
+if(!data)return;
 
 const runner =
-liveData.runner;
-
-const category =
-liveData.category;
+data.runner || {};
 
 const nextRunner =
-liveData.nextRunner;
+data.nextRunner || {};
 
 const competition =
-liveData.competition;
+data.competition || {};
+
+const category =
+data.category || {};
 
 /* ========================================= */
 
@@ -422,95 +361,91 @@ document.getElementById(
 ).innerHTML =
 
 `
-📍 ${competition?.place || "-"}
+📍 ${competition.place || "-"}
 <br>
-📅 ${competition?.from || "-"}
+📅 ${competition.from || "-"}
 bis
-${competition?.to || "-"}
+${competition.to || "-"}
 `;
 
 /* ========================================= */
 
-document.getElementById("runnerName")
-.innerHTML =
+document.getElementById(
+"runnerName"
+).innerHTML =
 runner.name || "-";
 
-document.getElementById("runnerClub")
-.innerHTML =
+document.getElementById(
+"runnerClub"
+).innerHTML =
 runner.club || "-";
 
-document.getElementById("runnerCategory")
-.innerHTML =
-category?.name || "-";
+document.getElementById(
+"runnerCategory"
+).innerHTML =
+category.name || "-";
 
 /* ========================================= */
 
-const aValue = Number(
-(runner.a1 || 0) +
-(runner.a2 || 0) +
-(runner.a3 || 0)
+const aValue =
+
+Number(runner.a1 || 0) +
+Number(runner.a2 || 0) +
+Number(runner.a3 || 0);
+
+const bValue =
+
+Number(runner.b1 || 0) +
+Number(runner.b2 || 0) +
+Number(runner.b3 || 0);
+
+/* ========================================= */
+
+document.getElementById(
+"scoreA"
+).innerHTML =
+aValue.toFixed(1);
+
+document.getElementById(
+"scoreB"
+).innerHTML =
+bValue.toFixed(1);
+
+document.getElementById(
+"deduction"
+).innerHTML =
+"-" + Number(
+runner.deduction || 0
 ).toFixed(1);
 
-const bValue = Number(
-(runner.b1 || 0) +
-(runner.b2 || 0) +
-(runner.b3 || 0)
+document.getElementById(
+"total"
+).innerHTML =
+Number(
+runner.total || 0
 ).toFixed(1);
 
 /* ========================================= */
 
-document.getElementById("scoreA")
-.innerHTML =
-aValue;
+document.getElementById(
+"placeBox"
+).innerHTML =
 
-document.getElementById("scoreB")
-.innerHTML =
-bValue;
-
-document.getElementById("deduction")
-.innerHTML =
-"-" + (runner.deduction || 0);
-
-document.getElementById("total")
-.innerHTML =
-runner.total || 0;
+"🏆 Platz " +
+(runner.place || "-");
 
 /* ========================================= */
 
-let placeClass =
-"placeOther";
+document.getElementById(
+"nextRunner"
+).innerHTML =
 
-if(runner.place==1)
-placeClass="place1";
-
-if(runner.place==2)
-placeClass="place2";
-
-if(runner.place==3)
-placeClass="place3";
-
-/* ========================================= */
-
-const placeBox =
-document.getElementById("placeBox");
-
-placeBox.className =
-"placeBox " + placeClass;
-
-placeBox.innerHTML =
-"🏆 Platz " + (runner.place || "-");
-
-/* ========================================= */
-
-document.getElementById("nextRunner")
-.innerHTML =
-
-nextRunner ?
+nextRunner.name ?
 
 `
 ${nextRunner.name}
 <br>
-${nextRunner.club}
+${nextRunner.club || "-"}
 `
 
 :
@@ -520,26 +455,32 @@ ${nextRunner.club}
 }
 
 /* ========================================= */
-/* FIREBASE LIVE */
+/* LIVE FIREBASE */
 /* ========================================= */
 
-window.onSnapshot(
+onSnapshot(
 
-window.doc(window.db,"rollart","live"),
+doc(db,"rollart","live"),
 
 (snapshot)=>{
 
 if(snapshot.exists()){
 
-liveData = snapshot.data();
+const data =
+snapshot.data();
 
-console.log("LIVE UPDATE", liveData);
+console.log(
+"LIVE UPDATE",
+data
+);
 
-render();
+render(data);
 
 }else{
 
-console.log("Keine Live Daten");
+console.log(
+"Keine Live Daten"
+);
 
 }
 
@@ -547,7 +488,10 @@ console.log("Keine Live Daten");
 
 (error)=>{
 
-console.log("Firebase Fehler", error);
+console.log(
+"Firebase Fehler",
+error
+);
 
 }
 
@@ -562,8 +506,6 @@ updateClock,
 
 updateClock();
 
-/* ========================================= */
-/* PWA */
 /* ========================================= */
 
 if("serviceWorker" in navigator){
