@@ -386,8 +386,6 @@ measurementId: "G-7DXHCKP3QZ"
 
 };
 
-/* ========================================= */
-
 const app =
 initializeApp(firebaseConfig);
 
@@ -554,16 +552,23 @@ data.nextRunner || {};
 const competition =
 data.competition || {};
 
-const category =
-data.category || {};
+/* ========================================= */
 
 allRunners =
-competition.runners || [];
+
+[...(competition.runners || [])]
+
+.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+/* ========================================= */
 
 currentViewIndex =
 
 allRunners.findIndex(
-r=>r.id===runner.id
+r=>String(r.id)===String(runner.id)
 );
 
 /* ========================================= */
