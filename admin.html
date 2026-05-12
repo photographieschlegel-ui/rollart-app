@@ -361,27 +361,27 @@ Number(a.start)-Number(b.start)
 
 /* ========================================= */
 
-let current =
+let currentIndex =
 
-runners.find(
+runners.findIndex(
 r=>!r.confirmed
 );
 
 /* ========================================= */
 
-if(!current){
+if(currentIndex < 0){
 
-current =
-runners[runners.length-1] || null;
+currentIndex =
+runners.length - 1;
 
 }
 
 /* ========================================= */
 
-const currentIndex =
-runners.findIndex(
-r=>r.id===current?.id
-);
+let current =
+runners[currentIndex];
+
+/* ========================================= */
 
 const nextRunner =
 runners[currentIndex+1] || null;
@@ -1005,27 +1005,25 @@ Number(a.start)-Number(b.start)
 
 /* ========================================= */
 
-let current =
+let currentIndex =
 
-runners.find(
+runners.findIndex(
 r=>!r.confirmed
 );
 
 /* ========================================= */
 
-if(!current){
+if(currentIndex < 0){
 
-current =
-runners[runners.length-1] || null;
+currentIndex =
+runners.length - 1;
 
 }
 
 /* ========================================= */
 
-const currentIndex =
-runners.findIndex(
-r=>r.id===current?.id
-);
+const current =
+runners[currentIndex];
 
 const nextRunner =
 runners[currentIndex+1] || null;
