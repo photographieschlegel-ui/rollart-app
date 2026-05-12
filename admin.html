@@ -276,14 +276,6 @@ margin-top:15px;
 
 <div id="liveInfo"></div>
 
-<button
-class="confirmButton"
-onclick="confirmRunner()">
-
-✅ Nächster Läufer
-
-</button>
-
 </div>
 
 </div>
@@ -292,7 +284,6 @@ onclick="confirmRunner()">
 
 let competitions = [];
 let activeCompetition = null;
-let currentRunnerIndex = 0;
 
 const deductions = {
 
@@ -346,10 +337,6 @@ getCurrentCategory();
 if(!liveCategory)
 return;
 
-/* ========================================= */
-/* LIVE RUNNER */
-/* ========================================= */
-
 const runners =
 
 activeCompetition.runners
@@ -364,19 +351,28 @@ Number(a.start)-Number(b.start)
 );
 
 /* ========================================= */
+/* LETZTER BESTÄTIGTER LÄUFER */
+/* ========================================= */
 
 let liveRunner =
 
 runners.find(
-r=>!r.confirmed
+r=>r.confirmed
 );
 
 /* ========================================= */
 
-if(!liveRunner){
+if(liveRunner){
 
 liveRunner =
-runners[runners.length-1] || null;
+
+runners
+.filter(r=>r.confirmed)
+
+.sort(
+(a,b)=>
+Number(b.start)-Number(a.start)
+)[0];
 
 }
 
@@ -462,19 +458,6 @@ renderCompetitions();
 
 }
 
-function deleteCompetition(id){
-
-competitions =
-competitions.filter(
-c=>c.id!==id
-);
-
-saveData();
-
-renderCompetitions();
-
-}
-
 function renderCompetitions(){
 
 const output =
@@ -506,14 +489,6 @@ ${comp.to || "-"}
 
 </button>
 
-<button
-class="deleteButton"
-onclick="deleteCompetition(${comp.id})">
-
-🗑 Löschen
-
-</button>
-
 </div>
 
 `;
@@ -528,8 +503,6 @@ activeCompetition =
 competitions.find(
 c=>c.id===id
 );
-
-currentRunnerIndex = 0;
 
 renderRunners();
 
@@ -983,9 +956,13 @@ r=>r.categoryId===category.id
 
 const current =
 
-runners.find(
-r=>!r.confirmed
-);
+runners
+.filter(r=>r.confirmed)
+
+.sort(
+(a,b)=>
+Number(b.start)-Number(a.start)
+)[0];
 
 if(!current)return;
 
@@ -1004,14 +981,6 @@ output.innerHTML = `
 🏆 ${current.total}
 
 `;
-
-}
-
-function confirmRunner(){
-
-saveData();
-
-renderLiveInfo();
 
 }
 
