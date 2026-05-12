@@ -372,8 +372,6 @@ onSnapshot
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ========================================= */
-
 const firebaseConfig = {
 
 apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
@@ -396,8 +394,6 @@ let liveData = {};
 let allRunners = [];
 let currentViewIndex = -1;
 
-/* ========================================= */
-
 function updateClock(){
 
 const now = new Date();
@@ -419,8 +415,6 @@ document.getElementById(
 
 }
 
-/* ========================================= */
-
 function renderRunner(runner){
 
 if(!runner)return;
@@ -440,8 +434,6 @@ document.getElementById(
 ).innerHTML =
 runner.category || "-";
 
-/* ========================================= */
-
 const aValue =
 
 Number(runner.a1 || 0) +
@@ -453,8 +445,6 @@ const bValue =
 Number(runner.b1 || 0) +
 Number(runner.b2 || 0) +
 Number(runner.b3 || 0);
-
-/* ========================================= */
 
 document.getElementById(
 "scoreA"
@@ -487,8 +477,6 @@ document.getElementById(
 (runner.place || "-");
 
 }
-
-/* ========================================= */
 
 function renderRanking(){
 
@@ -535,8 +523,6 @@ runner.total || 0
 
 }
 
-/* ========================================= */
-
 function render(data){
 
 if(!data)return;
@@ -552,8 +538,6 @@ data.nextRunner || {};
 const competition =
 data.competition || {};
 
-/* ========================================= */
-
 allRunners =
 
 [...(competition.runners || [])]
@@ -563,15 +547,11 @@ allRunners =
 Number(a.start)-Number(b.start)
 );
 
-/* ========================================= */
-
 currentViewIndex =
 
 allRunners.findIndex(
 r=>String(r.id)===String(runner.id)
 );
-
-/* ========================================= */
 
 document.getElementById(
 "competitionInfo"
@@ -585,11 +565,7 @@ bis
 ${competition.to || "-"}
 `;
 
-/* ========================================= */
-
 renderRunner(runner);
-
-/* ========================================= */
 
 document.getElementById(
 "nextRunner"
@@ -607,51 +583,63 @@ ${nextRunner.club || "-"}
 
 "Kein nächster Läufer";
 
-/* ========================================= */
-
 renderRanking();
 
 }
 
-/* ========================================= */
-
 function showPreviousRunner(){
 
-if(currentViewIndex <= 0)
+if(allRunners.length===0)
 return;
+
+if(currentViewIndex < 0){
+
+currentViewIndex = 0;
+
+}
+
+if(currentViewIndex > 0){
 
 currentViewIndex--;
 
-renderRunner(
-allRunners[currentViewIndex]
-);
-
 }
 
-/* ========================================= */
+const runner =
+allRunners[currentViewIndex];
+
+renderRunner(runner);
+
+}
 
 function showNextRunner(){
 
-if(currentViewIndex >= allRunners.length-1)
+if(allRunners.length===0)
 return;
 
-currentViewIndex++;
+if(currentViewIndex < 0){
 
-renderRunner(
-allRunners[currentViewIndex]
-);
+currentViewIndex = 0;
 
 }
 
-/* ========================================= */
+if(currentViewIndex < allRunners.length-1){
+
+currentViewIndex++;
+
+}
+
+const runner =
+allRunners[currentViewIndex];
+
+renderRunner(runner);
+
+}
 
 function showCurrentRunner(){
 
 render(liveData);
 
 }
-
-/* ========================================= */
 
 onSnapshot(
 
@@ -664,35 +652,13 @@ if(snapshot.exists()){
 const data =
 snapshot.data();
 
-console.log(
-"LIVE UPDATE",
-data
-);
-
 render(data);
 
-}else{
-
-console.log(
-"Keine Live Daten"
-);
-
 }
-
-},
-
-(error)=>{
-
-console.log(
-"Firebase Fehler",
-error
-);
 
 }
 
 );
-
-/* ========================================= */
 
 setInterval(
 updateClock,
@@ -700,8 +666,6 @@ updateClock,
 );
 
 updateClock();
-
-/* ========================================= */
 
 if("serviceWorker" in navigator){
 
