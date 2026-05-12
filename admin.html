@@ -374,10 +374,25 @@ runners.findIndex(
 r=>!r.confirmed
 );
 
+/* ========================================= */
+
 if(currentIndex < 0){
 
-currentIndex =
-runners.length - 1;
+await saveLive({
+
+updated:Date.now(),
+competition:activeCompetition,
+category:category,
+runner:null,
+nextRunner:null
+
+});
+
+return;
+
+}
+
+/* ========================================= */
 
 }
 
@@ -987,12 +1002,25 @@ runners.findIndex(
 r=>!r.confirmed
 );
 
+/* ========================================= */
+
 if(currentIndex < 0){
 
-currentIndex =
-runners.length - 1;
+output.innerHTML = `
+
+<div class="liveRunner">
+
+🏁 Wettbewerb beendet
+
+</div>
+
+`;
+
+return;
 
 }
+
+/* ========================================= */
 
 const current =
 runners[currentIndex];
