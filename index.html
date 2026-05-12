@@ -233,7 +233,11 @@ initializeApp(firebaseConfig);
 const db =
 getFirestore(app);
 
+/* WICHTIG GLOBAL */
+
 window.db = db;
+window.doc = doc;
+window.onSnapshot = onSnapshot;
 
 </script>
 
@@ -528,6 +532,8 @@ if(docSnap.exists()){
 
 liveData =
 docSnap.data();
+
+console.log("LIVE DATA",liveData);
 
 render();
 
