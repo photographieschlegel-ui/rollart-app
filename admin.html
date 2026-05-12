@@ -142,10 +142,6 @@ measurementId: "G-7DXHCKP3QZ"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.db = db;
-window.doc = doc;
-window.setDoc = setDoc;
-
 window.saveOnline = async function(data){
 
 await setDoc(
@@ -172,6 +168,15 @@ return snap.data().competitions || [];
 }
 
 return [];
+
+};
+
+window.saveLive = async function(data){
+
+await setDoc(
+doc(db,"rollart","live"),
+data
+);
 
 };
 
@@ -331,11 +336,15 @@ const knownClubs = [
 
 ];
 
-/* ========================================= */
-
 async function saveData(){
 
 await saveOnline(competitions);
+
+updateLive();
+
+}
+
+async function updateLive(){
 
 if(!activeCompetition)
 return;
@@ -359,15 +368,11 @@ r=>r.categoryId===category.id
 Number(a.start)-Number(b.start)
 );
 
-/* ========================================= */
-
 let currentIndex =
 
 runners.findIndex(
 r=>!r.confirmed
 );
-
-/* ========================================= */
 
 if(currentIndex < 0){
 
@@ -376,35 +381,23 @@ runners.length - 1;
 
 }
 
-/* ========================================= */
-
-let current =
+const current =
 runners[currentIndex];
-
-/* ========================================= */
 
 const nextRunner =
 runners[currentIndex+1] || null;
 
-/* ========================================= */
+await saveLive({
 
-await setDoc(
-
-doc(db,"rollart","live"),
-
-{
 updated:Date.now(),
 competition:activeCompetition,
 category:category,
 runner:current,
 nextRunner:nextRunner
+
+});
+
 }
-
-);
-
-}
-
-/* ========================================= */
 
 async function loadData(){
 
@@ -414,8 +407,6 @@ await loadOnline();
 renderCompetitions();
 
 }
-
-/* ========================================= */
 
 function saveCompetition(){
 
@@ -454,8 +445,6 @@ renderCompetitions();
 
 }
 
-/* ========================================= */
-
 function deleteCompetition(id){
 
 competitions =
@@ -468,8 +457,6 @@ saveData();
 renderCompetitions();
 
 }
-
-/* ========================================= */
 
 function renderCompetitions(){
 
@@ -518,8 +505,6 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
-/* ========================================= */
-
 function openCompetition(id){
 
 activeCompetition =
@@ -531,11 +516,9 @@ renderRunners();
 
 renderLiveInfo();
 
-saveData();
+updateLive();
 
 }
-
-/* ========================================= */
 
 function parseCompetitionText(){
 
@@ -651,8 +634,6 @@ renderRunners();
 
 }
 
-/* ========================================= */
-
 function renderRunners(){
 
 const output =
@@ -752,8 +733,6 @@ value="${runner.total}">
 
 }
 
-/* ========================================= */
-
 function saveRunnerScore(id){
 
 const runner =
@@ -813,8 +792,6 @@ renderLiveInfo();
 
 }
 
-/* ========================================= */
-
 function nextRunner(){
 
 if(!activeCompetition)
@@ -839,31 +816,38 @@ r=>r.categoryId===category.id
 Number(a.start)-Number(b.start)
 );
 
-/* ========================================= */
-
 const currentIndex =
 
 runners.findIndex(
 r=>!r.confirmed
 );
 
-/* ========================================= */
-
 if(currentIndex >= 0){
 
-runners[currentIndex].confirmed = true;
+const currentRunner =
+runners[currentIndex];
+
+const realRunner =
+
+activeCompetition.runners.find(
+r=>r.id===currentRunner.id
+);
+
+if(realRunner){
+
+realRunner.confirmed = true;
 
 }
 
-/* ========================================= */
+}
 
 saveData();
 
 renderLiveInfo();
 
-}
+renderRunners();
 
-/* ========================================= */
+}
 
 function updateRanking(categoryId){
 
@@ -886,8 +870,6 @@ r.place = index+1;
 });
 
 }
-
-/* ========================================= */
 
 function getCurrentCategory(){
 
@@ -932,8 +914,6 @@ return active;
 
 }
 
-/* ========================================= */
-
 function updateClock(){
 
 const now =
@@ -966,8 +946,6 @@ document.getElementById(
 "🕒 " + time;
 
 }
-
-/* ========================================= */
 
 function renderLiveInfo(){
 
@@ -1003,15 +981,11 @@ r=>r.categoryId===category.id
 Number(a.start)-Number(b.start)
 );
 
-/* ========================================= */
-
 let currentIndex =
 
 runners.findIndex(
 r=>!r.confirmed
 );
-
-/* ========================================= */
 
 if(currentIndex < 0){
 
@@ -1020,15 +994,11 @@ runners.length - 1;
 
 }
 
-/* ========================================= */
-
 const current =
 runners[currentIndex];
 
 const nextRunner =
 runners[currentIndex+1] || null;
-
-/* ========================================= */
 
 output.innerHTML = `
 
@@ -1064,8 +1034,6 @@ ${nextRunner?.name || "-"}
 
 }
 
-/* ========================================= */
-
 setInterval(
 updateClock,
 1000
@@ -1075,8 +1043,6 @@ setInterval(
 renderLiveInfo,
 3000
 );
-
-/* ========================================= */
 
 window.onload =
 async function(){
