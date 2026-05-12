@@ -343,10 +343,11 @@ if(activeCompetition){
 const liveCategory =
 getCurrentCategory();
 
+if(!liveCategory)
+return;
+
 let liveRunner = null;
 let nextRunner = null;
-
-if(liveCategory){
 
 const runners =
 activeCompetition.runners.filter(
@@ -358,8 +359,6 @@ runners[currentRunnerIndex] || null;
 
 nextRunner =
 runners[currentRunnerIndex+1] || null;
-
-}
 
 await setDoc(
 
@@ -886,16 +885,6 @@ active = cat;
 }
 
 });
-
-if(
-!active &&
-activeCompetition.categories.length>0
-){
-
-active =
-activeCompetition.categories[0];
-
-}
 
 return active;
 
