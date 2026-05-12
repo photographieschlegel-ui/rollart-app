@@ -267,6 +267,13 @@ margin-top:15px;
 
 <div id="liveInfo"></div>
 
+<button onclick="nextRunner()" style="
+margin-top:20px;
+background:#16a34a;
+">
+➡ Nächster Läufer
+</button>
+
 </div>
 
 </div>
@@ -343,8 +350,6 @@ Number(a.start)-Number(b.start)
 );
 
 /* ========================================= */
-/* AKTUELLER LÄUFER */
-/* ========================================= */
 
 let liveRunner =
 
@@ -370,10 +375,8 @@ r=>r.id===liveRunner?.id
 );
 
 /* ========================================= */
-/* NÄCHSTER */
-/* ========================================= */
 
-let nextRunner =
+const nextRunner =
 runners[currentIndex+1] || null;
 
 /* ========================================= */
@@ -762,6 +765,56 @@ runner.confirmed = true;
 updateRanking(
 runner.categoryId
 );
+
+saveData();
+
+renderRunners();
+
+renderLiveInfo();
+
+}
+
+function nextRunner(){
+
+if(!activeCompetition)
+return;
+
+const category =
+getCurrentCategory();
+
+if(!category)
+return;
+
+const runners =
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===category.id
+)
+
+.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+/* ========================================= */
+
+const current =
+
+runners.find(
+r=>!r.confirmed
+);
+
+/* ========================================= */
+
+if(current){
+
+current.confirmed = true;
+
+}
+
+/* ========================================= */
 
 saveData();
 
