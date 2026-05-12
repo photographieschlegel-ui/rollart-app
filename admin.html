@@ -8,7 +8,6 @@
 <title>🏆 RollArt Admin</title>
 
 <link rel="manifest" href="./manifest.json">
-
 <meta name="theme-color" content="#2563eb">
 
 <style>
@@ -362,7 +361,7 @@ r=>!r.confirmed
 if(!liveRunner){
 
 liveRunner =
-runners[runners.length-1] || null;
+runners[runners.length-1];
 
 }
 
@@ -760,8 +759,6 @@ runner.deduction
 
 ).toFixed(2));
 
-runner.confirmed = true;
-
 updateRanking(
 runner.categoryId
 );
@@ -800,17 +797,17 @@ Number(a.start)-Number(b.start)
 
 /* ========================================= */
 
-const current =
+const currentIndex =
 
-runners.find(
+runners.findIndex(
 r=>!r.confirmed
 );
 
 /* ========================================= */
 
-if(current){
+if(currentIndex >= 0){
 
-current.confirmed = true;
+runners[currentIndex].confirmed = true;
 
 }
 
@@ -958,7 +955,7 @@ r=>!r.confirmed
 if(!current){
 
 current =
-runners[runners.length-1] || null;
+runners[runners.length-1];
 
 }
 
@@ -1014,6 +1011,13 @@ ${nextRunner?.name || "-"}
 
 }
 
+/* ========================================= */
+
+setInterval(
+updateClock,
+1000
+);
+
 setInterval(()=>{
 
 renderLiveInfo();
@@ -1022,15 +1026,14 @@ saveData();
 
 },3000);
 
-setInterval(
-updateClock,
-1000
-);
+/* ========================================= */
 
 window.onload =
 async function(){
 
 await loadData();
+
+updateClock();
 
 };
 
