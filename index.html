@@ -1,3 +1,6 @@
+# RollArt Live – komplette neue index.html
+
+```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -147,6 +150,49 @@ color:#94a3b8;
 font-size:18px;
 }
 
+.liveButtons{
+display:flex;
+gap:10px;
+margin-top:20px;
+flex-wrap:wrap;
+}
+
+.liveButtons button{
+flex:1;
+padding:14px;
+border:none;
+border-radius:16px;
+font-size:18px;
+font-weight:bold;
+color:white;
+cursor:pointer;
+}
+
+.prevButton{
+background:#334155;
+}
+
+.currentButton{
+background:#dc2626;
+}
+
+.nextButton{
+background:#2563eb;
+}
+
+.rankingItem{
+padding:14px;
+background:#334155;
+border-radius:16px;
+margin-top:10px;
+font-size:18px;
+line-height:1.5;
+}
+
+.rankingTop{
+background:#ca8a04;
+}
+
 </style>
 
 </head>
@@ -259,6 +305,22 @@ Warte auf Live-Daten...
 🏆 Platz -
 </div>
 
+<div class="liveButtons">
+
+<button onclick="showPreviousRunner()" class="prevButton">
+⬅ Zurück
+</button>
+
+<button onclick="showCurrentRunner()" class="currentButton">
+🔴 Aktuell
+</button>
+
+<button onclick="showNextRunner()" class="nextButton">
+➡ Weiter
+</button>
+
+</div>
+
 </div>
 
 <div class="card">
@@ -270,6 +332,16 @@ Warte auf Live-Daten...
 <div id="nextRunner" class="nextRunner">
 -
 </div>
+
+</div>
+
+<div class="card">
+
+<div class="liveLabel">
+📋 AKTUELLE WERTUNG
+</div>
+
+<div id="rankingList"></div>
 
 </div>
 
@@ -291,8 +363,6 @@ onSnapshot
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ========================================= */
-
 const firebaseConfig = {
 
 apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
@@ -305,15 +375,12 @@ measurementId: "G-7DXHCKP3QZ"
 
 };
 
-/* ========================================= */
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-const app =
-initializeApp(firebaseConfig);
-
-const db =
-getFirestore(app);
-
-/* ========================================= */
+let liveData = {};
+let allRunners = [];
+let currentViewIndex = -1;
 
 function updateClock(){
 
@@ -336,11 +403,128 @@ document.getElementById(
 
 }
 
+function renderRunner(runner){
+
+if(!runner)return;
+
+const aValue =
+
+Number(runner.a1 || 0) +
+Number(runner.a2 || 0) +
+Number(runner.a3 || 0);
+
+const bValue =
+
+Number(runner.b1 || 0) +
+Number(runner.b2 || 0) +
+Number(runner.b3 || 0);
+
 /* ========================================= */
+
+document.getElementById(
+"runnerName"
+).innerHTML =
+runner.name || "-";
+
+/* ========================================= */
+
+document.getElementById(
+"runnerClub"
+).innerHTML =
+runner.club || "-";
+
+/* ========================================= */
+
+document.getElementById(
+"runnerCategory"
+).innerHTML =
+runner.category || "-";
+
+/* ========================================= */
+
+document.getElementById(
+"scoreA"
+).innerHTML =
+aValue.toFixed(1);
+
+/* ========================================= */
+
+document.getElementById(
+"scoreB"
+).innerHTML =
+bValue.toFixed(1);
+
+/* ========================================= */
+
+document.getElementById(
+"deduction"
+).innerHTML =
+"-" + Number(
+runner.deduction || 0
+).toFixed(1);
+
+/* ========================================= */
+
+document.getElementById(
+"total"
+).innerHTML =
+Number(
+runner.total || 0
+).toFixed(1);
+
+/* ========================================= */
+
+document.getElementById(
+"placeBox"
+).innerHTML =
+"🏆 Platz " +
+(runner.place || "-");
+
+}
+
+function renderRanking(){
+
+const output =
+document.getElementById(
+"rankingList"
+);
+
+if(!liveData?.competition?.runners)
+return;
+
+const runners =
+[...liveData.competition.runners]
+.sort((a,b)=>
+Number(b.total)-Number(a.total)
+);
+
+output.innerHTML = "";
+
+runners.forEach((runner,index)=>{
+
+output.innerHTML += `
+
+<div class="rankingItem ${index===0 ? 'rankingTop' : ''}">
+
+${index+1}. ${runner.name}
+
+<br>
+
+🏆 ${Number(runner.total || 0).toFixed(1)}
+
+</div>
+
+`;
+
+});
+
+}
 
 function render(data){
 
 if(!data)return;
+
+liveData = data;
 
 const runner =
 data.runner || {};
@@ -353,6 +537,14 @@ data.competition || {};
 
 const category =
 data.category || {};
+
+allRunners =
+competition.runners || [];
+
+currentViewIndex =
+allRunners.findIndex(
+r=>r.id===runner.id
+);
 
 /* ========================================= */
 
@@ -370,69 +562,7 @@ ${competition.to || "-"}
 
 /* ========================================= */
 
-document.getElementById(
-"runnerName"
-).innerHTML =
-runner.name || "-";
-
-document.getElementById(
-"runnerClub"
-).innerHTML =
-runner.club || "-";
-
-document.getElementById(
-"runnerCategory"
-).innerHTML =
-category.name || "-";
-
-/* ========================================= */
-
-const aValue =
-
-Number(runner.a1 || 0) +
-Number(runner.a2 || 0) +
-Number(runner.a3 || 0);
-
-const bValue =
-
-Number(runner.b1 || 0) +
-Number(runner.b2 || 0) +
-Number(runner.b3 || 0);
-
-/* ========================================= */
-
-document.getElementById(
-"scoreA"
-).innerHTML =
-aValue.toFixed(1);
-
-document.getElementById(
-"scoreB"
-).innerHTML =
-bValue.toFixed(1);
-
-document.getElementById(
-"deduction"
-).innerHTML =
-"-" + Number(
-runner.deduction || 0
-).toFixed(1);
-
-document.getElementById(
-"total"
-).innerHTML =
-Number(
-runner.total || 0
-).toFixed(1);
-
-/* ========================================= */
-
-document.getElementById(
-"placeBox"
-).innerHTML =
-
-"🏆 Platz " +
-(runner.place || "-");
+renderRunner(runner);
 
 /* ========================================= */
 
@@ -452,11 +582,43 @@ ${nextRunner.club || "-"}
 
 "Kein nächster Läufer";
 
+/* ========================================= */
+
+renderRanking();
+
 }
 
-/* ========================================= */
-/* LIVE FIREBASE */
-/* ========================================= */
+function showPreviousRunner(){
+
+if(currentViewIndex <= 0)
+return;
+
+currentViewIndex--;
+
+renderRunner(
+allRunners[currentViewIndex]
+);
+
+}
+
+function showNextRunner(){
+
+if(currentViewIndex >= allRunners.length-1)
+return;
+
+currentViewIndex++;
+
+renderRunner(
+allRunners[currentViewIndex]
+);
+
+}
+
+function showCurrentRunner(){
+
+render(liveData);
+
+}
 
 onSnapshot(
 
@@ -497,16 +659,12 @@ error
 
 );
 
-/* ========================================= */
-
 setInterval(
 updateClock,
 1000
 );
 
 updateClock();
-
-/* ========================================= */
 
 if("serviceWorker" in navigator){
 
@@ -520,3 +678,4 @@ navigator.serviceWorker.register(
 
 </body>
 </html>
+```
