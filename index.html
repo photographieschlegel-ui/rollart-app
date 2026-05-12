@@ -212,17 +212,11 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
 
 apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-
 authDomain: "rollart-score-5319a.firebaseapp.com",
-
 projectId: "rollart-score-5319a",
-
 storageBucket: "rollart-score-5319a.firebasestorage.app",
-
 messagingSenderId: "658963624980",
-
 appId: "1:658963624980:web:2e4d153f5df087c4f42301",
-
 measurementId: "G-7DXHCKP3QZ"
 
 };
@@ -233,7 +227,7 @@ initializeApp(firebaseConfig);
 const db =
 getFirestore(app);
 
-/* WICHTIG GLOBAL */
+/* GLOBAL */
 
 window.db = db;
 window.doc = doc;
@@ -399,8 +393,15 @@ document.getElementById("clock")
 
 function render(){
 
-if(!liveData.runner)
+if(!liveData.runner){
+
+document.getElementById("runnerName")
+.innerHTML =
+"Warte auf Live-Daten";
+
 return;
+
+}
 
 const runner =
 liveData.runner;
@@ -519,25 +520,34 @@ ${nextRunner.club}
 }
 
 /* ========================================= */
-/* LIVE FIREBASE */
+/* FIREBASE LIVE */
 /* ========================================= */
 
-onSnapshot(
+window.onSnapshot(
 
-doc(db,"rollart","live"),
+window.doc(window.db,"rollart","live"),
 
-(docSnap)=>{
+(snapshot)=>{
 
-if(docSnap.exists()){
+if(snapshot.exists()){
 
-liveData =
-docSnap.data();
+liveData = snapshot.data();
 
-console.log("LIVE DATA",liveData);
+console.log("LIVE UPDATE", liveData);
 
 render();
 
+}else{
+
+console.log("Keine Live Daten");
+
 }
+
+},
+
+(error)=>{
+
+console.log("Firebase Fehler", error);
 
 }
 
