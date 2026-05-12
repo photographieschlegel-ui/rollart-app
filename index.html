@@ -1,15 +1,16 @@
-# index.html
-
-```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>🏆 RollArt Live</title>
 
 <link rel="manifest" href="./manifest.json">
+
 <meta name="theme-color" content="#dc2626">
+
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -209,27 +210,43 @@ onSnapshot
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
+
 apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+
 authDomain: "rollart-score-5319a.firebaseapp.com",
+
 projectId: "rollart-score-5319a",
+
 storageBucket: "rollart-score-5319a.firebasestorage.app",
+
 messagingSenderId: "658963624980",
+
 appId: "1:658963624980:web:2e4d153f5df087c4f42301",
+
 measurementId: "G-7DXHCKP3QZ"
+
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
 
 window.liveSync = function(callback){
 
 onSnapshot(
 
 doc(db,"rollart","live"),
+
 (docSnap)=>{
 
 if(docSnap.exists()){
-callback(docSnap.data());
+
+callback(
+docSnap.data()
+);
+
 }
 
 }
@@ -241,17 +258,37 @@ callback(docSnap.data());
 </script>
 
 </head>
+
 <body>
 
 <div class="app">
 
 <div class="header">
 
-<img src="./icon-512.png" class="logo">
+<img
+src="./icon-512.png"
+class="logo">
 
 <div>
-<div class="title">🏆 RollArt Live</div>
-<div id="clock" class="liveClock">🕒 --</div>
+
+<div class="title">
+🏆 RollArt Live
+</div>
+
+<div
+id="competitionInfo"
+style="
+font-size:18px;
+color:#cbd5e1;
+margin-top:8px;
+">
+-
+</div>
+
+<div id="clock" class="liveClock">
+🕒 --
+</div>
+
 </div>
 
 </div>
@@ -262,30 +299,66 @@ callback(docSnap.data());
 AKTUELLER LÄUFER
 </div>
 
-<div id="runnerName" class="runnerName">-</div>
-<div id="runnerClub" class="runnerClub">-</div>
-<div id="runnerCategory" class="category">-</div>
+<div id="runnerName" class="runnerName">
+-
+</div>
+
+<div id="runnerClub" class="runnerClub">
+-
+</div>
+
+<div id="runnerCategory" class="category">
+-
+</div>
 
 <div class="scoreGrid">
 
 <div class="scoreCard">
-<div class="scoreTitle">⭐ A Wert</div>
-<div id="scoreA" class="scoreValue">0</div>
+
+<div class="scoreTitle">
+⭐ A Wert
+</div>
+
+<div id="scoreA" class="scoreValue">
+0
+</div>
+
 </div>
 
 <div class="scoreCard">
-<div class="scoreTitle">⭐ B Wert</div>
-<div id="scoreB" class="scoreValue">0</div>
+
+<div class="scoreTitle">
+⭐ B Wert
+</div>
+
+<div id="scoreB" class="scoreValue">
+0
+</div>
+
 </div>
 
 <div class="scoreCard">
-<div class="scoreTitle">➖ Abzug</div>
-<div id="deduction" class="scoreValue">0</div>
+
+<div class="scoreTitle">
+➖ Abzug
+</div>
+
+<div id="deduction" class="scoreValue">
+0
+</div>
+
 </div>
 
 <div class="scoreCard totalCard">
-<div class="scoreTitle">🏆 Gesamt</div>
-<div id="total" class="scoreValue">0</div>
+
+<div class="scoreTitle">
+🏆 Gesamt
+</div>
+
+<div id="total" class="scoreValue">
+0
+</div>
+
 </div>
 
 </div>
@@ -297,12 +370,21 @@ AKTUELLER LÄUFER
 </div>
 
 <div class="card">
-<div class="liveLabel">➡ NÄCHSTER LÄUFER</div>
-<div id="nextRunner" class="nextRunner">-</div>
+
+<div class="liveLabel">
+➡ NÄCHSTER LÄUFER
+</div>
+
+<div id="nextRunner" class="nextRunner">
+-
+</div>
+
 </div>
 
 <div class="footer">
+
 TV Walsum-Aldenrade 07
+
 </div>
 
 </div>
@@ -315,7 +397,8 @@ function updateClock(){
 
 const now = new Date();
 
-const time = now.toLocaleTimeString(
+const time =
+now.toLocaleTimeString(
 "de-DE",
 {
 hour:"2-digit",
@@ -325,32 +408,59 @@ second:"2-digit"
 );
 
 document.getElementById("clock")
-.innerHTML = "🕒 " + time;
+.innerHTML =
+"🕒 " + time;
 
 }
 
 function render(){
 
-if(!liveData.runner)return;
+if(!liveData.runner)
+return;
 
-const runner = liveData.runner;
-const category = liveData.category;
-const nextRunner = liveData.nextRunner;
+const runner =
+liveData.runner;
+
+const category =
+liveData.category;
+
+const nextRunner =
+liveData.nextRunner;
+
+const competition =
+liveData.competition;
+
+/* ========================================= */
+
+document.getElementById(
+"competitionInfo"
+).innerHTML =
+
+`
+📍 ${competition?.place || "-"}
+<br>
+📅 ${competition?.from || "-"}
+bis
+${competition?.to || "-"}
+`;
 
 /* ========================================= */
 
 document.getElementById("runnerName")
-.innerHTML = runner.name || "-";
+.innerHTML =
+runner.name || "-";
 
 /* ========================================= */
 
 document.getElementById("runnerClub")
-.innerHTML = runner.club || "-";
+.innerHTML =
+runner.club || "-";
 
 /* ========================================= */
 
 document.getElementById("runnerCategory")
-.innerHTML = category?.name || "-";
+.innerHTML =
+category?.name || "-";
 
 /* ========================================= */
 
@@ -371,35 +481,40 @@ const bValue = Number(
 /* ========================================= */
 
 document.getElementById("scoreA")
-.innerHTML = aValue;
+.innerHTML =
+aValue;
 
 /* ========================================= */
 
 document.getElementById("scoreB")
-.innerHTML = bValue;
+.innerHTML =
+bValue;
 
 /* ========================================= */
 
 document.getElementById("deduction")
-.innerHTML = "-" + (runner.deduction || 0);
+.innerHTML =
+"-" + (runner.deduction || 0);
 
 /* ========================================= */
 
 document.getElementById("total")
-.innerHTML = runner.total || 0;
+.innerHTML =
+runner.total || 0;
 
 /* ========================================= */
 
-let placeClass = "placeOther";
+let placeClass =
+"placeOther";
 
 if(runner.place==1)
-placeClass = "place1";
+placeClass="place1";
 
 if(runner.place==2)
-placeClass = "place2";
+placeClass="place2";
 
 if(runner.place==3)
-placeClass = "place3";
+placeClass="place3";
 
 /* ========================================= */
 
@@ -419,7 +534,11 @@ document.getElementById("nextRunner")
 
 nextRunner ?
 
-`${nextRunner.name}<br>${nextRunner.club}`
+`
+${nextRunner.name}
+<br>
+${nextRunner.club}
+`
 
 :
 
@@ -430,11 +549,13 @@ nextRunner ?
 liveSync((data)=>{
 
 liveData = data;
+
 render();
 
 });
 
 setInterval(updateClock,1000);
+
 updateClock();
 
 if("serviceWorker" in navigator){
@@ -449,4 +570,3 @@ navigator.serviceWorker.register(
 
 </body>
 </html>
-```
