@@ -107,8 +107,7 @@ import {
 getFirestore,
 doc,
 setDoc,
-getDoc,
-onSnapshot
+getDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -597,13 +596,13 @@ category:currentCategory.name,
 
 categoryId:currentCategory.id,
 
-a1:0,
-a2:0,
-a3:0,
+a1:"",
+a2:"",
+a3:"",
 
-b1:0,
-b2:0,
-b3:0,
+b1:"",
+b2:"",
+b3:"",
 
 deductionNumber:"",
 deduction:0,
@@ -658,17 +657,17 @@ output.innerHTML += `
 <input
 id="a1_${runner.id}"
 placeholder="A"
-value="${runner.a1}">
+value="${runner.a1 || ''}">
 
 <input
 id="a2_${runner.id}"
 placeholder="A"
-value="${runner.a2}">
+value="${runner.a2 || ''}">
 
 <input
 id="a3_${runner.id}"
 placeholder="A"
-value="${runner.a3}">
+value="${runner.a3 || ''}">
 
 </div>
 
@@ -677,17 +676,17 @@ value="${runner.a3}">
 <input
 id="b1_${runner.id}"
 placeholder="B"
-value="${runner.b1}">
+value="${runner.b1 || ''}">
 
 <input
 id="b2_${runner.id}"
 placeholder="B"
-value="${runner.b2}">
+value="${runner.b2 || ''}">
 
 <input
 id="b3_${runner.id}"
 placeholder="B"
-value="${runner.b3}">
+value="${runner.b3 || ''}">
 
 </div>
 
@@ -696,7 +695,7 @@ value="${runner.b3}">
 <input
 id="deduction_${runner.id}"
 placeholder="Abzugsschlüssel"
-value="${runner.deductionNumber}">
+value="${runner.deductionNumber || ''}">
 
 <input
 disabled
@@ -847,7 +846,8 @@ r.place = index+1;
 
 function getCurrentCategory(){
 
-if(!activeCompetition)return null;
+if(!activeCompetition)
+return null;
 
 const now =
 new Date();
@@ -886,6 +886,16 @@ active = cat;
 }
 
 });
+
+if(
+!active &&
+activeCompetition.categories.length>0
+){
+
+active =
+activeCompetition.categories[0];
+
+}
 
 return active;
 
@@ -1009,10 +1019,6 @@ saveData();
 renderLiveInfo();
 
 }
-
-/* ========================================= */
-/* LIVE AUTO UPDATE */
-/* ========================================= */
 
 setInterval(()=>{
 
