@@ -80,6 +80,14 @@ font-weight:bold;
 cursor:pointer;
 }
 
+.deleteButton{
+background:#dc2626;
+}
+
+.nextButton{
+background:#16a34a;
+}
+
 .scoreGrid{
 display:grid;
 grid-template-columns:repeat(3,1fr);
@@ -266,11 +274,12 @@ margin-top:15px;
 
 <div id="liveInfo"></div>
 
-<button onclick="nextRunner()" style="
-margin-top:20px;
-background:#16a34a;
-">
+<button
+class="nextButton"
+onclick="nextRunner()">
+
 ➡ Nächster Läufer
+
 </button>
 
 </div>
@@ -322,6 +331,8 @@ const knownClubs = [
 
 ];
 
+/* ========================================= */
+
 async function saveData(){
 
 await saveOnline(competitions);
@@ -329,10 +340,10 @@ await saveOnline(competitions);
 if(!activeCompetition)
 return;
 
-const liveCategory =
+const category =
 getCurrentCategory();
 
-if(!liveCategory)
+if(!category)
 return;
 
 const runners =
@@ -340,7 +351,7 @@ const runners =
 activeCompetition.runners
 
 .filter(
-r=>r.categoryId===liveCategory.id
+r=>r.categoryId===category.id
 )
 
 .sort(
@@ -350,7 +361,7 @@ Number(a.start)-Number(b.start)
 
 /* ========================================= */
 
-let liveRunner =
+let current =
 
 runners.find(
 r=>!r.confirmed
@@ -358,22 +369,19 @@ r=>!r.confirmed
 
 /* ========================================= */
 
-if(!liveRunner){
+if(!current){
 
-liveRunner =
-runners[runners.length-1];
+current =
+runners[runners.length-1] || null;
 
 }
 
 /* ========================================= */
 
 const currentIndex =
-
 runners.findIndex(
-r=>r.id===liveRunner?.id
+r=>r.id===current?.id
 );
-
-/* ========================================= */
 
 const nextRunner =
 runners[currentIndex+1] || null;
@@ -387,14 +395,16 @@ doc(db,"rollart","live"),
 {
 updated:Date.now(),
 competition:activeCompetition,
-category:liveCategory,
-runner:liveRunner,
+category:category,
+runner:current,
 nextRunner:nextRunner
 }
 
 );
 
 }
+
+/* ========================================= */
 
 async function loadData(){
 
@@ -404,6 +414,8 @@ await loadOnline();
 renderCompetitions();
 
 }
+
+/* ========================================= */
 
 function saveCompetition(){
 
@@ -432,7 +444,6 @@ document.getElementById(
 ).value,
 
 categories:[],
-
 runners:[]
 
 });
@@ -442,6 +453,23 @@ saveData();
 renderCompetitions();
 
 }
+
+/* ========================================= */
+
+function deleteCompetition(id){
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+saveData();
+
+renderCompetitions();
+
+}
+
+/* ========================================= */
 
 function renderCompetitions(){
 
@@ -474,6 +502,14 @@ ${comp.to || "-"}
 
 </button>
 
+<button
+class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
+
+🗑 Löschen
+
+</button>
+
 </div>
 
 `;
@@ -481,6 +517,8 @@ ${comp.to || "-"}
 });
 
 }
+
+/* ========================================= */
 
 function openCompetition(id){
 
@@ -493,7 +531,11 @@ renderRunners();
 
 renderLiveInfo();
 
+saveData();
+
 }
+
+/* ========================================= */
 
 function parseCompetitionText(){
 
@@ -528,7 +570,6 @@ currentCategory = {
 id:Date.now()+Math.random(),
 
 begin:categoryMatch[1],
-
 end:categoryMatch[2],
 
 name:categoryMatch[3]
@@ -558,7 +599,6 @@ if(runnerMatch && currentCategory){
 let rest = runnerMatch[2];
 
 let club = "-";
-
 let name = rest;
 
 knownClubs.forEach(c=>{
@@ -581,11 +621,9 @@ id:Date.now()+Math.random(),
 start:runnerMatch[1],
 
 name:name,
-
 club:club,
 
 category:currentCategory.name,
-
 categoryId:currentCategory.id,
 
 a1:"",
@@ -612,6 +650,8 @@ saveData();
 renderRunners();
 
 }
+
+/* ========================================= */
 
 function renderRunners(){
 
@@ -712,6 +752,8 @@ value="${runner.total}">
 
 }
 
+/* ========================================= */
+
 function saveRunnerScore(id){
 
 const runner =
@@ -771,6 +813,8 @@ renderLiveInfo();
 
 }
 
+/* ========================================= */
+
 function nextRunner(){
 
 if(!activeCompetition)
@@ -815,11 +859,11 @@ runners[currentIndex].confirmed = true;
 
 saveData();
 
-renderRunners();
-
 renderLiveInfo();
 
 }
+
+/* ========================================= */
 
 function updateRanking(categoryId){
 
@@ -842,6 +886,8 @@ r.place = index+1;
 });
 
 }
+
+/* ========================================= */
 
 function getCurrentCategory(){
 
@@ -886,10 +932,23 @@ return active;
 
 }
 
+/* ========================================= */
+
 function updateClock(){
 
 const now =
 new Date();
+
+const offset =
+parseInt(
+document.getElementById(
+"timeOffset"
+).value
+) || 0;
+
+now.setMinutes(
+now.getMinutes() + offset
+);
 
 const time =
 now.toLocaleTimeString(
@@ -907,6 +966,8 @@ document.getElementById(
 "🕒 " + time;
 
 }
+
+/* ========================================= */
 
 function renderLiveInfo(){
 
@@ -955,7 +1016,7 @@ r=>!r.confirmed
 if(!current){
 
 current =
-runners[runners.length-1];
+runners[runners.length-1] || null;
 
 }
 
@@ -971,8 +1032,6 @@ runners[currentIndex+1] || null;
 
 /* ========================================= */
 
-if(!current)return;
-
 output.innerHTML = `
 
 <div class="liveRunner">
@@ -981,25 +1040,21 @@ output.innerHTML = `
 
 <br><br>
 
-👤 ${current.name}
+👤 ${current?.name || "-"}
 
 <br>
 
-🏢 ${current.club}
+🏢 ${current?.club || "-"}
 
 <br>
 
-📂 ${current.category}
-
-<br><br>
-
-⭐ ${current.total}
+📂 ${current?.category || "-"}
 
 </div>
 
 <div class="nextRunner">
 
-➡ NÄCHSTER:
+➡ NÄCHSTER
 
 <br><br>
 
@@ -1018,13 +1073,10 @@ updateClock,
 1000
 );
 
-setInterval(()=>{
-
-renderLiveInfo();
-
-saveData();
-
-},3000);
+setInterval(
+renderLiveInfo,
+3000
+);
 
 /* ========================================= */
 
