@@ -792,6 +792,29 @@ placeholder="Abzugsschlüssel">
 
 }
 
+function updateRanking(categoryId){
+
+const ranking =
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===categoryId
+)
+
+.sort(
+(a,b)=>
+Number(b.total)-Number(a.total)
+);
+
+ranking.forEach((runner,index)=>{
+
+runner.place = index+1;
+
+});
+
+}
+
 function saveLiveScore(){
 
 const runner =
@@ -854,6 +877,10 @@ runner.b3 -
 runner.deduction
 
 ).toFixed(2));
+
+updateRanking(
+runner.categoryId
+);
 
 saveData();
 
@@ -935,6 +962,8 @@ runner=>{
 
 runner.confirmed = false;
 runner.liveActive = false;
+
+runner.place = "";
 
 runner.total = 0;
 
@@ -1040,48 +1069,8 @@ r=>r.liveActive===true
 
 if(!current){
 
-const ranking =
-
-[...activeCompetition.runners]
-
-.sort(
-(a,b)=>
-Number(b.total)-Number(a.total)
-);
-
-let html = `
-
-<div class="liveRunner">
-
-🏁 Wettbewerb beendet
-
-<br><br>
-
-🥇 ERGEBNISSE
-
-`;
-
-ranking.forEach((runner,index)=>{
-
-html += `
-
-<div class="resultItem">
-
-${index+1}. ${runner.name}
-
-<br>
-
-🏆 ${runner.total || 0}
-
-</div>
-
-`;
-
-});
-
-html += `</div>`;
-
-output.innerHTML = html;
+output.innerHTML =
+"🏁 Wettbewerb beendet";
 
 return;
 
@@ -1100,6 +1089,16 @@ output.innerHTML = `
 <br>
 
 📂 ${current.category}
+
+<br><br>
+
+🏆 Platz:
+${current.place || "-"}
+
+<br>
+
+⭐ Gesamt:
+${current.total || 0}
 
 </div>
 
@@ -1138,6 +1137,16 @@ Start ${runner.start}
 <br><br>
 
 📂 ${runner.category}
+
+<br><br>
+
+🏆 Platz:
+${runner.place || "-"}
+
+<br>
+
+⭐ Gesamt:
+${runner.total || 0}
 
 </div>
 
