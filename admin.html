@@ -243,14 +243,6 @@ rows="12">
 
 <div class="card">
 
-<h2>⏱ Live Wertung</h2>
-
-<div id="liveScoring"></div>
-
-</div>
-
-<div class="card">
-
 <h2>👥 Läufer</h2>
 
 <div
@@ -265,6 +257,16 @@ class="grid">
 <h2>🔴 Live Status</h2>
 
 <div id="liveInfo"></div>
+
+<div id="liveScoring"></div>
+
+<div
+style="
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:10px;
+margin-top:20px;
+">
 
 <button
 class="nextButton"
@@ -289,6 +291,8 @@ onclick="resetCompetition()">
 🔄 Wettbewerb zurücksetzen
 
 </button>
+
+</div>
 
 </div>
 
