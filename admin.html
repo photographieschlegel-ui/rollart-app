@@ -332,6 +332,8 @@ const knownClubs = [
 
 ];
 
+/* ========================================= */
+
 async function saveData(){
 
 await saveOnline(competitions);
@@ -340,22 +342,25 @@ await updateLive();
 
 }
 
+/* ========================================= */
+
 async function updateLive(){
 
 if(!activeCompetition)
 return;
 
-const currentRunner =
-activeCompetition.runners.find(
-r=>r.liveActive===true
-);
+const category =
+getCurrentCategory();
 
-if(!currentRunner){
+if(!category){
 
 await saveLive({
+
+updated:Date.now(),
 runner:null,
 nextRunner:null,
 competition:null
+
 });
 
 return;
@@ -363,15 +368,72 @@ return;
 }
 
 const runners =
-activeCompetition.runners.sort(
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===category.id
+)
+
+.sort(
 (a,b)=>
 Number(a.start)-Number(b.start)
 );
+
+let currentRunner =
+runners.find(
+r=>r.liveActive===true
+);
+
+/* ========================================= */
+/* AUTO START */
+/* ========================================= */
+
+if(!currentRunner){
+
+const firstRunner =
+runners.find(
+r=>!r.confirmed
+);
+
+if(firstRunner){
+
+firstRunner.liveActive = true;
+
+currentRunner = firstRunner;
+
+}
+
+}
+
+/* ========================================= */
+
+if(!currentRunner){
+
+await saveLive({
+
+updated:Date.now(),
+runner:null,
+nextRunner:null,
+competition:null
+
+});
+
+return;
+
+}
+
+/* ========================================= */
 
 const currentIndex =
 runners.findIndex(
 r=>r.id===currentRunner.id
 );
+
+const nextRunner =
+runners[currentIndex+1] || null;
+
+/* ========================================= */
 
 await saveLive({
 
@@ -381,12 +443,13 @@ competition:activeCompetition,
 
 runner:currentRunner,
 
-nextRunner:
-runners[currentIndex+1] || null
+nextRunner:nextRunner
 
 });
 
 }
+
+/* ========================================= */
 
 async function loadData(){
 
@@ -396,6 +459,8 @@ await loadOnline();
 renderCompetitions();
 
 }
+
+/* ========================================= */
 
 function saveCompetition(){
 
@@ -434,6 +499,8 @@ renderCompetitions();
 
 }
 
+/* ========================================= */
+
 async function deleteCompetition(id){
 
 competitions =
@@ -465,6 +532,8 @@ renderCompetitions();
 renderRunners();
 
 }
+
+/* ========================================= */
 
 function renderCompetitions(){
 
@@ -511,6 +580,8 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
+/* ========================================= */
+
 function openCompetition(id){
 
 activeCompetition =
@@ -524,7 +595,11 @@ renderLiveInfo();
 
 renderLiveScoring();
 
+updateLive();
+
 }
+
+/* ========================================= */
 
 function cleanCategoryName(name){
 
@@ -537,6 +612,8 @@ return name
 .trim();
 
 }
+
+/* ========================================= */
 
 function parseCompetitionText(){
 
@@ -655,6 +732,8 @@ renderRunners();
 
 }
 
+/* ========================================= */
+
 function renderLiveScoring(){
 
 const output =
@@ -736,6 +815,8 @@ placeholder="Abzugsschlüssel">
 
 }
 
+/* ========================================= */
+
 function saveLiveScore(){
 
 const runner =
@@ -805,6 +886,8 @@ renderRunners();
 
 }
 
+/* ========================================= */
+
 function nextRunner(){
 
 if(!activeCompetition)
@@ -869,6 +952,8 @@ renderRunners();
 
 }
 
+/* ========================================= */
+
 function resetCompetition(){
 
 if(!activeCompetition)
@@ -905,6 +990,65 @@ renderLiveInfo();
 renderLiveScoring();
 
 }
+
+/* ========================================= */
+
+function getCurrentCategory(){
+
+if(!activeCompetition)
+return null;
+
+const now =
+new Date();
+
+const offset =
+parseInt(
+document.getElementById(
+"timeOffset"
+).value
+) || 0;
+
+now.setMinutes(
+now.getMinutes() + offset
+);
+
+const currentTime =
+now.toTimeString()
+.substring(0,5);
+
+const nowMinutes =
+Number(currentTime.substring(0,2))*60 +
+Number(currentTime.substring(3,5));
+
+let active = null;
+
+activeCompetition.categories.forEach(
+cat=>{
+
+const beginMinutes =
+Number(cat.begin.substring(0,2))*60 +
+Number(cat.begin.substring(3,5));
+
+const endMinutes =
+Number(cat.end.substring(0,2))*60 +
+Number(cat.end.substring(3,5));
+
+if(
+nowMinutes >= beginMinutes &&
+nowMinutes <= endMinutes
+){
+
+active = cat;
+
+}
+
+});
+
+return active;
+
+}
+
+/* ========================================= */
 
 function renderLiveInfo(){
 
@@ -956,6 +1100,8 @@ output.innerHTML = `
 
 }
 
+/* ========================================= */
+
 function renderRunners(){
 
 const output =
@@ -996,6 +1142,8 @@ Start ${runner.start}
 
 }
 
+/* ========================================= */
+
 function updateClock(){
 
 const now =
@@ -1030,6 +1178,11 @@ second:"2-digit"
 setInterval(
 updateClock,
 1000
+);
+
+setInterval(
+updateLive,
+3000
 );
 
 window.onload =
