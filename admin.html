@@ -108,14 +108,6 @@ font-size:20px;
 line-height:1.7;
 }
 
-.nextRunner{
-margin-top:15px;
-padding:15px;
-background:#1d4ed8;
-border-radius:18px;
-font-size:18px;
-}
-
 </style>
 
 <script type="module">
@@ -138,8 +130,7 @@ authDomain: "rollart-score-5319a.firebaseapp.com",
 projectId: "rollart-score-5319a",
 storageBucket: "rollart-score-5319a.firebasestorage.app",
 messagingSenderId: "658963624980",
-appId: "1:658963624980:web:2e4d153f5df087c4f42301",
-measurementId: "G-7DXHCKP3QZ"
+appId: "1:658963624980:web:2e4d153f5df087c4f42301"
 
 };
 
@@ -317,7 +308,6 @@ let competitions = [];
 let activeCompetition = null;
 
 const deductions = {
-
 "1":0.3,
 "2":0.2,
 "3":0.3,
@@ -327,21 +317,7 @@ const deductions = {
 "7":0.3,
 "8":0.3,
 "9":0.5,
-"10":0.5,
-"11":0.3,
-"12":0.3,
-"13":0.3,
-"14":0.3,
-"15":0.3,
-"16":0.5,
-"17":0.2,
-"18":0.5,
-"19":0.5,
-"20":0.5,
-"21":0.3,
-"22":0.5,
-"23":0.2
-
+"10":0.5
 };
 
 const knownClubs = [
@@ -356,8 +332,6 @@ const knownClubs = [
 
 ];
 
-/* ========================================= */
-
 async function saveData(){
 
 await saveOnline(competitions);
@@ -366,74 +340,53 @@ await updateLive();
 
 }
 
-/* ========================================= */
-
 async function updateLive(){
 
 if(!activeCompetition)
 return;
 
-const category =
-getCurrentCategory();
-
-if(!category)
-return;
-
-const runners =
-
-activeCompetition.runners
-
-.filter(
-r=>r.categoryId===category.id
-)
-
-.sort(
-(a,b)=>
-Number(a.start)-Number(b.start)
-);
-
 const currentRunner =
-runners.find(
+activeCompetition.runners.find(
 r=>r.liveActive===true
 );
 
 if(!currentRunner){
 
 await saveLive({
-
-updated:Date.now(),
 runner:null,
 nextRunner:null,
-competition:null,
-category:null
-
+competition:null
 });
 
 return;
 
 }
 
+const runners =
+activeCompetition.runners.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
 const currentIndex =
 runners.findIndex(
 r=>r.id===currentRunner.id
 );
 
-const nextRunner =
-runners[currentIndex+1] || null;
-
 await saveLive({
 
 updated:Date.now(),
+
 competition:activeCompetition,
-category:category,
+
 runner:currentRunner,
-nextRunner:nextRunner
+
+nextRunner:
+runners[currentIndex+1] || null
 
 });
 
 }
-
-/* ========================================= */
 
 async function loadData(){
 
@@ -443,8 +396,6 @@ await loadOnline();
 renderCompetitions();
 
 }
-
-/* ========================================= */
 
 function saveCompetition(){
 
@@ -483,8 +434,6 @@ renderCompetitions();
 
 }
 
-/* ========================================= */
-
 async function deleteCompetition(id){
 
 competitions =
@@ -501,18 +450,11 @@ activeCompetition = null;
 
 await saveLive({
 
-updated:Date.now(),
 runner:null,
 nextRunner:null,
-competition:null,
-category:null
+competition:null
 
 });
-
-document.getElementById(
-"liveInfo"
-).innerHTML =
-"Kein aktiver Wettbewerb";
 
 }
 
@@ -523,8 +465,6 @@ renderCompetitions();
 renderRunners();
 
 }
-
-/* ========================================= */
 
 function renderCompetitions(){
 
@@ -543,13 +483,11 @@ output.innerHTML += `
 
 <h3>${comp.name}</h3>
 
-📍 ${comp.place || "-"}
+📍 ${comp.place}
 
 <br><br>
 
-📅 ${comp.from || "-"}
-bis
-${comp.to || "-"}
+📅 ${comp.from}
 
 <button onclick="openCompetition(${comp.id})">
 
@@ -573,8 +511,6 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
-/* ========================================= */
-
 function openCompetition(id){
 
 activeCompetition =
@@ -588,11 +524,7 @@ renderLiveInfo();
 
 renderLiveScoring();
 
-updateLive();
-
 }
-
-/* ========================================= */
 
 function cleanCategoryName(name){
 
@@ -606,11 +538,12 @@ return name
 
 }
 
-/* ========================================= */
-
 function parseCompetitionText(){
 
 if(!activeCompetition)return;
+
+activeCompetition.categories = [];
+activeCompetition.runners = [];
 
 const text =
 document.getElementById(
@@ -629,9 +562,8 @@ line = line.trim();
 if(!line)return;
 
 const categoryMatch =
-
 line.match(
-/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(.+)/
+/(\d{2}:\d{2})[:\d\s]*?([A-Za-zÄÖÜäöüß].+)/
 );
 
 if(categoryMatch){
@@ -640,11 +572,14 @@ currentCategory = {
 
 id:Date.now()+Math.random(),
 
-begin:categoryMatch[1],
-end:categoryMatch[2],
+begin:
+line.substring(0,5),
+
+end:
+line.substring(6,11),
 
 name:cleanCategoryName(
-categoryMatch[3]
+categoryMatch[2]
 )
 
 };
@@ -720,8 +655,6 @@ renderRunners();
 
 }
 
-/* ========================================= */
-
 function renderLiveScoring(){
 
 const output =
@@ -732,22 +665,20 @@ document.getElementById(
 if(!activeCompetition){
 
 output.innerHTML =
-"Kein aktiver Wettbewerb";
+"Kein Wettbewerb";
 
 return;
 
 }
 
-const currentRunner =
-
+const runner =
 activeCompetition.runners.find(
 r=>r.liveActive===true
 );
 
-if(!currentRunner){
+if(!runner){
 
-output.innerHTML =
-`
+output.innerHTML = `
 <button
 class="nextButton"
 onclick="nextRunner()">
@@ -765,15 +696,13 @@ output.innerHTML = `
 
 <div class="item">
 
-<h3>
-${currentRunner.name}
-</h3>
+<h3>${runner.name}</h3>
 
-🏢 ${currentRunner.club}
+🏢 ${runner.club}
 
 <br><br>
 
-📂 ${currentRunner.category}
+📂 ${runner.category}
 
 <div class="scoreGrid">
 
@@ -807,12 +736,9 @@ placeholder="Abzugsschlüssel">
 
 }
 
-/* ========================================= */
-
 function saveLiveScore(){
 
 const runner =
-
 activeCompetition.runners.find(
 r=>r.liveActive===true
 );
@@ -873,38 +799,19 @@ runner.deduction
 
 ).toFixed(2));
 
-updateRanking(
-runner.categoryId
-);
-
 saveData();
 
 renderRunners();
 
 }
 
-/* ========================================= */
-
 function nextRunner(){
 
 if(!activeCompetition)
 return;
 
-const category =
-getCurrentCategory();
-
-if(!category)
-return;
-
 const runners =
-
-activeCompetition.runners
-
-.filter(
-r=>r.categoryId===category.id
-)
-
-.sort(
+activeCompetition.runners.sort(
 (a,b)=>
 Number(a.start)-Number(b.start)
 );
@@ -962,8 +869,6 @@ renderRunners();
 
 }
 
-/* ========================================= */
-
 function resetCompetition(){
 
 if(!activeCompetition)
@@ -974,8 +879,6 @@ runner=>{
 
 runner.confirmed = false;
 runner.liveActive = false;
-
-runner.place = "";
 
 runner.total = 0;
 
@@ -1003,122 +906,6 @@ renderLiveScoring();
 
 }
 
-/* ========================================= */
-
-function updateRanking(categoryId){
-
-const runners =
-
-activeCompetition.runners
-
-.filter(
-r=>r.categoryId===categoryId
-)
-
-.sort(
-(a,b)=>b.total-a.total
-);
-
-runners.forEach((r,index)=>{
-
-r.place = index+1;
-
-});
-
-}
-
-/* ========================================= */
-
-function getCurrentCategory(){
-
-if(!activeCompetition)
-return null;
-
-const now =
-new Date();
-
-const offset =
-parseInt(
-document.getElementById(
-"timeOffset"
-).value
-) || 0;
-
-now.setMinutes(
-now.getMinutes() + offset
-);
-
-const currentTime =
-now.toTimeString()
-.substring(0,5);
-
-const nowMinutes =
-Number(currentTime.substring(0,2))*60 +
-Number(currentTime.substring(3,5));
-
-let active = null;
-
-activeCompetition.categories.forEach(
-cat=>{
-
-const beginMinutes =
-Number(cat.begin.substring(0,2))*60 +
-Number(cat.begin.substring(3,5));
-
-const endMinutes =
-Number(cat.end.substring(0,2))*60 +
-Number(cat.end.substring(3,5));
-
-if(
-nowMinutes >= beginMinutes &&
-nowMinutes <= endMinutes
-){
-
-active = cat;
-
-}
-
-});
-
-return active;
-
-}
-
-/* ========================================= */
-
-function updateClock(){
-
-const now =
-new Date();
-
-const offset =
-parseInt(
-document.getElementById(
-"timeOffset"
-).value
-) || 0;
-
-now.setMinutes(
-now.getMinutes() + offset
-);
-
-document.getElementById(
-"liveClock"
-).innerHTML =
-"🕒 " +
-now.toLocaleTimeString(
-"de-DE",
-{
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit"
-}
-);
-
-}
-
-/* ========================================= */
-
 function renderLiveInfo(){
 
 const output =
@@ -1129,7 +916,7 @@ document.getElementById(
 if(!activeCompetition){
 
 output.innerHTML =
-"Kein aktiver Wettbewerb";
+"Kein Wettbewerb";
 
 return;
 
@@ -1143,11 +930,7 @@ r=>r.liveActive===true
 if(!current){
 
 output.innerHTML =
-`
-<div class="liveRunner">
-🏁 Kein aktiver Läufer
-</div>
-`;
+"🏁 Kein aktiver Läufer";
 
 return;
 
@@ -1156,10 +939,6 @@ return;
 output.innerHTML = `
 
 <div class="liveRunner">
-
-🏆 AKTUELL
-
-<br><br>
 
 👤 ${current.name}
 
@@ -1176,8 +955,6 @@ output.innerHTML = `
 `;
 
 }
-
-/* ========================================= */
 
 function renderRunners(){
 
@@ -1211,60 +988,6 @@ Start ${runner.start}
 
 📂 ${runner.category}
 
-<div class="scoreGrid">
-
-<input
-id="a1_${runner.id}"
-value="${runner.a1 || ''}">
-
-<input
-id="a2_${runner.id}"
-value="${runner.a2 || ''}">
-
-<input
-id="a3_${runner.id}"
-value="${runner.a3 || ''}">
-
-</div>
-
-<div class="scoreGrid">
-
-<input
-id="b1_${runner.id}"
-value="${runner.b1 || ''}">
-
-<input
-id="b2_${runner.id}"
-value="${runner.b2 || ''}">
-
-<input
-id="b3_${runner.id}"
-value="${runner.b3 || ''}">
-
-</div>
-
-<div class="scoreGrid">
-
-<input
-id="deduction_${runner.id}"
-value="${runner.deductionNumber || ''}">
-
-<input
-disabled
-value="-${runner.deduction || 0}">
-
-<input
-disabled
-value="${runner.total || 0}">
-
-</div>
-
-<button onclick="saveRunner('${runner.id}')">
-
-💾 Speichern
-
-</button>
-
 </div>
 
 `;
@@ -1273,82 +996,36 @@ value="${runner.total || 0}">
 
 }
 
-/* ========================================= */
+function updateClock(){
 
-function saveRunner(id){
+const now =
+new Date();
 
-const runner =
-activeCompetition.runners.find(
-r=>String(r.id)===String(id)
-);
-
-if(!runner)return;
-
-runner.a1 =
-parseFloat(
-document.getElementById(`a1_${id}`).value
-) || 0;
-
-runner.a2 =
-parseFloat(
-document.getElementById(`a2_${id}`).value
-) || 0;
-
-runner.a3 =
-parseFloat(
-document.getElementById(`a3_${id}`).value
-) || 0;
-
-runner.b1 =
-parseFloat(
-document.getElementById(`b1_${id}`).value
-) || 0;
-
-runner.b2 =
-parseFloat(
-document.getElementById(`b2_${id}`).value
-) || 0;
-
-runner.b3 =
-parseFloat(
-document.getElementById(`b3_${id}`).value
-) || 0;
-
-runner.deductionNumber =
+const offset =
+parseInt(
 document.getElementById(
-`deduction_${id}`
-).value;
+"timeOffset"
+).value
+) || 0;
 
-runner.deduction =
-deductions[
-runner.deductionNumber
-] || 0;
-
-runner.total = Number((
-
-runner.a1 +
-runner.a2 +
-runner.a3 +
-
-runner.b1 +
-runner.b2 +
-runner.b3 -
-
-runner.deduction
-
-).toFixed(2));
-
-updateRanking(
-runner.categoryId
+now.setMinutes(
+now.getMinutes() + offset
 );
 
-saveData();
-
-renderRunners();
+document.getElementById(
+"liveClock"
+).innerHTML =
+"🕒 " +
+now.toLocaleTimeString(
+"de-DE",
+{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+);
 
 }
-
-/* ========================================= */
 
 setInterval(
 updateClock,
