@@ -271,61 +271,6 @@ second:"2-digit"
 
 }
 
-function clearLive(){
-
-document.getElementById(
-"competitionInfo"
-).innerHTML =
-"Kein aktiver Wettbewerb";
-
-document.getElementById(
-"runnerName"
-).innerHTML =
-"-";
-
-document.getElementById(
-"runnerClub"
-).innerHTML =
-"-";
-
-document.getElementById(
-"runnerCategory"
-).innerHTML =
-"-";
-
-document.getElementById(
-"scoreA"
-).innerHTML = "0";
-
-document.getElementById(
-"scoreB"
-).innerHTML = "0";
-
-document.getElementById(
-"deduction"
-).innerHTML = "0";
-
-document.getElementById(
-"total"
-).innerHTML = "0";
-
-document.getElementById(
-"placeBox"
-).innerHTML =
-"🏁 Kein aktiver Wettbewerb";
-
-document.getElementById(
-"nextRunner"
-).innerHTML =
-"-";
-
-document.getElementById(
-"allRunners"
-).innerHTML =
-"";
-
-}
-
 function renderRunner(runner){
 
 if(!runner)return;
@@ -418,6 +363,15 @@ Number(a.start)-Number(b.start)
 
 const categories = {};
 
+const categoryInfos = {};
+
+(liveData.competition.categories || [])
+.forEach(cat=>{
+
+categoryInfos[cat.name] = cat;
+
+});
+
 runners.forEach(runner=>{
 
 if(!categories[runner.category]){
@@ -429,6 +383,12 @@ categories[runner.category] = [];
 categories[runner.category].push(
 runner
 );
+
+categories[runner.category].begin =
+categoryInfos[runner.category]?.begin;
+
+categories[runner.category].end =
+categoryInfos[runner.category]?.end;
 
 });
 
@@ -443,6 +403,12 @@ output.innerHTML += `
 <div class="categoryTitle">
 
 📂 ${category}
+
+<br>
+
+🕒 ${categories[category][0]?.begin || "--:--"}
+ -
+${categories[category][0]?.end || "--:--"}
 
 </div>
 
@@ -487,24 +453,16 @@ ${runner.place || "-"}
 
 function render(data){
 
-if(!data || !data.runner){
-
-clearLive();
-
-return;
-
-}
-
-liveData = data;
-
-const runner =
-data.runner || {};
-
-const nextRunner =
-data.nextRunner || {};
+liveData = data || {};
 
 const competition =
-data.competition || {};
+data?.competition || {};
+
+const runner =
+data?.runner || {};
+
+const nextRunner =
+data?.nextRunner || {};
 
 allRunners =
 [...(competition.runners || [])]
@@ -514,10 +472,54 @@ allRunners =
 Number(a.start)-Number(b.start)
 );
 
+if(runner?.id){
+
 currentViewIndex =
 allRunners.findIndex(
 r=>String(r.id)===String(runner.id)
 );
+
+renderRunner(runner);
+
+}else{
+
+document.getElementById(
+"runnerName"
+).innerHTML =
+"Kein aktiver Läufer";
+
+document.getElementById(
+"runnerClub"
+).innerHTML =
+"-";
+
+document.getElementById(
+"runnerCategory"
+).innerHTML =
+"-";
+
+document.getElementById(
+"scoreA"
+).innerHTML = "0";
+
+document.getElementById(
+"scoreB"
+).innerHTML = "0";
+
+document.getElementById(
+"deduction"
+).innerHTML = "0";
+
+document.getElementById(
+"total"
+).innerHTML = "0";
+
+document.getElementById(
+"placeBox"
+).innerHTML =
+"🏁 Wettbewerb noch nicht gestartet";
+
+}
 
 document.getElementById(
 "competitionInfo"
@@ -528,8 +530,6 @@ document.getElementById(
 <br>
 📅 ${competition.from || "-"}
 `;
-
-renderRunner(runner);
 
 document.getElementById(
 "nextRunner"
@@ -545,7 +545,7 @@ ${nextRunner.club || "-"}
 
 :
 
-"🏁 Letzter Läufer";
+"🏁 Kein nächster Läufer";
 
 renderAllRunners();
 
@@ -603,7 +603,7 @@ render(snapshot.data());
 
 }else{
 
-clearLive();
+render({});
 
 }
 
