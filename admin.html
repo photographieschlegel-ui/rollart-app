@@ -262,25 +262,17 @@ class="grid">
 
 <div class="card">
 
-<h2>⏱ Live</h2>
-
-<input
-type="number"
-id="timeOffset"
-value="0"
-placeholder="Zeitkorrektur Minuten">
-
-<div
-id="liveClock"
-style="
-font-size:28px;
-font-weight:bold;
-margin-top:15px;
-">
-🕒 --:--
-</div>
+<h2>🔴 Live Status</h2>
 
 <div id="liveInfo"></div>
+
+<button
+class="nextButton"
+onclick="startCompetition()">
+
+▶ Wettbewerb starten
+
+</button>
 
 <button
 class="nextButton"
@@ -345,67 +337,26 @@ async function updateLive(){
 if(!activeCompetition)
 return;
 
-const category =
-getCurrentCategory();
-
-if(!category){
-
-await saveLive({
-
-updated:Date.now(),
-runner:null,
-nextRunner:null,
-competition:null
-
-});
-
-return;
-
-}
-
 const runners =
 
-activeCompetition.runners
-
-.filter(
-r=>r.categoryId===category.id
-)
-
-.sort(
+activeCompetition.runners.sort(
 (a,b)=>
 Number(a.start)-Number(b.start)
 );
 
-let currentRunner =
+const currentRunner =
 runners.find(
 r=>r.liveActive===true
 );
 
 if(!currentRunner){
 
-const firstRunner =
-runners.find(
-r=>!r.confirmed
-);
-
-if(firstRunner){
-
-firstRunner.liveActive = true;
-
-currentRunner = firstRunner;
-
-}
-
-}
-
-if(!currentRunner){
-
 await saveLive({
 
 updated:Date.now(),
 runner:null,
 nextRunner:null,
-competition:null
+competition:activeCompetition
 
 });
 
@@ -418,9 +369,6 @@ runners.findIndex(
 r=>r.id===currentRunner.id
 );
 
-const nextRunner =
-runners[currentIndex+1] || null;
-
 await saveLive({
 
 updated:Date.now(),
@@ -429,7 +377,8 @@ competition:activeCompetition,
 
 runner:currentRunner,
 
-nextRunner:nextRunner
+nextRunner:
+runners[currentIndex+1] || null
 
 });
 
@@ -443,10 +392,6 @@ await loadOnline();
 renderCompetitions();
 
 }
-
-/* ========================================= */
-/* BUTTON FUNKTIONEN GLOBAL */
-/* ========================================= */
 
 window.saveCompetition = function(){
 
@@ -530,8 +475,6 @@ renderLiveInfo();
 
 renderLiveScoring();
 
-updateLive();
-
 };
 
 window.parseCompetitionText = function(){
@@ -567,12 +510,6 @@ if(categoryMatch){
 currentCategory = {
 
 id:Date.now()+Math.random(),
-
-begin:
-line.substring(0,5),
-
-end:
-line.substring(6,11),
 
 name:
 categoryMatch[2]
@@ -653,6 +590,29 @@ renderRunners();
 
 };
 
+function updateRanking(categoryId){
+
+const ranking =
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===categoryId
+)
+
+.sort(
+(a,b)=>
+Number(b.total)-Number(a.total)
+);
+
+ranking.forEach((runner,index)=>{
+
+runner.place = index+1;
+
+});
+
+}
+
 window.saveLiveScore = function(){
 
 const runner =
@@ -728,6 +688,33 @@ renderLiveInfo();
 
 };
 
+window.startCompetition = function(){
+
+if(!activeCompetition)
+return;
+
+const runners =
+
+activeCompetition.runners.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+if(runners.length===0)
+return;
+
+runners[0].liveActive = true;
+
+saveData();
+
+renderLiveInfo();
+
+renderLiveScoring();
+
+renderRunners();
+
+};
+
 window.nextRunner = function(){
 
 if(!activeCompetition)
@@ -744,29 +731,8 @@ runners.find(
 r=>r.liveActive===true
 );
 
-if(!currentRunner){
-
-const firstRunner =
-runners.find(
-r=>!r.confirmed
-);
-
-if(!firstRunner)
+if(!currentRunner)
 return;
-
-firstRunner.liveActive = true;
-
-saveData();
-
-renderLiveInfo();
-
-renderLiveScoring();
-
-renderRunners();
-
-return;
-
-}
 
 currentRunner.confirmed = true;
 currentRunner.liveActive = false;
@@ -831,84 +797,6 @@ renderLiveScoring();
 
 };
 
-function updateRanking(categoryId){
-
-const ranking =
-
-activeCompetition.runners
-
-.filter(
-r=>r.categoryId===categoryId
-)
-
-.sort(
-(a,b)=>
-Number(b.total)-Number(a.total)
-);
-
-ranking.forEach((runner,index)=>{
-
-runner.place = index+1;
-
-});
-
-}
-
-function getCurrentCategory(){
-
-if(!activeCompetition)
-return null;
-
-const now =
-new Date();
-
-const offset =
-parseInt(
-document.getElementById(
-"timeOffset"
-).value
-) || 0;
-
-now.setMinutes(
-now.getMinutes() + offset
-);
-
-const currentTime =
-now.toTimeString()
-.substring(0,5);
-
-const nowMinutes =
-Number(currentTime.substring(0,2))*60 +
-Number(currentTime.substring(3,5));
-
-let active = null;
-
-activeCompetition.categories.forEach(
-cat=>{
-
-const beginMinutes =
-Number(cat.begin.substring(0,2))*60 +
-Number(cat.begin.substring(3,5));
-
-const endMinutes =
-Number(cat.end.substring(0,2))*60 +
-Number(cat.end.substring(3,5));
-
-if(
-nowMinutes >= beginMinutes &&
-nowMinutes <= endMinutes
-){
-
-active = cat;
-
-}
-
-});
-
-return active;
-
-}
-
 function renderLiveScoring(){
 
 const output =
@@ -932,15 +820,8 @@ r=>r.liveActive===true
 
 if(!runner){
 
-output.innerHTML = `
-<button
-class="nextButton"
-onclick="nextRunner()">
-
-▶ Wettbewerb starten
-
-</button>
-`;
+output.innerHTML =
+"🏁 Kein aktiver Läufer";
 
 return;
 
@@ -1145,53 +1026,10 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
-function updateClock(){
-
-const now =
-new Date();
-
-const offset =
-parseInt(
-document.getElementById(
-"timeOffset"
-).value
-) || 0;
-
-now.setMinutes(
-now.getMinutes() + offset
-);
-
-document.getElementById(
-"liveClock"
-).innerHTML =
-"🕒 " +
-now.toLocaleTimeString(
-"de-DE",
-{
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit"
-}
-);
-
-}
-
-setInterval(
-updateClock,
-1000
-);
-
-setInterval(
-updateLive,
-3000
-);
-
 window.onload =
 async function(){
 
 await loadData();
-
-updateClock();
 
 };
 
