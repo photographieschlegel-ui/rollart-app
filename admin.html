@@ -105,7 +105,14 @@ padding:20px;
 background:#334155;
 border-radius:20px;
 font-size:20px;
-line-height:1.7;
+line-height:1.8;
+}
+
+.resultItem{
+margin-top:14px;
+padding:14px;
+background:#1e293b;
+border-radius:14px;
 }
 
 </style>
@@ -332,8 +339,6 @@ const knownClubs = [
 
 ];
 
-/* ========================================= */
-
 async function saveData(){
 
 await saveOnline(competitions);
@@ -341,8 +346,6 @@ await saveOnline(competitions);
 await updateLive();
 
 }
-
-/* ========================================= */
 
 async function updateLive(){
 
@@ -385,10 +388,6 @@ runners.find(
 r=>r.liveActive===true
 );
 
-/* ========================================= */
-/* AUTO START */
-/* ========================================= */
-
 if(!currentRunner){
 
 const firstRunner =
@@ -406,8 +405,6 @@ currentRunner = firstRunner;
 
 }
 
-/* ========================================= */
-
 if(!currentRunner){
 
 await saveLive({
@@ -423,8 +420,6 @@ return;
 
 }
 
-/* ========================================= */
-
 const currentIndex =
 runners.findIndex(
 r=>r.id===currentRunner.id
@@ -432,8 +427,6 @@ r=>r.id===currentRunner.id
 
 const nextRunner =
 runners[currentIndex+1] || null;
-
-/* ========================================= */
 
 await saveLive({
 
@@ -449,8 +442,6 @@ nextRunner:nextRunner
 
 }
 
-/* ========================================= */
-
 async function loadData(){
 
 competitions =
@@ -459,8 +450,6 @@ await loadOnline();
 renderCompetitions();
 
 }
-
-/* ========================================= */
 
 function saveCompetition(){
 
@@ -499,8 +488,6 @@ renderCompetitions();
 
 }
 
-/* ========================================= */
-
 async function deleteCompetition(id){
 
 competitions =
@@ -532,8 +519,6 @@ renderCompetitions();
 renderRunners();
 
 }
-
-/* ========================================= */
 
 function renderCompetitions(){
 
@@ -580,8 +565,6 @@ onclick="deleteCompetition(${comp.id})">
 
 }
 
-/* ========================================= */
-
 function openCompetition(id){
 
 activeCompetition =
@@ -599,8 +582,6 @@ updateLive();
 
 }
 
-/* ========================================= */
-
 function cleanCategoryName(name){
 
 return name
@@ -612,8 +593,6 @@ return name
 .trim();
 
 }
-
-/* ========================================= */
 
 function parseCompetitionText(){
 
@@ -732,8 +711,6 @@ renderRunners();
 
 }
 
-/* ========================================= */
-
 function renderLiveScoring(){
 
 const output =
@@ -815,8 +792,6 @@ placeholder="Abzugsschlüssel">
 
 }
 
-/* ========================================= */
-
 function saveLiveScore(){
 
 const runner =
@@ -886,8 +861,6 @@ renderRunners();
 
 }
 
-/* ========================================= */
-
 function nextRunner(){
 
 if(!activeCompetition)
@@ -952,8 +925,6 @@ renderRunners();
 
 }
 
-/* ========================================= */
-
 function resetCompetition(){
 
 if(!activeCompetition)
@@ -990,8 +961,6 @@ renderLiveInfo();
 renderLiveScoring();
 
 }
-
-/* ========================================= */
 
 function getCurrentCategory(){
 
@@ -1048,8 +1017,6 @@ return active;
 
 }
 
-/* ========================================= */
-
 function renderLiveInfo(){
 
 const output =
@@ -1073,8 +1040,48 @@ r=>r.liveActive===true
 
 if(!current){
 
-output.innerHTML =
-"🏁 Kein aktiver Läufer";
+const ranking =
+
+[...activeCompetition.runners]
+
+.sort(
+(a,b)=>
+Number(b.total)-Number(a.total)
+);
+
+let html = `
+
+<div class="liveRunner">
+
+🏁 Wettbewerb beendet
+
+<br><br>
+
+🥇 ERGEBNISSE
+
+`;
+
+ranking.forEach((runner,index)=>{
+
+html += `
+
+<div class="resultItem">
+
+${index+1}. ${runner.name}
+
+<br>
+
+🏆 ${runner.total || 0}
+
+</div>
+
+`;
+
+});
+
+html += `</div>`;
+
+output.innerHTML = html;
 
 return;
 
@@ -1099,8 +1106,6 @@ output.innerHTML = `
 `;
 
 }
-
-/* ========================================= */
 
 function renderRunners(){
 
@@ -1141,8 +1146,6 @@ Start ${runner.start}
 });
 
 }
-
-/* ========================================= */
 
 function updateClock(){
 
