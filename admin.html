@@ -108,13 +108,6 @@ font-size:20px;
 line-height:1.8;
 }
 
-.resultItem{
-margin-top:14px;
-padding:14px;
-background:#1e293b;
-border-radius:14px;
-}
-
 </style>
 
 <script type="module">
@@ -451,7 +444,11 @@ renderCompetitions();
 
 }
 
-function saveCompetition(){
+/* ========================================= */
+/* BUTTON FUNKTIONEN GLOBAL */
+/* ========================================= */
+
+window.saveCompetition = function(){
 
 competitions.push({
 
@@ -486,9 +483,9 @@ saveData();
 
 renderCompetitions();
 
-}
+};
 
-async function deleteCompetition(id){
+window.deleteCompetition = async function(id){
 
 competitions =
 competitions.filter(
@@ -518,54 +515,9 @@ renderCompetitions();
 
 renderRunners();
 
-}
+};
 
-function renderCompetitions(){
-
-const output =
-document.getElementById(
-"competitionList"
-);
-
-output.innerHTML = "";
-
-competitions.forEach(comp=>{
-
-output.innerHTML += `
-
-<div class="item">
-
-<h3>${comp.name}</h3>
-
-📍 ${comp.place}
-
-<br><br>
-
-📅 ${comp.from}
-
-<button onclick="openCompetition(${comp.id})">
-
-📂 Öffnen
-
-</button>
-
-<button
-class="deleteButton"
-onclick="deleteCompetition(${comp.id})">
-
-🗑 Löschen
-
-</button>
-
-</div>
-
-`;
-
-});
-
-}
-
-function openCompetition(id){
+window.openCompetition = function(id){
 
 activeCompetition =
 competitions.find(
@@ -580,21 +532,9 @@ renderLiveScoring();
 
 updateLive();
 
-}
+};
 
-function cleanCategoryName(name){
-
-return name
-
-.replace(/^\d+\s+\d+\s+\d+\s+/,"")
-
-.replace(/\s+/g," ")
-
-.trim();
-
-}
-
-function parseCompetitionText(){
+window.parseCompetitionText = function(){
 
 if(!activeCompetition)return;
 
@@ -634,9 +574,11 @@ line.substring(0,5),
 end:
 line.substring(6,11),
 
-name:cleanCategoryName(
+name:
 categoryMatch[2]
-)
+
+.replace(/^\d+\s+\d+\s+\d+\s+/,"")
+.trim()
 
 };
 
@@ -708,6 +650,262 @@ liveActive:false
 saveData();
 
 renderRunners();
+
+};
+
+window.saveLiveScore = function(){
+
+const runner =
+activeCompetition.runners.find(
+r=>r.liveActive===true
+);
+
+if(!runner)return;
+
+runner.a1 =
+parseFloat(
+document.getElementById("live_a1").value
+) || 0;
+
+runner.a2 =
+parseFloat(
+document.getElementById("live_a2").value
+) || 0;
+
+runner.a3 =
+parseFloat(
+document.getElementById("live_a3").value
+) || 0;
+
+runner.b1 =
+parseFloat(
+document.getElementById("live_b1").value
+) || 0;
+
+runner.b2 =
+parseFloat(
+document.getElementById("live_b2").value
+) || 0;
+
+runner.b3 =
+parseFloat(
+document.getElementById("live_b3").value
+) || 0;
+
+runner.deductionNumber =
+document.getElementById(
+"live_deduction"
+).value;
+
+runner.deduction =
+deductions[
+runner.deductionNumber
+] || 0;
+
+runner.total = Number((
+
+runner.a1 +
+runner.a2 +
+runner.a3 +
+
+runner.b1 +
+runner.b2 +
+runner.b3 -
+
+runner.deduction
+
+).toFixed(2));
+
+updateRanking(
+runner.categoryId
+);
+
+saveData();
+
+renderRunners();
+
+renderLiveInfo();
+
+};
+
+window.nextRunner = function(){
+
+if(!activeCompetition)
+return;
+
+const runners =
+activeCompetition.runners.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+let currentRunner =
+runners.find(
+r=>r.liveActive===true
+);
+
+if(!currentRunner){
+
+const firstRunner =
+runners.find(
+r=>!r.confirmed
+);
+
+if(!firstRunner)
+return;
+
+firstRunner.liveActive = true;
+
+saveData();
+
+renderLiveInfo();
+
+renderLiveScoring();
+
+renderRunners();
+
+return;
+
+}
+
+currentRunner.confirmed = true;
+currentRunner.liveActive = false;
+
+const nextRunner =
+runners.find(
+r=>!r.confirmed
+);
+
+if(nextRunner){
+
+nextRunner.liveActive = true;
+
+}
+
+saveData();
+
+renderLiveInfo();
+
+renderLiveScoring();
+
+renderRunners();
+
+};
+
+window.resetCompetition = function(){
+
+if(!activeCompetition)
+return;
+
+activeCompetition.runners.forEach(
+runner=>{
+
+runner.confirmed = false;
+runner.liveActive = false;
+
+runner.place = "";
+
+runner.total = 0;
+
+runner.a1 = "";
+runner.a2 = "";
+runner.a3 = "";
+
+runner.b1 = "";
+runner.b2 = "";
+runner.b3 = "";
+
+runner.deduction = 0;
+runner.deductionNumber = "";
+
+}
+);
+
+saveData();
+
+renderRunners();
+
+renderLiveInfo();
+
+renderLiveScoring();
+
+};
+
+function updateRanking(categoryId){
+
+const ranking =
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===categoryId
+)
+
+.sort(
+(a,b)=>
+Number(b.total)-Number(a.total)
+);
+
+ranking.forEach((runner,index)=>{
+
+runner.place = index+1;
+
+});
+
+}
+
+function getCurrentCategory(){
+
+if(!activeCompetition)
+return null;
+
+const now =
+new Date();
+
+const offset =
+parseInt(
+document.getElementById(
+"timeOffset"
+).value
+) || 0;
+
+now.setMinutes(
+now.getMinutes() + offset
+);
+
+const currentTime =
+now.toTimeString()
+.substring(0,5);
+
+const nowMinutes =
+Number(currentTime.substring(0,2))*60 +
+Number(currentTime.substring(3,5));
+
+let active = null;
+
+activeCompetition.categories.forEach(
+cat=>{
+
+const beginMinutes =
+Number(cat.begin.substring(0,2))*60 +
+Number(cat.begin.substring(3,5));
+
+const endMinutes =
+Number(cat.end.substring(0,2))*60 +
+Number(cat.end.substring(3,5));
+
+if(
+nowMinutes >= beginMinutes &&
+nowMinutes <= endMinutes
+){
+
+active = cat;
+
+}
+
+});
+
+return active;
 
 }
 
@@ -789,260 +987,6 @@ placeholder="Abzugsschlüssel">
 </div>
 
 `;
-
-}
-
-function updateRanking(categoryId){
-
-const ranking =
-
-activeCompetition.runners
-
-.filter(
-r=>r.categoryId===categoryId
-)
-
-.sort(
-(a,b)=>
-Number(b.total)-Number(a.total)
-);
-
-ranking.forEach((runner,index)=>{
-
-runner.place = index+1;
-
-});
-
-}
-
-function saveLiveScore(){
-
-const runner =
-activeCompetition.runners.find(
-r=>r.liveActive===true
-);
-
-if(!runner)return;
-
-runner.a1 =
-parseFloat(
-document.getElementById("live_a1").value
-) || 0;
-
-runner.a2 =
-parseFloat(
-document.getElementById("live_a2").value
-) || 0;
-
-runner.a3 =
-parseFloat(
-document.getElementById("live_a3").value
-) || 0;
-
-runner.b1 =
-parseFloat(
-document.getElementById("live_b1").value
-) || 0;
-
-runner.b2 =
-parseFloat(
-document.getElementById("live_b2").value
-) || 0;
-
-runner.b3 =
-parseFloat(
-document.getElementById("live_b3").value
-) || 0;
-
-runner.deductionNumber =
-document.getElementById(
-"live_deduction"
-).value;
-
-runner.deduction =
-deductions[
-runner.deductionNumber
-] || 0;
-
-runner.total = Number((
-
-runner.a1 +
-runner.a2 +
-runner.a3 +
-
-runner.b1 +
-runner.b2 +
-runner.b3 -
-
-runner.deduction
-
-).toFixed(2));
-
-updateRanking(
-runner.categoryId
-);
-
-saveData();
-
-renderRunners();
-
-}
-
-function nextRunner(){
-
-if(!activeCompetition)
-return;
-
-const runners =
-activeCompetition.runners.sort(
-(a,b)=>
-Number(a.start)-Number(b.start)
-);
-
-let currentRunner =
-runners.find(
-r=>r.liveActive===true
-);
-
-if(!currentRunner){
-
-const firstRunner =
-runners.find(
-r=>!r.confirmed
-);
-
-if(!firstRunner)
-return;
-
-firstRunner.liveActive = true;
-
-saveData();
-
-renderLiveInfo();
-
-renderLiveScoring();
-
-renderRunners();
-
-return;
-
-}
-
-currentRunner.confirmed = true;
-currentRunner.liveActive = false;
-
-const nextRunner =
-runners.find(
-r=>!r.confirmed
-);
-
-if(nextRunner){
-
-nextRunner.liveActive = true;
-
-}
-
-saveData();
-
-renderLiveInfo();
-
-renderLiveScoring();
-
-renderRunners();
-
-}
-
-function resetCompetition(){
-
-if(!activeCompetition)
-return;
-
-activeCompetition.runners.forEach(
-runner=>{
-
-runner.confirmed = false;
-runner.liveActive = false;
-
-runner.place = "";
-
-runner.total = 0;
-
-runner.a1 = "";
-runner.a2 = "";
-runner.a3 = "";
-
-runner.b1 = "";
-runner.b2 = "";
-runner.b3 = "";
-
-runner.deduction = 0;
-runner.deductionNumber = "";
-
-}
-);
-
-saveData();
-
-renderRunners();
-
-renderLiveInfo();
-
-renderLiveScoring();
-
-}
-
-function getCurrentCategory(){
-
-if(!activeCompetition)
-return null;
-
-const now =
-new Date();
-
-const offset =
-parseInt(
-document.getElementById(
-"timeOffset"
-).value
-) || 0;
-
-now.setMinutes(
-now.getMinutes() + offset
-);
-
-const currentTime =
-now.toTimeString()
-.substring(0,5);
-
-const nowMinutes =
-Number(currentTime.substring(0,2))*60 +
-Number(currentTime.substring(3,5));
-
-let active = null;
-
-activeCompetition.categories.forEach(
-cat=>{
-
-const beginMinutes =
-Number(cat.begin.substring(0,2))*60 +
-Number(cat.begin.substring(3,5));
-
-const endMinutes =
-Number(cat.end.substring(0,2))*60 +
-Number(cat.end.substring(3,5));
-
-if(
-nowMinutes >= beginMinutes &&
-nowMinutes <= endMinutes
-){
-
-active = cat;
-
-}
-
-});
-
-return active;
 
 }
 
@@ -1147,6 +1091,51 @@ ${runner.place || "-"}
 
 ⭐ Gesamt:
 ${runner.total || 0}
+
+</div>
+
+`;
+
+});
+
+}
+
+function renderCompetitions(){
+
+const output =
+document.getElementById(
+"competitionList"
+);
+
+output.innerHTML = "";
+
+competitions.forEach(comp=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+<h3>${comp.name}</h3>
+
+📍 ${comp.place}
+
+<br><br>
+
+📅 ${comp.from}
+
+<button onclick="openCompetition(${comp.id})">
+
+📂 Öffnen
+
+</button>
+
+<button
+class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
+
+🗑 Löschen
+
+</button>
 
 </div>
 
