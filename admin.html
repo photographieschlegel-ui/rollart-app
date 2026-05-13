@@ -533,6 +533,18 @@ updateLive();
 
 }
 
+function cleanCategoryName(name){
+
+return name
+
+.replace(/^\d+\s+\d+\s+\d+\s+/,"")
+
+.replace(/\s+/g," ")
+
+.trim();
+
+}
+
 function parseCompetitionText(){
 
 if(!activeCompetition)return;
@@ -556,7 +568,7 @@ if(!line)return;
 const categoryMatch =
 
 line.match(
-/(\d{2}:\d{2})\s+(\d{2}:\d{2}).*?([A-Za-zÄÖÜäöüß0-9\s.-]+)$/
+/(\d{2}:\d{2})\s+(\d{2}:\d{2})\s+(.+)/
 );
 
 if(categoryMatch){
@@ -568,11 +580,9 @@ id:Date.now()+Math.random(),
 begin:categoryMatch[1],
 end:categoryMatch[2],
 
-name:categoryMatch[3]
-
-.replace(/^\d+\s+\d+\s+\d+\s+/,"")
-
-.trim()
+name:cleanCategoryName(
+categoryMatch[3]
+)
 
 };
 
@@ -663,33 +673,9 @@ return;
 
 }
 
-const category =
-getCurrentCategory();
-
-if(!category){
-
-output.innerHTML =
-"Keine aktive Kategorie";
-
-return;
-
-}
-
-const runners =
-
-activeCompetition.runners
-
-.filter(
-r=>r.categoryId===category.id
-)
-
-.sort(
-(a,b)=>
-Number(a.start)-Number(b.start)
-);
-
 const currentRunner =
-runners.find(
+
+activeCompetition.runners.find(
 r=>r.liveActive===true
 );
 
@@ -711,6 +697,10 @@ ${currentRunner.name}
 </h3>
 
 🏢 ${currentRunner.club}
+
+<br><br>
+
+📂 ${currentRunner.category}
 
 <div class="scoreGrid">
 
@@ -745,11 +735,6 @@ placeholder="Abzugsschlüssel">
 }
 
 function saveLiveScore(){
-
-const category =
-getCurrentCategory();
-
-if(!category)return;
 
 const runner =
 
@@ -832,19 +817,9 @@ function nextRunner(){
 if(!activeCompetition)
 return;
 
-const category =
-getCurrentCategory();
-
-if(!category)
-return;
-
 const runners =
 
 activeCompetition.runners
-
-.filter(
-r=>r.categoryId===category.id
-)
 
 .sort(
 (a,b)=>
@@ -881,7 +856,6 @@ return;
 }
 
 currentRunner.confirmed = true;
-
 currentRunner.liveActive = false;
 
 const nextRunner =
@@ -971,7 +945,41 @@ function getCurrentCategory(){
 if(!activeCompetition)
 return null;
 
-return activeCompetition.categories[0] || null;
+const now =
+new Date();
+
+const offset =
+parseInt(
+document.getElementById(
+"timeOffset"
+).value
+) || 0;
+
+now.setMinutes(
+now.getMinutes() + offset
+);
+
+const currentTime =
+now.toTimeString()
+.substring(0,5);
+
+let active = null;
+
+activeCompetition.categories.forEach(
+cat=>{
+
+if(
+currentTime >= cat.begin &&
+currentTime <= cat.end
+){
+
+active = cat;
+
+}
+
+});
+
+return active;
 
 }
 
@@ -979,6 +987,17 @@ function updateClock(){
 
 const now =
 new Date();
+
+const offset =
+parseInt(
+document.getElementById(
+"timeOffset"
+).value
+) || 0;
+
+now.setMinutes(
+now.getMinutes() + offset
+);
 
 document.getElementById(
 "liveClock"
