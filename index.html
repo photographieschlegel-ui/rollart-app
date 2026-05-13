@@ -235,7 +235,7 @@ AKTUELLER LÄUFER
 </div>
 
 <div id="runnerName" class="runnerName">
-Warte auf Live-Daten...
+Kein aktiver Wettbewerb
 </div>
 
 <div id="runnerClub" class="runnerClub">
@@ -299,7 +299,7 @@ Warte auf Live-Daten...
 </div>
 
 <div id="placeBox" class="placeBox">
-🏆 Platz -
+🏁 Wettbewerb beendet
 </div>
 
 <div class="liveButtons">
@@ -415,6 +415,60 @@ document.getElementById(
 
 }
 
+function clearLive(){
+
+document.getElementById(
+"runnerName"
+).innerHTML =
+"Kein aktiver Wettbewerb";
+
+document.getElementById(
+"runnerClub"
+).innerHTML =
+"-";
+
+document.getElementById(
+"runnerCategory"
+).innerHTML =
+"-";
+
+document.getElementById(
+"scoreA"
+).innerHTML =
+"0";
+
+document.getElementById(
+"scoreB"
+).innerHTML =
+"0";
+
+document.getElementById(
+"deduction"
+).innerHTML =
+"0";
+
+document.getElementById(
+"total"
+).innerHTML =
+"0";
+
+document.getElementById(
+"placeBox"
+).innerHTML =
+"🏁 Wettbewerb beendet";
+
+document.getElementById(
+"nextRunner"
+).innerHTML =
+"-";
+
+document.getElementById(
+"rankingList"
+).innerHTML =
+"";
+
+}
+
 function renderRunner(runner){
 
 if(!runner)return;
@@ -525,7 +579,21 @@ runner.total || 0
 
 function render(data){
 
-if(!data)return;
+if(!data){
+
+clearLive();
+
+return;
+
+}
+
+if(!data.runner){
+
+clearLive();
+
+return;
+
+}
 
 liveData = data;
 
@@ -571,7 +639,7 @@ document.getElementById(
 "nextRunner"
 ).innerHTML =
 
-nextRunner.name ?
+nextRunner?.name ?
 
 `
 ${nextRunner.name}
@@ -581,7 +649,7 @@ ${nextRunner.club || "-"}
 
 :
 
-"Kein nächster Läufer";
+"-";
 
 renderRanking();
 
@@ -653,6 +721,10 @@ const data =
 snapshot.data();
 
 render(data);
+
+}else{
+
+clearLive();
 
 }
 
