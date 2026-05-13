@@ -360,7 +360,7 @@ async function saveData(){
 
 await saveOnline(competitions);
 
-updateLive();
+await updateLive();
 
 }
 
@@ -388,13 +388,12 @@ r=>r.categoryId===category.id
 Number(a.start)-Number(b.start)
 );
 
-let currentIndex =
-
-runners.findIndex(
+const currentRunner =
+runners.find(
 r=>!r.confirmed
 );
 
-if(currentIndex < 0){
+if(!currentRunner){
 
 await saveLive({
 
@@ -410,8 +409,10 @@ return;
 
 }
 
-const current =
-runners[currentIndex];
+const currentIndex =
+runners.findIndex(
+r=>r.id===currentRunner.id
+);
 
 const nextRunner =
 runners[currentIndex+1] || null;
@@ -421,7 +422,7 @@ await saveLive({
 updated:Date.now(),
 competition:activeCompetition,
 category:category,
-runner:current,
+runner:currentRunner,
 nextRunner:nextRunner
 
 });
@@ -614,8 +615,7 @@ id:Date.now()+Math.random(),
 begin:categoryMatch[1],
 end:categoryMatch[2],
 
-name:categoryMatch[3]
-.trim()
+name:categoryMatch[3].trim()
 
 };
 
@@ -905,30 +905,20 @@ r=>r.categoryId===category.id
 Number(a.start)-Number(b.start)
 );
 
-const currentIndex =
-
-runners.findIndex(
+const currentRunner =
+runners.find(
 r=>!r.confirmed
 );
 
-if(currentIndex >= 0){
+if(!currentRunner){
 
-const currentRunner =
-runners[currentIndex];
+renderLiveInfo();
 
-const realRunner =
-
-activeCompetition.runners.find(
-r=>r.id===currentRunner.id
-);
-
-if(realRunner){
-
-realRunner.confirmed = true;
+return;
 
 }
 
-}
+currentRunner.confirmed = true;
 
 saveData();
 
@@ -1117,13 +1107,20 @@ r=>r.categoryId===category.id
 Number(a.start)-Number(b.start)
 );
 
-let currentIndex =
+const current =
+runners.find(
+r=>!r.confirmed
+);
 
+const currentIndex =
 runners.findIndex(
 r=>!r.confirmed
 );
 
-if(currentIndex < 0){
+const nextRunner =
+runners[currentIndex+1] || null;
+
+if(!current){
 
 output.innerHTML = `
 <div class="liveRunner">
@@ -1134,12 +1131,6 @@ output.innerHTML = `
 return;
 
 }
-
-const current =
-runners[currentIndex];
-
-const nextRunner =
-runners[currentIndex+1] || null;
 
 output.innerHTML = `
 
@@ -1207,7 +1198,55 @@ Start ${runner.start}
 
 <br><br>
 
-🏆 ${runner.total || 0}
+📂 ${runner.category}
+
+<div class="scoreGrid">
+
+<input
+disabled
+value="${runner.a1 || ''}">
+
+<input
+disabled
+value="${runner.a2 || ''}">
+
+<input
+disabled
+value="${runner.a3 || ''}">
+
+</div>
+
+<div class="scoreGrid">
+
+<input
+disabled
+value="${runner.b1 || ''}">
+
+<input
+disabled
+value="${runner.b2 || ''}">
+
+<input
+disabled
+value="${runner.b3 || ''}">
+
+</div>
+
+<div class="scoreGrid">
+
+<input
+disabled
+value="${runner.deductionNumber || ''}">
+
+<input
+disabled
+value="-${runner.deduction || 0}">
+
+<input
+disabled
+value="${runner.total || 0}">
+
+</div>
 
 </div>
 
