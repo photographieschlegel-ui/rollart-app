@@ -22,7 +22,7 @@ color:white;
 }
 
 .app{
-max-width:1000px;
+max-width:1100px;
 margin:auto;
 padding:15px;
 }
@@ -170,7 +170,7 @@ background:#334155;
 padding:14px;
 border-radius:14px;
 margin-top:12px;
-line-height:1.6;
+line-height:1.8;
 font-size:18px;
 }
 
@@ -325,6 +325,11 @@ document.getElementById(
 ).innerHTML =
 "";
 
+document.getElementById(
+"allRunners"
+).innerHTML =
+"";
+
 }
 
 function renderRunner(runner){
@@ -432,6 +437,73 @@ ${index+1}. ${runner.name}
 
 }
 
+function renderAllRunners(){
+
+const output =
+document.getElementById(
+"allRunners"
+);
+
+if(
+!liveData?.competition?.runners
+){
+
+output.innerHTML =
+"Keine Läufer";
+
+return;
+
+}
+
+const runners =
+
+[...liveData.competition.runners]
+
+.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+output.innerHTML = "";
+
+runners.forEach(runner=>{
+
+output.innerHTML += `
+
+<div class="resultItem">
+
+Start ${runner.start}
+
+<br><br>
+
+👤 ${runner.name}
+
+<br><br>
+
+🏢 ${runner.club}
+
+<br><br>
+
+📂 ${runner.category}
+
+<br><br>
+
+🏆 Platz:
+${runner.place || "-"}
+
+<br>
+
+⭐ Gesamt:
+${runner.total || 0}
+
+</div>
+
+`;
+
+});
+
+}
+
 function render(data){
 
 if(!data || !data.runner){
@@ -495,6 +567,8 @@ ${nextRunner.club || "-"}
 "🏁 Letzter Läufer";
 
 renderResults();
+
+renderAllRunners();
 
 }
 
@@ -760,10 +834,20 @@ class="nextRunner">
 <div class="card">
 
 <div class="liveTitle">
-🥇 ERGEBNISSE
+🥇 Ergebnisse
 </div>
 
 <div id="results"></div>
+
+</div>
+
+<div class="card">
+
+<div class="liveTitle">
+👥 Alle Läufer
+</div>
+
+<div id="allRunners"></div>
 
 </div>
 
