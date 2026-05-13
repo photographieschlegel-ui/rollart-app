@@ -8,7 +8,6 @@
 <title>🏆 RollArt Live</title>
 
 <link rel="manifest" href="./manifest.json">
-
 <meta name="theme-color" content="#dc2626">
 
 <style>
@@ -22,7 +21,7 @@ color:white;
 }
 
 .app{
-max-width:1100px;
+max-width:1400px;
 margin:auto;
 padding:12px;
 }
@@ -167,11 +166,27 @@ background:#2563eb;
 
 .resultItem{
 background:#334155;
-padding:10px;
-border-radius:12px;
-margin-top:8px;
-line-height:1.5;
-font-size:15px;
+padding:8px;
+border-radius:10px;
+line-height:1.4;
+font-size:13px;
+}
+
+.runnerGrid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:10px;
+}
+
+.categoryBlock{
+margin-bottom:20px;
+}
+
+.categoryTitle{
+font-size:18px;
+font-weight:bold;
+margin-bottom:10px;
+color:#60a5fa;
 }
 
 .footer{
@@ -194,6 +209,10 @@ grid-template-columns:1fr;
 
 .navButtons{
 grid-template-columns:1fr;
+}
+
+.runnerGrid{
+grid-template-columns:repeat(2,1fr);
 }
 
 }
@@ -301,11 +320,6 @@ document.getElementById(
 "-";
 
 document.getElementById(
-"results"
-).innerHTML =
-"";
-
-document.getElementById(
 "allRunners"
 ).innerHTML =
 "";
@@ -376,47 +390,6 @@ document.getElementById(
 
 }
 
-function renderResults(){
-
-const output =
-document.getElementById(
-"results"
-);
-
-if(!liveData?.competition?.runners)
-return;
-
-const ranking =
-
-[...liveData.competition.runners]
-
-.sort(
-(a,b)=>
-Number(b.total)-Number(a.total)
-);
-
-output.innerHTML = "";
-
-ranking.forEach((runner,index)=>{
-
-output.innerHTML += `
-
-<div class="resultItem">
-
-${index+1}. ${runner.name}
-
-<br>
-
-🏆 ${runner.total || 0} Punkte
-
-</div>
-
-`;
-
-});
-
-}
-
 function renderAllRunners(){
 
 const output =
@@ -436,7 +409,6 @@ return;
 }
 
 const runners =
-
 [...liveData.competition.runners]
 
 .sort(
@@ -444,27 +416,51 @@ const runners =
 Number(a.start)-Number(b.start)
 );
 
-output.innerHTML = "";
+const categories = {};
 
 runners.forEach(runner=>{
 
+if(!categories[runner.category]){
+
+categories[runner.category] = [];
+
+}
+
+categories[runner.category].push(
+runner
+);
+
+});
+
+output.innerHTML = "";
+
+Object.keys(categories).forEach(category=>{
+
 output.innerHTML += `
+
+<div class="categoryBlock">
+
+<div class="categoryTitle">
+
+📂 ${category}
+
+</div>
+
+<div class="runnerGrid">
+
+${categories[category].map(runner=>`
 
 <div class="resultItem">
 
-Start ${runner.start}
+🕒 Start ${runner.start}
 
 <br><br>
 
 👤 ${runner.name}
 
-<br><br>
+<br>
 
 🏢 ${runner.club}
-
-<br><br>
-
-📂 ${runner.category}
 
 <br><br>
 
@@ -473,8 +469,13 @@ ${runner.place || "-"}
 
 <br>
 
-⭐ Gesamt:
-${runner.total || 0}
+⭐ ${runner.total || 0}
+
+</div>
+
+`).join("")}
+
+</div>
 
 </div>
 
@@ -545,8 +546,6 @@ ${nextRunner.club || "-"}
 :
 
 "🏁 Letzter Läufer";
-
-renderResults();
 
 renderAllRunners();
 
@@ -814,17 +813,7 @@ class="nextRunner">
 <div class="card">
 
 <div class="liveTitle">
-🥇 Ergebnisse
-</div>
-
-<div id="results"></div>
-
-</div>
-
-<div class="card">
-
-<div class="liveTitle">
-👥 Alle Läufer
+👥 Alle Kategorien & Läufer
 </div>
 
 <div id="allRunners"></div>
