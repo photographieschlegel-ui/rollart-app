@@ -469,6 +469,8 @@ document.getElementById(
 
 }
 
+/* ========================================= */
+
 function renderRunner(runner){
 
 if(!runner)return;
@@ -532,6 +534,8 @@ document.getElementById(
 
 }
 
+/* ========================================= */
+
 function renderRanking(){
 
 const output =
@@ -576,6 +580,8 @@ runner.total || 0
 });
 
 }
+
+/* ========================================= */
 
 function render(data){
 
@@ -655,7 +661,9 @@ renderRanking();
 
 }
 
-function showPreviousRunner(){
+/* ========================================= */
+
+window.showPreviousRunner = function(){
 
 if(allRunners.length===0)
 return;
@@ -679,7 +687,9 @@ renderRunner(runner);
 
 }
 
-function showNextRunner(){
+/* ========================================= */
+
+window.showNextRunner = function(){
 
 if(allRunners.length===0)
 return;
@@ -703,11 +713,15 @@ renderRunner(runner);
 
 }
 
-function showCurrentRunner(){
+/* ========================================= */
+
+window.showCurrentRunner = function(){
 
 render(liveData);
 
 }
+
+/* ========================================= */
 
 onSnapshot(
 

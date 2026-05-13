@@ -252,6 +252,14 @@ rows="12">
 
 <div class="card">
 
+<h2>⏱ Live Wertung</h2>
+
+<div id="liveScoring"></div>
+
+</div>
+
+<div class="card">
+
 <h2>👥 Läufer</h2>
 
 <div
@@ -391,10 +399,10 @@ if(currentIndex < 0){
 await saveLive({
 
 updated:Date.now(),
-competition:activeCompetition,
-category:category,
 runner:null,
-nextRunner:null
+nextRunner:null,
+competition:null,
+category:null
 
 });
 
@@ -417,6 +425,8 @@ runner:current,
 nextRunner:nextRunner
 
 });
+
+renderLiveScoring();
 
 }
 
@@ -466,16 +476,42 @@ renderCompetitions();
 
 }
 
-function deleteCompetition(id){
+async function deleteCompetition(id){
 
 competitions =
 competitions.filter(
 c=>c.id!==id
 );
 
-saveData();
+if(
+activeCompetition &&
+activeCompetition.id===id
+){
+
+activeCompetition = null;
+
+await saveLive({
+
+updated:Date.now(),
+runner:null,
+nextRunner:null,
+competition:null,
+category:null
+
+});
+
+document.getElementById(
+"liveInfo"
+).innerHTML =
+"Kein aktiver Wettbewerb";
+
+}
+
+await saveData();
 
 renderCompetitions();
+
+renderRunners();
 
 }
 
@@ -537,6 +573,8 @@ renderRunners();
 
 renderLiveInfo();
 
+renderLiveScoring();
+
 updateLive();
 
 }
@@ -577,10 +615,6 @@ begin:categoryMatch[1],
 end:categoryMatch[2],
 
 name:categoryMatch[3]
-.replace(
-/^\d+\s+\d+\s+\d+\s+/,
-""
-)
 .trim()
 
 };
@@ -655,94 +689,94 @@ renderRunners();
 
 }
 
-function renderRunners(){
+function renderLiveScoring(){
 
 const output =
 document.getElementById(
-"runnerList"
+"liveScoring"
 );
 
-output.innerHTML = "";
+if(!activeCompetition){
 
-if(!activeCompetition)return;
+output.innerHTML =
+"Kein aktiver Wettbewerb";
 
-activeCompetition.runners.forEach(
-runner=>{
+return;
 
-output.innerHTML += `
+}
+
+const category =
+getCurrentCategory();
+
+if(!category){
+
+output.innerHTML =
+"Keine aktive Kategorie";
+
+return;
+
+}
+
+const runners =
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===category.id
+)
+
+.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+const currentRunner =
+runners.find(
+r=>!r.confirmed
+);
+
+if(!currentRunner){
+
+output.innerHTML =
+"🏁 Wettbewerb beendet";
+
+return;
+
+}
+
+output.innerHTML = `
 
 <div class="item">
 
-<h3>Start ${runner.start}</h3>
+<h3>
+${currentRunner.name}
+</h3>
 
-👤 ${runner.name}
-
-<br><br>
-
-🏢 ${runner.club}
-
-<br><br>
-
-📂 ${runner.category}
+🏢 ${currentRunner.club}
 
 <div class="scoreGrid">
 
-<input
-id="a1_${runner.id}"
-placeholder="A"
-value="${runner.a1 || ''}">
-
-<input
-id="a2_${runner.id}"
-placeholder="A"
-value="${runner.a2 || ''}">
-
-<input
-id="a3_${runner.id}"
-placeholder="A"
-value="${runner.a3 || ''}">
+<input id="live_a1" placeholder="A1">
+<input id="live_a2" placeholder="A2">
+<input id="live_a3" placeholder="A3">
 
 </div>
 
 <div class="scoreGrid">
 
-<input
-id="b1_${runner.id}"
-placeholder="B"
-value="${runner.b1 || ''}">
-
-<input
-id="b2_${runner.id}"
-placeholder="B"
-value="${runner.b2 || ''}">
-
-<input
-id="b3_${runner.id}"
-placeholder="B"
-value="${runner.b3 || ''}">
+<input id="live_b1" placeholder="B1">
+<input id="live_b2" placeholder="B2">
+<input id="live_b3" placeholder="B3">
 
 </div>
 
-<div class="scoreGrid">
-
 <input
-id="deduction_${runner.id}"
-placeholder="Abzug"
-value="${runner.deductionNumber || ''}">
+id="live_deduction"
+placeholder="Abzugsschlüssel">
 
-<input
-disabled
-value="-${runner.deduction}">
+<button onclick="saveLiveScore()">
 
-<input
-disabled
-value="${runner.total}">
-
-</div>
-
-<button onclick="saveRunnerScore('${runner.id}')">
-
-💾 Speichern
+💾 Live Wertung speichern
 
 </button>
 
@@ -750,37 +784,69 @@ value="${runner.total}">
 
 `;
 
-});
-
 }
 
-function saveRunnerScore(id){
+function saveLiveScore(){
 
-const runner =
-activeCompetition.runners.find(
-r=>r.id==id
+const category =
+getCurrentCategory();
+
+if(!category)return;
+
+const runners =
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===category.id
+)
+
+.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
 );
 
+const runner =
+runners.find(
+r=>!r.confirmed
+);
+
+if(!runner)return;
+
 runner.a1 =
-parseFloat(document.getElementById(`a1_${id}`).value) || 0;
+parseFloat(
+document.getElementById("live_a1").value
+) || 0;
 
 runner.a2 =
-parseFloat(document.getElementById(`a2_${id}`).value) || 0;
+parseFloat(
+document.getElementById("live_a2").value
+) || 0;
 
 runner.a3 =
-parseFloat(document.getElementById(`a3_${id}`).value) || 0;
+parseFloat(
+document.getElementById("live_a3").value
+) || 0;
 
 runner.b1 =
-parseFloat(document.getElementById(`b1_${id}`).value) || 0;
+parseFloat(
+document.getElementById("live_b1").value
+) || 0;
 
 runner.b2 =
-parseFloat(document.getElementById(`b2_${id}`).value) || 0;
+parseFloat(
+document.getElementById("live_b2").value
+) || 0;
 
 runner.b3 =
-parseFloat(document.getElementById(`b3_${id}`).value) || 0;
+parseFloat(
+document.getElementById("live_b3").value
+) || 0;
 
 runner.deductionNumber =
-document.getElementById(`deduction_${id}`).value;
+document.getElementById(
+"live_deduction"
+).value;
 
 runner.deduction =
 deductions[
@@ -810,6 +876,8 @@ saveData();
 renderRunners();
 
 renderLiveInfo();
+
+renderLiveScoring();
 
 }
 
@@ -866,6 +934,8 @@ saveData();
 
 renderLiveInfo();
 
+renderLiveScoring();
+
 renderRunners();
 
 }
@@ -903,6 +973,8 @@ saveData();
 renderRunners();
 
 renderLiveInfo();
+
+renderLiveScoring();
 
 }
 
@@ -1011,7 +1083,14 @@ document.getElementById(
 "liveInfo"
 );
 
-if(!activeCompetition)return;
+if(!activeCompetition){
+
+output.innerHTML =
+"Kein aktiver Wettbewerb";
+
+return;
+
+}
 
 const category =
 getCurrentCategory();
@@ -1047,13 +1126,9 @@ r=>!r.confirmed
 if(currentIndex < 0){
 
 output.innerHTML = `
-
 <div class="liveRunner">
-
 🏁 Wettbewerb beendet
-
 </div>
-
 `;
 
 return;
@@ -1097,6 +1172,48 @@ ${nextRunner?.name || "-"}
 </div>
 
 `;
+
+}
+
+function renderRunners(){
+
+const output =
+document.getElementById(
+"runnerList"
+);
+
+if(!output)return;
+
+output.innerHTML = "";
+
+if(!activeCompetition)return;
+
+activeCompetition.runners.forEach(
+runner=>{
+
+output.innerHTML += `
+
+<div class="item">
+
+<h3>
+Start ${runner.start}
+</h3>
+
+👤 ${runner.name}
+
+<br><br>
+
+🏢 ${runner.club}
+
+<br><br>
+
+🏆 ${runner.total || 0}
+
+</div>
+
+`;
+
+});
 
 }
 
