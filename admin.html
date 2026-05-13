@@ -486,9 +486,6 @@ window.parseCompetitionText = function(){
 
 if(!activeCompetition)return;
 
-activeCompetition.categories = [];
-activeCompetition.runners = [];
-
 const text =
 document.getElementById(
 "competitionText"
@@ -515,6 +512,21 @@ if(categoryMatch){
 const parts =
 line.split(/\s+/);
 
+const categoryName =
+parts.slice(6).join(" ");
+
+const alreadyExists =
+activeCompetition.categories.find(
+c=>c.name===categoryName
+);
+
+if(alreadyExists){
+
+currentCategory = alreadyExists;
+return;
+
+}
+
 currentCategory = {
 
 id:Date.now()+Math.random(),
@@ -528,8 +540,7 @@ warmup: parts[3],
 groups: parts[4],
 participants: parts[5],
 
-name:
-parts.slice(6).join(" ")
+name: categoryName
 
 };
 
@@ -565,6 +576,16 @@ rest.replace(c,"").trim();
 }
 
 });
+
+const alreadyRunner =
+activeCompetition.runners.find(
+r=>
+r.start===runnerMatch[1] &&
+r.categoryId===currentCategory.id
+);
+
+if(alreadyRunner)
+return;
 
 activeCompetition.runners.push({
 
@@ -716,6 +737,10 @@ Number(a.start)-Number(b.start)
 
 if(runners.length===0)
 return;
+
+activeCompetition.runners.forEach(r=>{
+r.liveActive=false;
+});
 
 runners[0].liveActive = true;
 
@@ -956,7 +981,25 @@ output.innerHTML = "";
 
 if(!activeCompetition)return;
 
-activeCompetition.runners.forEach(
+const sorted =
+[...activeCompetition.runners]
+
+.sort(
+(a,b)=>{
+
+if(a.category !== b.category){
+
+return a.category.localeCompare(
+b.category
+);
+
+}
+
+return Number(a.start)-Number(b.start);
+
+});
+
+sorted.forEach(
 runner=>{
 
 output.innerHTML += `
