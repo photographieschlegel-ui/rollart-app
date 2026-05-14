@@ -380,34 +380,6 @@ renderLiveScoring();
 
 };
 
-window.deleteCompetition =
-async function(id){
-
-if(!confirm(
-"Wettbewerb löschen?"
-)) return;
-
-competitions =
-competitions.filter(
-c=>c.id!==id
-);
-
-await setDoc(
-doc(db,"rollart","live"),
-{
-
-competition:null,
-runner:null
-
-}
-);
-
-await saveDatabase();
-
-renderCompetitions();
-
-};
-
 window.archiveCompetition =
 async function(id){
 
@@ -444,151 +416,6 @@ renderArchive();
 
 };
 
-window.openArchiveCompetition =
-function(id){
-
-const comp =
-archivedCompetitions.find(
-c=>c.id===id
-);
-
-if(!comp)return;
-
-activeCompetition = comp;
-
-renderRunners();
-
-document.getElementById(
-"liveScoring"
-).innerHTML = `
-
-<div class="card">
-
-🏁 Archivmodus
-
-<br><br>
-
-Dieser Wettbewerb ist abgeschlossen
-und kann nicht verändert werden.
-
-</div>
-
-`;
-
-};
-
-window.deleteArchiveCompetition =
-async function(id){
-
-if(!confirm(
-"Archiv wirklich löschen?"
-)) return;
-
-archivedCompetitions =
-archivedCompetitions.filter(
-c=>c.id!==id
-);
-
-await saveDatabase();
-
-renderArchive();
-
-};
-
-window.exportResults =
-function(id){
-
-const comp =
-archivedCompetitions.find(
-c=>c.id===id
-);
-
-if(!comp)return;
-
-let content = "";
-
-content +=
-comp.name + "\n";
-
-content +=
-comp.place + "\n";
-
-content +=
-comp.from + " - " +
-comp.to + "\n\n";
-
-const categories = {};
-
-comp.runners.forEach(r=>{
-
-if(!categories[r.category]){
-
-categories[r.category]=[];
-
-}
-
-categories[r.category].push(r);
-
-});
-
-Object.keys(categories).forEach(cat=>{
-
-content +=
-"====================\n";
-
-content +=
-cat + "\n";
-
-content +=
-"====================\n\n";
-
-categories[cat]
-
-.sort(
-(a,b)=>
-Number(a.place)-Number(b.place)
-)
-
-.forEach(r=>{
-
-content +=
-r.place + ". ";
-
-content +=
-r.name + " ";
-
-content +=
-r.club + " ";
-
-content +=
-"Gesamt: " +
-r.total + "\n";
-
-});
-
-content += "\n";
-
-});
-
-const blob =
-new Blob(
-[content],
-{type:"text/plain"}
-);
-
-const link =
-document.createElement("a");
-
-link.href =
-URL.createObjectURL(blob);
-
-link.download =
-comp.name + ".txt";
-
-link.click();
-
-};
-
 window.parseCompetitionText =
 function(){
 
@@ -604,6 +431,8 @@ const lines =
 text.split("\n");
 
 let currentCategory = null;
+
+let globalStart = 1;
 
 lines.forEach(line=>{
 
@@ -652,7 +481,7 @@ activeCompetition.runners.push({
 
 id:Date.now()+Math.random(),
 
-start:runnerMatch[1],
+start:globalStart++,
 
 name:runnerMatch[2],
 
@@ -726,9 +555,6 @@ r.place = i+1;
 
 window.saveLiveScore =
 function(){
-
-const scrollPos =
-window.scrollY;
 
 const runner =
 
@@ -824,13 +650,7 @@ runner.categoryId
 saveDatabase();
 
 renderRunners();
-
 renderLiveScoring();
-
-window.scrollTo({
-top:scrollPos,
-behavior:"instant"
-});
 
 };
 
@@ -902,79 +722,6 @@ next.liveActive=true;
 activeCompetition.finished=true;
 
 }
-
-saveDatabase();
-
-renderRunners();
-renderLiveScoring();
-
-};
-
-window.finishCompetition =
-async function(){
-
-if(!activeCompetition)
-return;
-
-activeCompetition.finished = true;
-
-activeCompetition.runners.forEach(r=>{
-
-r.liveActive = false;
-
-});
-
-await saveDatabase();
-
-await setDoc(
-doc(db,"rollart","live"),
-{
-
-competition:null,
-runner:null
-
-}
-);
-
-renderRunners();
-
-renderLiveScoring();
-
-};
-
-window.resetCompetition =
-function(){
-
-if(!confirm(
-"Alle Wertungen löschen?"
-)) return;
-
-if(!activeCompetition)
-return;
-
-activeCompetition.finished=false;
-
-activeCompetition.runners.forEach(r=>{
-
-r.confirmed=false;
-r.liveActive=false;
-
-r.place="";
-
-r.a1=0;
-r.a2=0;
-r.a3=0;
-
-r.b1=0;
-r.b2=0;
-r.b3=0;
-
-r.aScore=0;
-r.bScore=0;
-
-r.total=0;
-
-});
 
 saveDatabase();
 
@@ -1204,10 +951,6 @@ output.innerHTML += `
 -
 ${comp.to}
 
-<br><br>
-
-${comp.scoringSystem}
-
 <button onclick="openCompetition(${comp.id})">
 
 📂 Öffnen
@@ -1219,14 +962,6 @@ class="archiveButton"
 onclick="archiveCompetition(${comp.id})">
 
 🏁 Archivieren
-
-</button>
-
-<button
-class="deleteButton"
-onclick="deleteCompetition(${comp.id})">
-
-🗑 Löschen
 
 </button>
 
@@ -1245,7 +980,7 @@ document.getElementById(
 "archiveList"
 );
 
-output.innerHTML = "";
+output.innerHTML="";
 
 archivedCompetitions.forEach(comp=>{
 
@@ -1255,7 +990,7 @@ comp.runners.forEach(r=>{
 
 if(!categories[r.category]){
 
-categories[r.category] = [];
+categories[r.category]=[];
 
 }
 
@@ -1272,16 +1007,6 @@ output.innerHTML += `
 🏁 ${comp.name}
 
 </h3>
-
-📍 ${comp.place}
-
-<br>
-
-📅 ${comp.from}
--
-${comp.to}
-
-<br><br>
 
 ${Object.keys(categories).map(cat=>`
 
@@ -1318,10 +1043,6 @@ ${r.name}
 
 <br>
 
-${r.club || "-"}
-
-<br><br>
-
 ⭐ Technik:
 ${r.aScore || 0}
 
@@ -1341,33 +1062,7 @@ ${r.total || 0}
 
 </div>
 
-<br>
-
 `).join("")}
-
-<button
-class="archiveButton"
-onclick="openArchiveCompetition(${comp.id})">
-
-📂 Öffnen
-
-</button>
-
-<button
-class="archiveButton"
-onclick="exportResults(${comp.id})">
-
-📄 Export
-
-</button>
-
-<button
-class="deleteButton"
-onclick="deleteArchiveCompetition(${comp.id})">
-
-🗑 Archiv löschen
-
-</button>
 
 </div>
 
@@ -1418,10 +1113,6 @@ id="competitionTo">
 
 <option value="rollart">
 RollArt
-</option>
-
-<option value="simple">
-Vereinswertung
 </option>
 
 </select>
@@ -1486,22 +1177,6 @@ onclick="nextRunner()">
 
 </button>
 
-<button
-class="finishButton"
-onclick="finishCompetition()">
-
-🏁 Abschließen
-
-</button>
-
-<button
-class="resetButton"
-onclick="resetCompetition()">
-
-🧪 Reset
-
-</button>
-
 </div>
 
 </div>
@@ -1518,9 +1193,7 @@ onclick="resetCompetition()">
 
 <h2>📂 Archiv</h2>
 
-<div id="archiveList"
-class="grid">
-</div>
+<div id="archiveList"></div>
 
 </div>
 
