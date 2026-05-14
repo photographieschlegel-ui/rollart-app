@@ -484,24 +484,29 @@ output.innerHTML = "";
 
 archiveData.forEach(comp=>{
 
-const winners =
+const categories = {};
 
-[...comp.runners]
+comp.runners.forEach(r=>{
 
-.sort(
-(a,b)=>
-Number(a.place)-Number(b.place)
-)
+if(!categories[r.category]){
 
-.slice(0,3);
+categories[r.category] = [];
+
+}
+
+categories[r.category].push(r);
+
+});
 
 output.innerHTML += `
 
-<div class="archiveItem">
+<div class="card">
 
-<b>${comp.name}</b>
+<h3>
 
-<br><br>
+🏁 ${comp.name}
+
+</h3>
 
 📍 ${comp.place}
 
@@ -513,11 +518,63 @@ ${comp.to}
 
 <br><br>
 
-${winners.map(w=>`
+${Object.keys(categories).map(cat=>`
 
-${medal(w.place)}
-${w.name}
-(${w.total})
+<div class="categoryTitle">
+
+📂 ${cat}
+
+</div>
+
+<div class="runnerGrid">
+
+${categories[cat]
+
+.sort(
+(a,b)=>
+Number(a.place)-Number(b.place)
+)
+
+.map(r=>`
+
+<div class="resultItem">
+
+<div class="medal">
+
+${medal(r.place)}
+
+${r.place || "-"}
+
+</div>
+
+<br>
+
+${r.name}
+
+<br>
+
+${r.club || "-"}
+
+<br><br>
+
+⭐ Technik:
+${r.aScore || 0}
+
+<br>
+
+🎨 Kunst:
+${r.bScore || 0}
+
+<br>
+
+🏆 Gesamt:
+${r.total || 0}
+
+</div>
+
+`).join("")}
+
+</div>
 
 <br>
 
