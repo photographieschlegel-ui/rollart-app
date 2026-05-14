@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -271,13 +272,11 @@ if(sorted.length===0)
 return 0;
 
 return Number(
-
 (
 sorted.reduce((a,b)=>a+b,0)
 /
 sorted.length
 ).toFixed(2)
-
 );
 
 }
@@ -334,14 +333,6 @@ competitions.filter(
 c=>c.id!==id
 );
 
-await setDoc(
-doc(db,"rollart","live"),
-{
-competition:null,
-runner:null
-}
-);
-
 await saveDatabase();
 
 renderCompetitions();
@@ -395,6 +386,24 @@ renderArchive();
 
 };
 
+window.deleteArchiveCompetition =
+async function(id){
+
+if(!confirm(
+"Archiv wirklich löschen?"
+)) return;
+
+archivedCompetitions =
+archivedCompetitions.filter(
+c=>c.id!==id
+);
+
+await saveDatabase();
+
+renderArchive();
+
+};
+
 window.parseCompetitionText =
 function(){
 
@@ -410,7 +419,6 @@ const lines =
 text.split("\n");
 
 let currentCategory = null;
-
 let globalStart = 1;
 
 lines.forEach(line=>{
@@ -538,63 +546,14 @@ r=>r.liveActive===true
 
 if(!runner)return;
 
-runner.a1 =
+runner.aScore =
 validateScore(
 document.getElementById("live_a1").value
 );
 
-runner.a2 =
-validateScore(
-document.getElementById("live_a2").value
-);
-
-runner.a3 =
-validateScore(
-document.getElementById("live_a3").value
-);
-
-runner.b1 =
+runner.bScore =
 validateScore(
 document.getElementById("live_b1").value
-);
-
-runner.b2 =
-validateScore(
-document.getElementById("live_b2").value
-);
-
-runner.b3 =
-validateScore(
-document.getElementById("live_b3").value
-);
-
-runner.deduction =
-deductions[
-document.getElementById(
-"live_deduction"
-).value
-] || 0;
-
-runner.aScore =
-calculateAverage([
-runner.a1,
-runner.a2,
-runner.a3
-]);
-
-runner.bScore =
-calculateAverage([
-runner.b1,
-runner.b2,
-runner.b3
-]);
-
-runner.bScore =
-Number(
-(
-runner.bScore -
-runner.deduction
-).toFixed(2)
 );
 
 runner.total =
@@ -612,7 +571,6 @@ runner.categoryId
 saveDatabase();
 
 renderRunners();
-renderLiveScoring();
 
 };
 
@@ -629,10 +587,7 @@ r.liveActive=false;
 });
 
 const first =
-
-activeCompetition.runners
-
-.sort(
+activeCompetition.runners.sort(
 (a,b)=>
 Number(a.start)-Number(b.start)
 )[0];
@@ -658,9 +613,7 @@ return;
 
 const runners =
 
-activeCompetition.runners
-
-.sort(
+activeCompetition.runners.sort(
 (a,b)=>
 Number(a.start)-Number(b.start)
 );
@@ -711,8 +664,6 @@ r.liveActive = false;
 
 });
 
-await saveDatabase();
-
 await setDoc(
 doc(db,"rollart","live"),
 {
@@ -721,8 +672,9 @@ runner:null
 }
 );
 
+await saveDatabase();
+
 renderRunners();
-renderLiveScoring();
 
 };
 
@@ -730,7 +682,7 @@ window.resetCompetition =
 async function(){
 
 if(!confirm(
-"Alle Wertungen wirklich zurücksetzen?"
+"Alle Wertungen zurücksetzen?"
 )) return;
 
 if(!activeCompetition)
@@ -740,23 +692,14 @@ activeCompetition.finished = false;
 
 activeCompetition.runners.forEach(r=>{
 
-r.confirmed = false;
-r.liveActive = false;
+r.confirmed=false;
+r.liveActive=false;
 
-r.place = "";
+r.place="";
 
-r.a1 = 0;
-r.a2 = 0;
-r.a3 = 0;
-
-r.b1 = 0;
-r.b2 = 0;
-r.b3 = 0;
-
-r.aScore = 0;
-r.bScore = 0;
-
-r.total = 0;
+r.aScore=0;
+r.bScore=0;
+r.total=0;
 
 });
 
@@ -771,7 +714,6 @@ runner:null
 await saveDatabase();
 
 renderRunners();
-renderLiveScoring();
 
 };
 
@@ -784,7 +726,7 @@ document.getElementById(
 
 if(!activeCompetition){
 
-output.innerHTML =
+output.innerHTML=
 "Kein Wettbewerb";
 
 return;
@@ -799,7 +741,7 @@ r=>r.liveActive===true
 
 if(!runner){
 
-output.innerHTML =
+output.innerHTML=
 "🏁 Kein aktiver Läufer";
 
 return;
@@ -812,33 +754,13 @@ output.innerHTML = `
 
 <b>${runner.name}</b>
 
-<br><br>
-
-⭐ Technik
-
-<div class="scoreGrid">
-
-<input id="live_a1" placeholder="A1">
-<input id="live_a2" placeholder="A2">
-<input id="live_a3" placeholder="A3">
-
-</div>
-
-<br>
-
-🎨 Kunst
-
-<div class="scoreGrid">
-
-<input id="live_b1" placeholder="B1">
-<input id="live_b2" placeholder="B2">
-<input id="live_b3" placeholder="B3">
-
-</div>
+<input
+id="live_a1"
+placeholder="Technik">
 
 <input
-id="live_deduction"
-placeholder="Abzug">
+id="live_b1"
+placeholder="Kunst">
 
 <button onclick="saveLiveScore()">
 
@@ -907,10 +829,8 @@ return Number(a.start)-Number(b.start);
 .map(r=>`
 
 <div class="resultItem
-
 ${r.liveActive?"live":""}
 ${r.confirmed?"done":""}
-
 ">
 
 <div class="medal">
@@ -925,10 +845,6 @@ ${r.place || r.start}
 ${r.name}
 
 <br>
-
-${r.club || "-"}
-
-<br><br>
 
 ⭐ Technik:
 ${r.aScore || 0}
@@ -1003,6 +919,125 @@ class="deleteButton"
 onclick="deleteCompetition(${comp.id})">
 
 🗑 Löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+function renderArchive(){
+
+const output =
+document.getElementById(
+"archiveList"
+);
+
+if(!output) return;
+
+output.innerHTML="";
+
+archivedCompetitions.forEach(comp=>{
+
+const categories = {};
+
+comp.runners.forEach(r=>{
+
+if(!categories[r.category]){
+
+categories[r.category]=[];
+
+}
+
+categories[r.category].push(r);
+
+});
+
+output.innerHTML += `
+
+<div class="card">
+
+<h3>
+
+🏁 ${comp.name}
+
+</h3>
+
+📍 ${comp.place}
+
+<br>
+
+📅 ${comp.from}
+-
+${comp.to}
+
+<br><br>
+
+${Object.keys(categories).map(cat=>`
+
+<div class="categoryTitle">
+
+📂 ${cat}
+
+</div>
+
+<div class="runnerGrid">
+
+${categories[cat]
+
+.sort(
+(a,b)=>
+Number(a.place)-Number(b.place)
+)
+
+.map(r=>`
+
+<div class="resultItem">
+
+<div class="medal">
+
+${medal(r.place)}
+
+${r.place || "-"}
+
+</div>
+
+<br>
+
+${r.name}
+
+<br>
+
+⭐ Technik:
+${r.aScore || 0}
+
+<br>
+
+🎨 Kunst:
+${r.bScore || 0}
+
+<br>
+
+🏆 Gesamt:
+${r.total || 0}
+
+</div>
+
+`).join("")}
+
+</div>
+
+`).join("")}
+
+<button
+class="deleteButton"
+onclick="deleteArchiveCompetition(${comp.id})">
+
+🗑 Archiv löschen
 
 </button>
 
@@ -1137,6 +1172,17 @@ onclick="resetCompetition()">
 <h2>👥 Läufer</h2>
 
 <div id="runnerList"></div>
+
+</div>
+
+<div class="card">
+
+<h2>📂 Archiv</h2>
+
+<div
+id="archiveList"
+class="grid">
+</div>
 
 </div>
 
