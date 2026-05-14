@@ -1,3 +1,4 @@
+```html id="admin-phase1-finished"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -8,6 +9,7 @@
 <title>🏆 RollArt Admin</title>
 
 <link rel="manifest" href="./manifest.json">
+
 <meta name="theme-color" content="#2563eb">
 
 <style>
@@ -61,7 +63,8 @@ line-height:1.4;
 
 input,
 textarea,
-button{
+button,
+select{
 width:100%;
 padding:12px;
 margin-top:8px;
@@ -72,7 +75,8 @@ box-sizing:border-box;
 }
 
 input,
-textarea{
+textarea,
+select{
 background:#475569;
 color:white;
 }
@@ -92,8 +96,12 @@ background:#dc2626;
 background:#16a34a;
 }
 
+.finishButton{
+background:#ea580c;
+}
+
 .resetButton{
-background:#dc2626;
+background:#7c3aed;
 }
 
 .scoreGrid{
@@ -284,36 +292,27 @@ runners.find(
 r=>r.liveActive===true
 );
 
-if(!currentRunner){
-
-await saveLive({
-
-updated:Date.now(),
-runner:null,
-nextRunner:null,
-competition:activeCompetition
-
-});
-
-return;
-
-}
-
-const currentIndex =
-runners.findIndex(
-r=>r.id===currentRunner.id
-);
-
 await saveLive({
 
 updated:Date.now(),
 
 competition:activeCompetition,
 
-runner:currentRunner,
+runner:currentRunner || null,
 
 nextRunner:
-runners[currentIndex+1] || null
+currentRunner
+?
+
+runners[
+runners.findIndex(
+r=>r.id===currentRunner.id
+)+1
+] || null
+
+:
+
+null
 
 });
 
@@ -353,6 +352,8 @@ to:
 document.getElementById(
 "competitionTo"
 ).value,
+
+finished:false,
 
 categories:[],
 runners:[]
@@ -411,6 +412,30 @@ renderCompetitions();
 document.getElementById(
 "runnerList"
 ).innerHTML = "";
+
+};
+
+window.finishCompetition =
+function(){
+
+if(!activeCompetition)
+return;
+
+activeCompetition.finished = true;
+
+activeCompetition.runners.forEach(r=>{
+
+r.liveActive = false;
+
+});
+
+saveData();
+
+renderRunners();
+
+renderLiveInfo();
+
+renderLiveScoring();
 
 };
 
@@ -664,6 +689,8 @@ window.startCompetition = function(){
 if(!activeCompetition)
 return;
 
+activeCompetition.finished = false;
+
 const runners =
 
 activeCompetition.runners.sort(
@@ -675,7 +702,9 @@ if(runners.length===0)
 return;
 
 activeCompetition.runners.forEach(r=>{
+
 r.liveActive=false;
+
 });
 
 runners[0].liveActive = true;
@@ -721,6 +750,10 @@ if(nextRunner){
 
 nextRunner.liveActive = true;
 
+}else{
+
+activeCompetition.finished = true;
+
 }
 
 saveData();
@@ -735,8 +768,14 @@ renderRunners();
 
 window.resetCompetition = function(){
 
+if(!confirm(
+"Wirklich Testdaten löschen?"
+))return;
+
 if(!activeCompetition)
 return;
+
+activeCompetition.finished = false;
 
 activeCompetition.runners.forEach(
 runner=>{
@@ -783,6 +822,15 @@ if(!activeCompetition){
 
 output.innerHTML =
 "Kein Wettbewerb";
+
+return;
+
+}
+
+if(activeCompetition.finished){
+
+output.innerHTML =
+"🏁 Wettbewerb abgeschlossen";
 
 return;
 
@@ -864,6 +912,22 @@ return;
 
 }
 
+if(activeCompetition.finished){
+
+output.innerHTML =
+
+`
+<div class="liveRunner">
+
+🏁 Wettbewerb abgeschlossen
+
+</div>
+`;
+
+return;
+
+}
+
 const current =
 activeCompetition.runners.find(
 r=>r.liveActive===true
@@ -872,7 +936,7 @@ r=>r.liveActive===true
 if(!current){
 
 output.innerHTML =
-"🏁 Wettbewerb beendet";
+"🏁 Kein aktiver Läufer";
 
 return;
 
@@ -1050,6 +1114,10 @@ output.innerHTML += `
 
 📅 ${comp.from}
 
+<br><br>
+
+${comp.finished ? "🏁 Abgeschlossen" : "🟢 Aktiv"}
+
 <button onclick="openCompetition(${comp.id})">
 
 📂 Öffnen
@@ -1172,10 +1240,18 @@ onclick="nextRunner()">
 </button>
 
 <button
+class="finishButton"
+onclick="finishCompetition()">
+
+🏁 Wettbewerb abschließen
+
+</button>
+
+<button
 class="resetButton"
 onclick="resetCompetition()">
 
-🔄 Wettbewerb zurücksetzen
+🧪 Test zurücksetzen
 
 </button>
 
@@ -1195,3 +1271,4 @@ onclick="resetCompetition()">
 
 </body>
 </html>
+```
