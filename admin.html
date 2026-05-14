@@ -1,6 +1,599 @@
-<!-- NUR DIESE FUNKTION IN DEINER admin.html ERSETZEN -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
 
-<script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>🏆 RollArt Admin</title>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#2563eb">
+
+<style>
+
+body{
+margin:0;
+padding:0;
+font-family:Arial,sans-serif;
+background:#0f172a;
+color:white;
+}
+
+.app{
+max-width:1600px;
+margin:auto;
+padding:12px;
+}
+
+.card{
+background:#1e293b;
+padding:14px;
+border-radius:18px;
+margin-bottom:14px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:
+repeat(auto-fit,minmax(220px,1fr));
+gap:10px;
+}
+
+input,
+button,
+select,
+textarea{
+width:100%;
+padding:12px;
+margin-top:8px;
+border:none;
+border-radius:12px;
+font-size:14px;
+box-sizing:border-box;
+}
+
+input,
+textarea,
+select{
+background:#475569;
+color:white;
+}
+
+button{
+background:#2563eb;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.nextButton{
+background:#16a34a;
+}
+
+.finishButton{
+background:#ea580c;
+}
+
+.resetButton{
+background:#7c3aed;
+}
+
+.deleteButton{
+background:#dc2626;
+}
+
+.resultItem{
+background:#334155;
+padding:8px;
+border-radius:10px;
+font-size:12px;
+line-height:1.4;
+}
+
+.resultItem.live{
+background:#16a34a;
+}
+
+.resultItem.done{
+opacity:0.7;
+}
+
+.runnerGrid{
+display:grid;
+grid-template-columns:
+repeat(auto-fit,minmax(170px,1fr));
+gap:8px;
+}
+
+.categoryTitle{
+background:#1e40af;
+padding:10px;
+border-radius:12px;
+margin-bottom:8px;
+font-weight:bold;
+line-height:1.5;
+}
+
+.scoreGrid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:8px;
+margin-top:8px;
+}
+
+.medal{
+font-size:18px;
+font-weight:bold;
+}
+
+</style>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+doc,
+setDoc,
+getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+authDomain: "rollart-score-5319a.firebaseapp.com",
+projectId: "rollart-score-5319a",
+storageBucket: "rollart-score-5319a.firebasestorage.app",
+messagingSenderId: "658963624980",
+appId: "1:658963624980:web:2e4d153f5df087c4f42301"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let competitions = [];
+let activeCompetition = null;
+
+const deductions = {
+"1":0.3,
+"2":0.2,
+"3":0.3,
+"4":0.2,
+"5":0.3,
+"6":0.3,
+"7":0.3,
+"8":0.3,
+"9":0.5,
+"10":0.5
+};
+
+const knownClubs = [
+
+"TV Walsum-Aldenrade 07",
+"TG Westhofen",
+"RRD Wuppertal",
+"Wattenscheider RSC",
+"TV Datteln 09",
+"RESG Walsum",
+"1. RC Recklinghausen",
+"SSG Ronsdorf"
+
+];
+
+async function saveOnline(data){
+
+await setDoc(
+doc(db,"rollart","main"),
+{
+updated:Date.now(),
+competitions:data
+}
+);
+
+}
+
+async function loadOnline(){
+
+const snap =
+await getDoc(
+doc(db,"rollart","main")
+);
+
+if(snap.exists()){
+
+return snap.data().competitions || [];
+
+}
+
+return [];
+
+}
+
+async function saveLive(data){
+
+await setDoc(
+doc(db,"rollart","live"),
+data
+);
+
+}
+
+async function saveData(){
+
+await saveOnline(competitions);
+
+await updateLive();
+
+}
+
+async function updateLive(){
+
+if(!activeCompetition)
+return;
+
+const runners =
+
+activeCompetition.runners.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+const currentRunner =
+runners.find(
+r=>r.liveActive===true
+);
+
+await saveLive({
+
+competition:activeCompetition,
+
+runner:currentRunner || null,
+
+nextRunner:
+currentRunner
+?
+
+runners[
+runners.findIndex(
+r=>r.id===currentRunner.id
+)+1
+] || null
+
+:
+
+null
+
+});
+
+}
+
+async function loadData(){
+
+competitions =
+await loadOnline();
+
+renderCompetitions();
+
+}
+
+function medal(place){
+
+if(place==1)
+return "🥇";
+
+if(place==2)
+return "🥈";
+
+if(place==3)
+return "🥉";
+
+return "🏆";
+
+}
+
+function validateScore(value){
+
+let num =
+parseFloat(value);
+
+if(isNaN(num))
+return 0;
+
+if(num < 0.1)
+num = 0.1;
+
+if(num > 10)
+num = 10;
+
+return Number(
+num.toFixed(1)
+);
+
+}
+
+function calculateAverage(values){
+
+const sorted =
+values
+.filter(v=>!isNaN(v))
+.sort((a,b)=>a-b);
+
+if(sorted.length===0)
+return 0;
+
+if(sorted.length >= 3){
+
+sorted.shift();
+sorted.pop();
+
+}
+
+const avg =
+sorted.reduce((a,b)=>a+b,0)
+/
+sorted.length;
+
+return Number(
+avg.toFixed(2)
+);
+
+}
+
+window.saveCompetition = function(){
+
+competitions.push({
+
+id:Date.now(),
+
+name:
+document.getElementById(
+"competitionName"
+).value,
+
+place:
+document.getElementById(
+"competitionPlace"
+).value,
+
+from:
+document.getElementById(
+"competitionFrom"
+).value,
+
+to:
+document.getElementById(
+"competitionTo"
+).value,
+
+finished:false,
+
+scoringSystem:
+document.getElementById(
+"competitionScoring"
+).value,
+
+categories:[],
+runners:[]
+
+});
+
+saveData();
+
+renderCompetitions();
+
+};
+
+window.openCompetition = function(id){
+
+activeCompetition =
+competitions.find(
+c=>c.id===id
+);
+
+renderRunners();
+
+renderLiveScoring();
+
+};
+
+window.deleteCompetition = async function(id){
+
+if(!confirm(
+"Wettbewerb wirklich löschen?"
+)) return;
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+if(
+activeCompetition &&
+activeCompetition.id===id
+){
+
+activeCompetition = null;
+
+await saveLive({
+
+competition:null,
+runner:null,
+nextRunner:null
+
+});
+
+}
+
+saveData();
+
+renderCompetitions();
+
+document.getElementById(
+"runnerList"
+).innerHTML = "";
+
+document.getElementById(
+"liveScoring"
+).innerHTML = "";
+
+};
+
+window.parseCompetitionText = function(){
+
+if(!activeCompetition)return;
+
+const text =
+document.getElementById(
+"competitionText"
+).value;
+
+const lines =
+text.split("\n");
+
+let currentCategory = null;
+
+lines.forEach(line=>{
+
+line = line.trim();
+
+if(!line)return;
+
+const categoryMatch =
+line.match(
+/^\d{2}:\d{2}\s+\d{2}:\d{2}/
+);
+
+if(categoryMatch){
+
+const parts =
+line.split(/\s+/);
+
+const categoryName =
+parts.slice(6).join(" ");
+
+currentCategory = {
+
+id:Date.now()+Math.random(),
+
+begin: parts[0],
+end: parts[1],
+
+duration: parts[2],
+warmup: parts[3],
+
+groups: parts[4],
+participants: parts[5],
+
+name: categoryName
+
+};
+
+activeCompetition.categories.push(
+currentCategory
+);
+
+return;
+
+}
+
+const runnerMatch =
+line.match(
+/^(\d+)\s+(.+)$/
+);
+
+if(runnerMatch && currentCategory){
+
+let rest = runnerMatch[2];
+
+let club = "-";
+let name = rest;
+
+knownClubs.forEach(c=>{
+
+if(rest.endsWith(c)){
+
+club = c;
+
+name =
+rest.replace(c,"").trim();
+
+}
+
+});
+
+activeCompetition.runners.push({
+
+id:Date.now()+Math.random(),
+
+start:runnerMatch[1],
+
+name:name,
+club:club,
+
+category:currentCategory.name,
+categoryId:currentCategory.id,
+
+a1:0,
+a2:0,
+a3:0,
+
+b1:0,
+b2:0,
+b3:0,
+
+aScore:0,
+bScore:0,
+
+deduction:0,
+total:0,
+
+place:"",
+confirmed:false,
+liveActive:false
+
+});
+
+}
+
+});
+
+document.getElementById(
+"competitionText"
+).value = "";
+
+saveData();
+
+renderRunners();
+
+};
+
+function updateRanking(categoryId){
+
+const ranking =
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===categoryId
+)
+
+.sort(
+(a,b)=>
+Number(b.total)-Number(a.total)
+);
+
+ranking.forEach((runner,index)=>{
+
+runner.place = index+1;
+
+});
+
+}
 
 window.saveLiveScore = function(){
 
@@ -125,4 +718,573 @@ behavior: "instant"
 
 };
 
+window.startCompetition = function(){
+
+if(!activeCompetition)
+return;
+
+const runners =
+
+activeCompetition.runners.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+if(runners.length===0)
+return;
+
+activeCompetition.runners.forEach(r=>{
+
+r.liveActive=false;
+
+});
+
+runners[0].liveActive = true;
+
+saveData();
+
+renderRunners();
+
+renderLiveScoring();
+
+};
+
+window.nextRunner = function(){
+
+if(!activeCompetition)
+return;
+
+const runners =
+activeCompetition.runners.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+let currentRunner =
+runners.find(
+r=>r.liveActive===true
+);
+
+if(!currentRunner)
+return;
+
+currentRunner.confirmed = true;
+currentRunner.liveActive = false;
+
+const nextRunner =
+runners.find(
+r=>!r.confirmed
+);
+
+if(nextRunner){
+
+nextRunner.liveActive = true;
+
+}else{
+
+activeCompetition.finished = true;
+
+}
+
+saveData();
+
+renderRunners();
+
+renderLiveScoring();
+
+};
+
+window.finishCompetition =
+function(){
+
+if(!activeCompetition)
+return;
+
+activeCompetition.finished = true;
+
+activeCompetition.runners.forEach(r=>{
+
+r.liveActive = false;
+
+});
+
+saveData();
+
+renderRunners();
+
+renderLiveScoring();
+
+};
+
+window.resetCompetition = function(){
+
+if(!confirm(
+"Alle Testdaten wirklich löschen?"
+)) return;
+
+if(!activeCompetition)
+return;
+
+activeCompetition.finished = false;
+
+activeCompetition.runners.forEach(r=>{
+
+r.confirmed = false;
+r.liveActive = false;
+
+r.place = "";
+
+r.a1 = 0;
+r.a2 = 0;
+r.a3 = 0;
+
+r.b1 = 0;
+r.b2 = 0;
+r.b3 = 0;
+
+r.aScore = 0;
+r.bScore = 0;
+
+r.deduction = 0;
+
+r.total = 0;
+
+});
+
+saveData();
+
+renderRunners();
+
+renderLiveScoring();
+
+};
+
+function renderLiveScoring(){
+
+const output =
+document.getElementById(
+"liveScoring"
+);
+
+if(!activeCompetition){
+
+output.innerHTML =
+"Kein Wettbewerb";
+
+return;
+
+}
+
+const runner =
+activeCompetition.runners.find(
+r=>r.liveActive===true
+);
+
+if(!runner){
+
+output.innerHTML =
+"🏁 Kein aktiver Läufer";
+
+return;
+
+}
+
+if(activeCompetition.scoringSystem==="rollart"){
+
+output.innerHTML = `
+
+<div class="card">
+
+<b>${runner.name}</b>
+
+<br><br>
+
+⭐ Technik
+(0.1 - 10.0)
+
+<div class="scoreGrid">
+
+<input id="live_a1" placeholder="A1">
+<input id="live_a2" placeholder="A2">
+<input id="live_a3" placeholder="A3">
+
+</div>
+
+<br>
+
+🎨 Kunst
+(0.1 - 10.0)
+
+<div class="scoreGrid">
+
+<input id="live_b1" placeholder="B1">
+<input id="live_b2" placeholder="B2">
+<input id="live_b3" placeholder="B3">
+
+</div>
+
+<input
+id="live_deduction"
+placeholder="Abzugsschlüssel">
+
+<button onclick="saveLiveScore()">
+
+💾 RollArt Wertung speichern
+
+</button>
+
+</div>
+
+`;
+
+}else{
+
+output.innerHTML = `
+
+<div class="card">
+
+<b>${runner.name}</b>
+
+<input
+id="live_total"
+placeholder="Gesamtpunkte">
+
+<button onclick="saveLiveScore()">
+
+💾 Wertung speichern
+
+</button>
+
+</div>
+
+`;
+
+}
+
+}
+
+function renderRunners(){
+
+const output =
+document.getElementById(
+"runnerList"
+);
+
+output.innerHTML = "";
+
+if(!activeCompetition)
+return;
+
+let sorted =
+[...activeCompetition.runners];
+
+if(activeCompetition.finished){
+
+sorted.sort(
+(a,b)=>
+Number(a.place)-Number(b.place)
+);
+
+}else{
+
+sorted.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+}
+
+const categories = {};
+
+const categoryInfos = {};
+
+(activeCompetition.categories || [])
+.forEach(cat=>{
+
+categoryInfos[cat.name] = cat;
+
+});
+
+sorted.forEach(runner=>{
+
+if(!categories[runner.category]){
+
+categories[runner.category] = [];
+
+}
+
+categories[runner.category].push(
+runner
+);
+
+categories[runner.category].info =
+categoryInfos[runner.category];
+
+});
+
+Object.keys(categories).forEach(category=>{
+
+output.innerHTML += `
+
+<div class="categoryTitle">
+
+📂 ${category}
+
+<br>
+
+🕒 ${categories[category].info?.begin || "--:--"}
+
+-
+
+${categories[category].info?.end || "--:--"}
+
+<br>
+
+👥 ${categories[category].info?.participants || "-"}
+
+ Teilnehmer
+
+</div>
+
+<div class="runnerGrid">
+
+${categories[category].map(runner=>`
+
+<div class="resultItem
+
+${runner.liveActive ? "live" : ""}
+
+${runner.confirmed ? "done" : ""}
+
+">
+
+<div class="medal">
+
+${medal(runner.place)}
+
+${runner.place || runner.start}
+
+</div>
+
+<br>
+
+${runner.name}
+
+<br>
+
+${runner.club || "-"}
+
+<br><br>
+
+⭐ Technik:
+${runner.aScore || 0}
+
+<br>
+
+🎨 Kunst:
+${runner.bScore || 0}
+
+<br>
+
+🏆 Gesamt:
+${runner.total || 0}
+
+</div>
+
+`).join("")}
+
+</div>
+
+<br>
+
+`;
+
+});
+
+}
+
+function renderCompetitions(){
+
+const output =
+document.getElementById(
+"competitionList"
+);
+
+output.innerHTML = "";
+
+competitions.forEach(comp=>{
+
+output.innerHTML += `
+
+<div class="resultItem">
+
+<b>${comp.name}</b>
+
+<br><br>
+
+${comp.scoringSystem}
+
+<button onclick="openCompetition(${comp.id})">
+
+📂 Öffnen
+
+</button>
+
+<button
+class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
+
+🗑 Löschen
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+window.onload =
+async function(){
+
+await loadData();
+
+};
+
 </script>
+
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="card">
+
+<h2>🏆 Wettbewerb</h2>
+
+<input
+type="text"
+id="competitionName"
+placeholder="Wettbewerb">
+
+<input
+type="text"
+id="competitionPlace"
+placeholder="Ort">
+
+<input
+type="date"
+id="competitionFrom">
+
+<input
+type="date"
+id="competitionTo">
+
+<select id="competitionScoring">
+
+<option value="rollart">
+RollArt
+</option>
+
+<option value="simple">
+Vereinswertung
+</option>
+
+</select>
+
+<button onclick="saveCompetition()">
+
+💾 Wettbewerb speichern
+
+</button>
+
+</div>
+
+<div class="card">
+
+<h2>📋 Wettbewerbe</h2>
+
+<div
+id="competitionList"
+class="grid">
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>📥 PDF Import</h2>
+
+<textarea
+id="competitionText"
+rows="12"
+placeholder="PDF Text hier einfügen">
+</textarea>
+
+<button onclick="parseCompetitionText()">
+
+📥 Wettbewerb importieren
+
+</button>
+
+</div>
+
+<div class="card">
+
+<h2>🔴 Live Steuerung</h2>
+
+<div id="liveScoring"></div>
+
+<div class="grid">
+
+<button
+class="nextButton"
+onclick="startCompetition()">
+
+▶ Start
+
+</button>
+
+<button
+class="nextButton"
+onclick="nextRunner()">
+
+➡ Weiter
+
+</button>
+
+<button
+class="finishButton"
+onclick="finishCompetition()">
+
+🏁 Abschließen
+
+</button>
+
+<button
+class="resetButton"
+onclick="resetCompetition()">
+
+🧪 Reset
+
+</button>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>👥 Läufer</h2>
+
+<div id="runnerList"></div>
+
+</div>
+
+</div>
+
+</body>
+</html>
