@@ -8,7 +8,6 @@
 <title>🏆 RollArt Admin</title>
 
 <link rel="manifest" href="./manifest.json">
-
 <meta name="theme-color" content="#2563eb">
 
 <style>
@@ -78,6 +77,10 @@ background:#ea580c;
 
 .resetButton{
 background:#7c3aed;
+}
+
+.deleteButton{
+background:#dc2626;
 }
 
 .resultItem{
@@ -327,6 +330,48 @@ c=>c.id===id
 renderRunners();
 
 renderLiveScoring();
+
+};
+
+window.deleteCompetition = async function(id){
+
+if(!confirm(
+"Wettbewerb wirklich löschen?"
+)) return;
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+if(
+activeCompetition &&
+activeCompetition.id===id
+){
+
+activeCompetition = null;
+
+await saveLive({
+
+competition:null,
+runner:null,
+nextRunner:null
+
+});
+
+}
+
+saveData();
+
+renderCompetitions();
+
+document.getElementById(
+"runnerList"
+).innerHTML = "";
+
+document.getElementById(
+"liveScoring"
+).innerHTML = "";
 
 };
 
@@ -790,9 +835,7 @@ output.innerHTML = `
 <div class="scoreGrid">
 
 <input id="live_a1" placeholder="A1">
-
 <input id="live_a2" placeholder="A2">
-
 <input id="live_a3" placeholder="A3">
 
 </div>
@@ -804,9 +847,7 @@ output.innerHTML = `
 <div class="scoreGrid">
 
 <input id="live_b1" placeholder="B1">
-
 <input id="live_b2" placeholder="B2">
-
 <input id="live_b3" placeholder="B3">
 
 </div>
@@ -930,7 +971,7 @@ ${categories[category].info?.end || "--:--"}
 
 👥 ${categories[category].info?.participants || "-"}
 
-Teilnehmer
+ Teilnehmer
 
 </div>
 
@@ -1010,6 +1051,14 @@ ${comp.scoringSystem}
 <button onclick="openCompetition(${comp.id})">
 
 📂 Öffnen
+
+</button>
+
+<button
+class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
+
+🗑 Löschen
 
 </button>
 
