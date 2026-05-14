@@ -122,6 +122,11 @@ gap:8px;
 margin-top:8px;
 }
 
+.medal{
+font-size:18px;
+font-weight:bold;
+}
+
 </style>
 
 <script type="module">
@@ -273,6 +278,69 @@ competitions =
 await loadOnline();
 
 renderCompetitions();
+
+}
+
+function medal(place){
+
+if(place==1)
+return "🥇";
+
+if(place==2)
+return "🥈";
+
+if(place==3)
+return "🥉";
+
+return "🏆";
+
+}
+
+function validateScore(value){
+
+let num =
+parseFloat(value);
+
+if(isNaN(num))
+return 0;
+
+if(num < 0.1)
+num = 0.1;
+
+if(num > 10)
+num = 10;
+
+return Number(
+num.toFixed(1)
+);
+
+}
+
+function calculateAverage(values){
+
+const sorted =
+values
+.filter(v=>!isNaN(v))
+.sort((a,b)=>a-b);
+
+if(sorted.length===0)
+return 0;
+
+if(sorted.length >= 3){
+
+sorted.shift();
+sorted.pop();
+
+}
+
+const avg =
+sorted.reduce((a,b)=>a+b,0)
+/
+sorted.length;
+
+return Number(
+avg.toFixed(2)
+);
 
 }
 
@@ -504,27 +572,6 @@ renderRunners();
 
 };
 
-function average(values){
-
-const valid =
-values.filter(v=>!isNaN(v));
-
-if(valid.length===0)
-return 0;
-
-return Number(
-
-(
-valid.reduce((a,b)=>a+b,0)
-/
-valid.length
-
-).toFixed(2)
-
-);
-
-}
-
 function updateRanking(categoryId){
 
 const ranking =
@@ -563,34 +610,46 @@ activeCompetition.scoringSystem;
 if(scoringSystem==="rollart"){
 
 runner.a1 =
-parseFloat(
-document.getElementById("live_a1").value
-) || 0;
+validateScore(
+document.getElementById(
+"live_a1"
+).value
+);
 
 runner.a2 =
-parseFloat(
-document.getElementById("live_a2").value
-) || 0;
+validateScore(
+document.getElementById(
+"live_a2"
+).value
+);
 
 runner.a3 =
-parseFloat(
-document.getElementById("live_a3").value
-) || 0;
+validateScore(
+document.getElementById(
+"live_a3"
+).value
+);
 
 runner.b1 =
-parseFloat(
-document.getElementById("live_b1").value
-) || 0;
+validateScore(
+document.getElementById(
+"live_b1"
+).value
+);
 
 runner.b2 =
-parseFloat(
-document.getElementById("live_b2").value
-) || 0;
+validateScore(
+document.getElementById(
+"live_b2"
+).value
+);
 
 runner.b3 =
-parseFloat(
-document.getElementById("live_b3").value
-) || 0;
+validateScore(
+document.getElementById(
+"live_b3"
+).value
+);
 
 runner.deduction =
 deductions[
@@ -599,13 +658,15 @@ document.getElementById(
 ).value
 ] || 0;
 
-runner.aScore = average([
+runner.aScore =
+calculateAverage([
 runner.a1,
 runner.a2,
 runner.a3
 ]);
 
-runner.bScore = average([
+runner.bScore =
+calculateAverage([
 runner.b1,
 runner.b2,
 runner.b3
@@ -613,8 +674,10 @@ runner.b3
 
 runner.bScore =
 Number(
+(
 runner.bScore -
 runner.deduction
+).toFixed(2)
 );
 
 runner.total =
@@ -628,11 +691,11 @@ runner.bScore
 }else{
 
 runner.total =
-parseFloat(
+validateScore(
 document.getElementById(
 "live_total"
 ).value
-) || 0;
+);
 
 }
 
@@ -760,7 +823,6 @@ activeCompetition.finished = false;
 activeCompetition.runners.forEach(r=>{
 
 r.confirmed = false;
-
 r.liveActive = false;
 
 r.place = "";
@@ -831,11 +893,14 @@ output.innerHTML = `
 <br><br>
 
 ⭐ Technik
+(0.1 - 10.0)
 
 <div class="scoreGrid">
 
 <input id="live_a1" placeholder="A1">
+
 <input id="live_a2" placeholder="A2">
+
 <input id="live_a3" placeholder="A3">
 
 </div>
@@ -843,18 +908,21 @@ output.innerHTML = `
 <br>
 
 🎨 Kunst
+(0.1 - 10.0)
 
 <div class="scoreGrid">
 
 <input id="live_b1" placeholder="B1">
+
 <input id="live_b2" placeholder="B2">
+
 <input id="live_b3" placeholder="B3">
 
 </div>
 
 <input
 id="live_deduction"
-placeholder="Abzug">
+placeholder="Abzugsschlüssel">
 
 <button onclick="saveLiveScore()">
 
@@ -987,21 +1055,15 @@ ${runner.confirmed ? "done" : ""}
 
 ">
 
-<b>
+<div class="medal">
 
-${runner.place
-?
+${medal(runner.place)}
 
-"🏆 "+runner.place
-:
+${runner.place || runner.start}
 
-runner.start
+</div>
 
-}
-
-</b>
-
-<br><br>
+<br>
 
 ${runner.name}
 
@@ -1011,7 +1073,18 @@ ${runner.club || "-"}
 
 <br><br>
 
-⭐ ${runner.total || 0}
+⭐ Technik:
+${runner.aScore || 0}
+
+<br>
+
+🎨 Kunst:
+${runner.bScore || 0}
+
+<br>
+
+🏆 Gesamt:
+${runner.total || 0}
 
 </div>
 
