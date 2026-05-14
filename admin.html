@@ -3,11 +3,13 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>🏆 RollArt Admin</title>
 
 <link rel="manifest" href="./manifest.json">
+
 <meta name="theme-color" content="#2563eb">
 
 <style>
@@ -38,6 +40,13 @@ display:grid;
 grid-template-columns:
 repeat(auto-fit,minmax(220px,1fr));
 gap:10px;
+}
+
+.runnerGrid{
+display:grid;
+grid-template-columns:
+repeat(auto-fit,minmax(170px,1fr));
+gap:8px;
 }
 
 input,
@@ -92,7 +101,7 @@ background:#334155;
 padding:8px;
 border-radius:10px;
 font-size:12px;
-line-height:1.4;
+line-height:1.5;
 }
 
 .resultItem.live{
@@ -103,15 +112,8 @@ background:#16a34a;
 opacity:0.7;
 }
 
-.runnerGrid{
-display:grid;
-grid-template-columns:
-repeat(auto-fit,minmax(170px,1fr));
-gap:8px;
-}
-
 .categoryTitle{
-background:#1e40af;
+background:#1d4ed8;
 padding:10px;
 border-radius:12px;
 margin-bottom:8px;
@@ -121,7 +123,8 @@ line-height:1.5;
 
 .scoreGrid{
 display:grid;
-grid-template-columns:repeat(3,1fr);
+grid-template-columns:
+repeat(3,1fr);
 gap:8px;
 margin-top:8px;
 }
@@ -148,21 +151,50 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 
-apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-authDomain: "rollart-score-5319a.firebaseapp.com",
-projectId: "rollart-score-5319a",
-storageBucket: "rollart-score-5319a.firebasestorage.app",
-messagingSenderId: "658963624980",
-appId: "1:658963624980:web:2e4d153f5df087c4f42301"
+apiKey:
+"AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+
+authDomain:
+"rollart-score-5319a.firebaseapp.com",
+
+projectId:
+"rollart-score-5319a",
+
+storageBucket:
+"rollart-score-5319a.firebasestorage.app",
+
+messagingSenderId:
+"658963624980",
+
+appId:
+"1:658963624980:web:2e4d153f5df087c4f42301"
 
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
 
 let competitions = [];
 let archivedCompetitions = [];
 let activeCompetition = null;
+
+const deductions = {
+
+"1":0.3,
+"2":0.2,
+"3":0.3,
+"4":0.2,
+"5":0.3,
+"6":0.3,
+"7":0.3,
+"8":0.3,
+"9":0.5,
+"10":0.5
+
+};
 
 async function saveDatabase(){
 
@@ -173,6 +205,8 @@ competitions,
 archivedCompetitions
 }
 );
+
+await updateLive();
 
 }
 
@@ -198,7 +232,97 @@ renderArchive();
 
 }
 
-window.saveCompetition = async function(){
+async function updateLive(){
+
+if(!activeCompetition)
+return;
+
+const currentRunner =
+
+activeCompetition.runners.find(
+r=>r.liveActive===true
+);
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+
+competition:activeCompetition,
+
+runner:currentRunner || null
+
+}
+
+);
+
+}
+
+function medal(place){
+
+if(place==1)
+return "🥇";
+
+if(place==2)
+return "🥈";
+
+if(place==3)
+return "🥉";
+
+return "🏆";
+
+}
+
+function validateScore(value){
+
+let num =
+parseFloat(value);
+
+if(isNaN(num))
+return 0;
+
+if(num<0.1)
+num=0.1;
+
+if(num>10)
+num=10;
+
+return Number(
+num.toFixed(1)
+);
+
+}
+
+function calculateAverage(values){
+
+const sorted =
+values
+.filter(v=>!isNaN(v))
+.sort((a,b)=>a-b);
+
+if(sorted.length>=3){
+
+sorted.shift();
+sorted.pop();
+
+}
+
+if(sorted.length===0)
+return 0;
+
+return Number(
+
+(
+sorted.reduce((a,b)=>a+b,0)
+/
+sorted.length
+).toFixed(2)
+
+);
+
+}
+
+window.saveCompetition =
+async function(){
 
 competitions.push({
 
@@ -214,12 +338,22 @@ document.getElementById(
 "competitionPlace"
 ).value,
 
-date:
+from:
 document.getElementById(
-"competitionDate"
+"competitionFrom"
+).value,
+
+to:
+document.getElementById(
+"competitionTo"
 ).value,
 
 finished:false,
+
+scoringSystem:
+document.getElementById(
+"competitionScoring"
+).value,
 
 categories:[],
 runners:[]
@@ -232,7 +366,8 @@ renderCompetitions();
 
 };
 
-window.openCompetition = function(id){
+window.openCompetition =
+function(id){
 
 activeCompetition =
 competitions.find(
@@ -240,6 +375,7 @@ c=>c.id===id
 );
 
 renderRunners();
+renderLiveScoring();
 
 };
 
@@ -283,12 +419,12 @@ c=>c.id!==id
 await saveDatabase();
 
 renderCompetitions();
-
 renderArchive();
 
 };
 
-window.exportPDF = function(id){
+window.exportResults =
+function(id){
 
 const comp =
 archivedCompetitions.find(
@@ -299,9 +435,15 @@ if(!comp)return;
 
 let content = "";
 
-content += comp.name + "\n";
-content += comp.place + "\n";
-content += comp.date + "\n\n";
+content +=
+comp.name + "\n";
+
+content +=
+comp.place + "\n";
+
+content +=
+comp.from + " - " +
+comp.to + "\n\n";
 
 const categories = {};
 
@@ -309,7 +451,7 @@ comp.runners.forEach(r=>{
 
 if(!categories[r.category]){
 
-categories[r.category] = [];
+categories[r.category]=[];
 
 }
 
@@ -317,18 +459,18 @@ categories[r.category].push(r);
 
 });
 
-Object.keys(categories).forEach(category=>{
+Object.keys(categories).forEach(cat=>{
 
 content +=
 "====================\n";
 
 content +=
-category + "\n";
+cat + "\n";
 
 content +=
 "====================\n\n";
 
-categories[category]
+categories[cat]
 
 .sort(
 (a,b)=>
@@ -348,8 +490,7 @@ r.club + " ";
 
 content +=
 "Gesamt: " +
-r.total +
-"\n";
+r.total + "\n";
 
 });
 
@@ -376,9 +517,11 @@ link.click();
 
 };
 
-window.parseCompetitionText = function(){
+window.parseCompetitionText =
+function(){
 
-if(!activeCompetition)return;
+if(!activeCompetition)
+return;
 
 const text =
 document.getElementById(
@@ -410,11 +553,11 @@ currentCategory = {
 
 id:Date.now()+Math.random(),
 
-name:
-parts.slice(6).join(" "),
-
 begin:parts[0],
-end:parts[1]
+end:parts[1],
+
+name:
+parts.slice(6).join(" ")
 
 };
 
@@ -449,12 +592,25 @@ currentCategory.name,
 categoryId:
 currentCategory.id,
 
+a1:0,
+a2:0,
+a3:0,
+
+b1:0,
+b2:0,
+b3:0,
+
 aScore:0,
 bScore:0,
+
+deduction:0,
+
 total:0,
 
 place:"",
+
 confirmed:false,
+
 liveActive:false
 
 });
@@ -465,13 +621,378 @@ liveActive:false
 
 document.getElementById(
 "competitionText"
-).value = "";
+).value="";
 
 saveDatabase();
 
 renderRunners();
 
 };
+
+function updateRanking(categoryId){
+
+const ranking =
+
+activeCompetition.runners
+
+.filter(
+r=>r.categoryId===categoryId
+)
+
+.sort(
+(a,b)=>
+Number(b.total)-Number(a.total)
+);
+
+ranking.forEach((r,i)=>{
+
+r.place = i+1;
+
+});
+
+}
+
+window.saveLiveScore =
+function(){
+
+const scrollPos =
+window.scrollY;
+
+const runner =
+
+activeCompetition.runners.find(
+r=>r.liveActive===true
+);
+
+if(!runner)return;
+
+if(
+activeCompetition.scoringSystem
+==="rollart"
+){
+
+runner.a1 =
+validateScore(
+document.getElementById(
+"live_a1"
+).value
+);
+
+runner.a2 =
+validateScore(
+document.getElementById(
+"live_a2"
+).value
+);
+
+runner.a3 =
+validateScore(
+document.getElementById(
+"live_a3"
+).value
+);
+
+runner.b1 =
+validateScore(
+document.getElementById(
+"live_b1"
+).value
+);
+
+runner.b2 =
+validateScore(
+document.getElementById(
+"live_b2"
+).value
+);
+
+runner.b3 =
+validateScore(
+document.getElementById(
+"live_b3"
+).value
+);
+
+runner.deduction =
+deductions[
+document.getElementById(
+"live_deduction"
+).value
+] || 0;
+
+runner.aScore =
+calculateAverage([
+runner.a1,
+runner.a2,
+runner.a3
+]);
+
+runner.bScore =
+calculateAverage([
+runner.b1,
+runner.b2,
+runner.b3
+]);
+
+runner.bScore =
+Number(
+(
+runner.bScore -
+runner.deduction
+).toFixed(2)
+);
+
+runner.total =
+Number(
+(
+runner.aScore +
+runner.bScore
+).toFixed(2)
+);
+
+}
+
+updateRanking(
+runner.categoryId
+);
+
+saveDatabase();
+
+renderRunners();
+
+renderLiveScoring();
+
+window.scrollTo({
+top:scrollPos,
+behavior:"instant"
+});
+
+};
+
+window.startCompetition =
+function(){
+
+if(!activeCompetition)
+return;
+
+activeCompetition.runners.forEach(r=>{
+
+r.liveActive=false;
+
+});
+
+const first =
+activeCompetition.runners.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+)[0];
+
+if(first){
+
+first.liveActive=true;
+
+}
+
+saveDatabase();
+
+renderRunners();
+renderLiveScoring();
+
+};
+
+window.nextRunner =
+function(){
+
+if(!activeCompetition)
+return;
+
+const runners =
+
+activeCompetition.runners.sort(
+(a,b)=>
+Number(a.start)-Number(b.start)
+);
+
+const current =
+runners.find(
+r=>r.liveActive===true
+);
+
+if(!current)return;
+
+current.confirmed=true;
+current.liveActive=false;
+
+const next =
+runners.find(
+r=>!r.confirmed
+);
+
+if(next){
+
+next.liveActive=true;
+
+}else{
+
+activeCompetition.finished=true;
+
+}
+
+saveDatabase();
+
+renderRunners();
+renderLiveScoring();
+
+};
+
+window.finishCompetition =
+function(){
+
+if(!activeCompetition)
+return;
+
+activeCompetition.finished=true;
+
+activeCompetition.runners.forEach(r=>{
+
+r.liveActive=false;
+
+});
+
+saveDatabase();
+
+renderRunners();
+renderLiveScoring();
+
+};
+
+window.resetCompetition =
+function(){
+
+if(!confirm(
+"Alle Wertungen löschen?"
+)) return;
+
+if(!activeCompetition)
+return;
+
+activeCompetition.finished=false;
+
+activeCompetition.runners.forEach(r=>{
+
+r.confirmed=false;
+r.liveActive=false;
+
+r.place="";
+
+r.a1=0;
+r.a2=0;
+r.a3=0;
+
+r.b1=0;
+r.b2=0;
+r.b3=0;
+
+r.aScore=0;
+r.bScore=0;
+
+r.total=0;
+
+});
+
+saveDatabase();
+
+renderRunners();
+renderLiveScoring();
+
+};
+
+function renderLiveScoring(){
+
+const output =
+document.getElementById(
+"liveScoring"
+);
+
+if(!activeCompetition){
+
+output.innerHTML=
+"Kein Wettbewerb";
+
+return;
+
+}
+
+const runner =
+
+activeCompetition.runners.find(
+r=>r.liveActive===true
+);
+
+if(!runner){
+
+output.innerHTML=
+"🏁 Kein aktiver Läufer";
+
+return;
+
+}
+
+output.innerHTML = `
+
+<div class="card">
+
+<b>${runner.name}</b>
+
+<br><br>
+
+⭐ Technik
+
+<div class="scoreGrid">
+
+<input id="live_a1"
+placeholder="A1">
+
+<input id="live_a2"
+placeholder="A2">
+
+<input id="live_a3"
+placeholder="A3">
+
+</div>
+
+<br>
+
+🎨 Kunst
+
+<div class="scoreGrid">
+
+<input id="live_b1"
+placeholder="B1">
+
+<input id="live_b2"
+placeholder="B2">
+
+<input id="live_b3"
+placeholder="B3">
+
+</div>
+
+<input
+id="live_deduction"
+placeholder="Abzug">
+
+<button onclick="saveLiveScore()">
+
+💾 Speichern
+
+</button>
+
+</div>
+
+`;
+
+}
 
 function renderRunners(){
 
@@ -480,14 +1001,10 @@ document.getElementById(
 "runnerList"
 );
 
-if(!activeCompetition){
+output.innerHTML="";
 
-output.innerHTML =
-"Kein Wettbewerb";
-
+if(!activeCompetition)
 return;
-
-}
 
 const categories = {};
 
@@ -495,7 +1012,7 @@ activeCompetition.runners.forEach(r=>{
 
 if(!categories[r.category]){
 
-categories[r.category] = [];
+categories[r.category]=[];
 
 }
 
@@ -503,37 +1020,68 @@ categories[r.category].push(r);
 
 });
 
-output.innerHTML = "";
-
-Object.keys(categories).forEach(category=>{
+Object.keys(categories).forEach(cat=>{
 
 output.innerHTML += `
 
 <div class="categoryTitle">
 
-📂 ${category}
+📂 ${cat}
 
 </div>
 
 <div class="runnerGrid">
 
-${categories[category].map(r=>`
+${categories[cat]
 
-<div class="resultItem">
+.sort((a,b)=>{
 
-🏆 ${r.place || "-"}
+if(activeCompetition.finished){
 
-<br><br>
+return Number(a.place)-Number(b.place);
+
+}
+
+return Number(a.start)-Number(b.start);
+
+})
+
+.map(r=>`
+
+<div class="resultItem
+
+${r.liveActive?"live":""}
+
+${r.confirmed?"done":""}
+
+">
+
+<div class="medal">
+
+${medal(r.place)}
+
+${r.place || r.start}
+
+</div>
+
+<br>
 
 ${r.name}
 
 <br>
 
-${r.club}
+⭐ Technik:
+${r.aScore || 0}
 
-<br><br>
+<br>
 
-⭐ ${r.total || 0}
+🎨 Kunst:
+${r.bScore || 0}
+
+<br>
+
+🏆 Gesamt:
+${r.total || 0}
 
 </div>
 
@@ -556,7 +1104,7 @@ document.getElementById(
 "competitionList"
 );
 
-output.innerHTML = "";
+output.innerHTML="";
 
 competitions.forEach(comp=>{
 
@@ -572,7 +1120,13 @@ output.innerHTML += `
 
 <br>
 
-📅 ${comp.date}
+📅 ${comp.from}
+-
+${comp.to}
+
+<br><br>
+
+${comp.scoringSystem}
 
 <button onclick="openCompetition(${comp.id})">
 
@@ -611,7 +1165,7 @@ document.getElementById(
 "archiveList"
 );
 
-output.innerHTML = "";
+output.innerHTML="";
 
 archivedCompetitions.forEach(comp=>{
 
@@ -627,7 +1181,9 @@ output.innerHTML += `
 
 <br>
 
-📅 ${comp.date}
+📅 ${comp.from}
+-
+${comp.to}
 
 <br><br>
 
@@ -635,7 +1191,7 @@ output.innerHTML += `
 
 <button
 class="archiveButton"
-onclick="exportPDF(${comp.id})">
+onclick="exportResults(${comp.id})">
 
 📄 Ergebnis Export
 
@@ -680,7 +1236,23 @@ placeholder="Ort">
 
 <input
 type="date"
-id="competitionDate">
+id="competitionFrom">
+
+<input
+type="date"
+id="competitionTo">
+
+<select id="competitionScoring">
+
+<option value="rollart">
+RollArt
+</option>
+
+<option value="simple">
+Vereinswertung
+</option>
+
+</select>
 
 <button onclick="saveCompetition()">
 
@@ -692,10 +1264,9 @@ id="competitionDate">
 
 <div class="card">
 
-<h2>📋 Aktive Wettbewerbe</h2>
+<h2>📋 Wettbewerbe</h2>
 
-<div
-id="competitionList"
+<div id="competitionList"
 class="grid">
 </div>
 
@@ -721,6 +1292,50 @@ placeholder="PDF Text hier einfügen">
 
 <div class="card">
 
+<h2>🔴 Live Steuerung</h2>
+
+<div id="liveScoring"></div>
+
+<div class="grid">
+
+<button
+class="nextButton"
+onclick="startCompetition()">
+
+▶ Start
+
+</button>
+
+<button
+class="nextButton"
+onclick="nextRunner()">
+
+➡ Weiter
+
+</button>
+
+<button
+class="finishButton"
+onclick="finishCompetition()">
+
+🏁 Abschließen
+
+</button>
+
+<button
+class="resetButton"
+onclick="resetCompetition()">
+
+🧪 Reset
+
+</button>
+
+</div>
+
+</div>
+
+<div class="card">
+
 <h2>👥 Läufer</h2>
 
 <div id="runnerList"></div>
@@ -731,8 +1346,7 @@ placeholder="PDF Text hier einfügen">
 
 <h2>📂 Archiv</h2>
 
-<div
-id="archiveList"
+<div id="archiveList"
 class="grid">
 </div>
 
