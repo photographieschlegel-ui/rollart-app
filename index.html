@@ -1,3 +1,4 @@
+```html id="live-full-final-v3"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -187,6 +188,7 @@ font-size:18px;
 font-weight:bold;
 margin-bottom:10px;
 color:#60a5fa;
+line-height:1.6;
 }
 
 .footer{
@@ -384,11 +386,8 @@ categories[runner.category].push(
 runner
 );
 
-categories[runner.category].begin =
-categoryInfos[runner.category]?.begin;
-
-categories[runner.category].end =
-categoryInfos[runner.category]?.end;
+categories[runner.category].info =
+categoryInfos[runner.category];
 
 });
 
@@ -406,9 +405,15 @@ output.innerHTML += `
 
 <br>
 
-🕒 ${categories[category][0]?.begin || "--:--"}
+🕒 ${categories[category].info?.begin || "--:--"}
  -
-${categories[category][0]?.end || "--:--"}
+${categories[category].info?.end || "--:--"}
+
+<br>
+
+👥 ${categories[category].info?.participants || "-"}
+
+ Teilnehmer
 
 </div>
 
@@ -828,3 +833,4 @@ TV Walsum-Aldenrade 07
 
 </body>
 </html>
+```
