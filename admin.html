@@ -52,7 +52,6 @@ gap:8px;
 
 input,
 button,
-select,
 textarea{
 width:100%;
 padding:12px;
@@ -64,8 +63,7 @@ box-sizing:border-box;
 }
 
 input,
-textarea,
-select{
+textarea{
 background:#475569;
 color:white;
 }
@@ -351,15 +349,38 @@ document.getElementById(
 
 finished:false,
 
-scoringSystem:
-document.getElementById(
-"competitionScoring"
-).value,
-
 categories:[],
 runners:[]
 
 });
+
+await saveDatabase();
+
+renderCompetitions();
+
+};
+
+window.deleteCompetition =
+async function(id){
+
+if(!confirm(
+"Wettbewerb wirklich löschen?"
+)) return;
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+
+competition:null,
+runner:null
+
+}
+);
 
 await saveDatabase();
 
@@ -730,6 +751,90 @@ renderLiveScoring();
 
 };
 
+window.finishCompetition =
+async function(){
+
+if(!activeCompetition)
+return;
+
+activeCompetition.finished = true;
+
+activeCompetition.runners.forEach(r=>{
+
+r.liveActive = false;
+
+});
+
+await saveDatabase();
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+
+competition:null,
+runner:null
+
+}
+);
+
+renderRunners();
+
+renderLiveScoring();
+
+};
+
+window.resetCompetition =
+async function(){
+
+if(!confirm(
+"Alle Wertungen wirklich zurücksetzen?"
+)) return;
+
+if(!activeCompetition)
+return;
+
+activeCompetition.finished = false;
+
+activeCompetition.runners.forEach(r=>{
+
+r.confirmed = false;
+r.liveActive = false;
+
+r.place = "";
+
+r.a1 = 0;
+r.a2 = 0;
+r.a3 = 0;
+
+r.b1 = 0;
+r.b2 = 0;
+r.b3 = 0;
+
+r.aScore = 0;
+r.bScore = 0;
+
+r.total = 0;
+
+});
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+
+competition:null,
+runner:null
+
+}
+);
+
+await saveDatabase();
+
+renderRunners();
+
+renderLiveScoring();
+
+};
+
 function renderLiveScoring(){
 
 const output =
@@ -965,104 +1070,13 @@ onclick="archiveCompetition(${comp.id})">
 
 </button>
 
-</div>
+<button
+class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
 
-`;
+🗑 Löschen
 
-});
-
-}
-
-function renderArchive(){
-
-const output =
-document.getElementById(
-"archiveList"
-);
-
-output.innerHTML="";
-
-archivedCompetitions.forEach(comp=>{
-
-const categories = {};
-
-comp.runners.forEach(r=>{
-
-if(!categories[r.category]){
-
-categories[r.category]=[];
-
-}
-
-categories[r.category].push(r);
-
-});
-
-output.innerHTML += `
-
-<div class="card">
-
-<h3>
-
-🏁 ${comp.name}
-
-</h3>
-
-${Object.keys(categories).map(cat=>`
-
-<div class="categoryTitle">
-
-📂 ${cat}
-
-</div>
-
-<div class="runnerGrid">
-
-${categories[cat]
-
-.sort(
-(a,b)=>
-Number(a.place)-Number(b.place)
-)
-
-.map(r=>`
-
-<div class="resultItem">
-
-<div class="medal">
-
-${medal(r.place)}
-
-${r.place || "-"}
-
-</div>
-
-<br>
-
-${r.name}
-
-<br>
-
-⭐ Technik:
-${r.aScore || 0}
-
-<br>
-
-🎨 Kunst:
-${r.bScore || 0}
-
-<br>
-
-🏆 Gesamt:
-${r.total || 0}
-
-</div>
-
-`).join("")}
-
-</div>
-
-`).join("")}
+</button>
 
 </div>
 
@@ -1108,14 +1122,6 @@ id="competitionFrom">
 <input
 type="date"
 id="competitionTo">
-
-<select id="competitionScoring">
-
-<option value="rollart">
-RollArt
-</option>
-
-</select>
 
 <button onclick="saveCompetition()">
 
@@ -1177,6 +1183,22 @@ onclick="nextRunner()">
 
 </button>
 
+<button
+class="finishButton"
+onclick="finishCompetition()">
+
+🏁 Abschließen
+
+</button>
+
+<button
+class="resetButton"
+onclick="resetCompetition()">
+
+🧪 Reset
+
+</button>
+
 </div>
 
 </div>
@@ -1186,14 +1208,6 @@ onclick="nextRunner()">
 <h2>👥 Läufer</h2>
 
 <div id="runnerList"></div>
-
-</div>
-
-<div class="card">
-
-<h2>📂 Archiv</h2>
-
-<div id="archiveList"></div>
 
 </div>
 
