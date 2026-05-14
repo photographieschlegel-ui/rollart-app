@@ -8,6 +8,7 @@
 <title>🏆 RollArt Live</title>
 
 <link rel="manifest" href="./manifest.json">
+
 <meta name="theme-color" content="#dc2626">
 
 <style>
@@ -21,7 +22,7 @@ color:white;
 }
 
 .app{
-max-width:1500px;
+max-width:1600px;
 margin:auto;
 padding:10px;
 }
@@ -29,14 +30,13 @@ padding:10px;
 .header{
 display:flex;
 align-items:center;
-gap:15px;
+gap:14px;
 margin-bottom:14px;
 }
 
 .logo{
 width:60px;
 height:60px;
-object-fit:contain;
 background:white;
 padding:6px;
 border-radius:14px;
@@ -49,8 +49,8 @@ font-weight:bold;
 
 .clock{
 font-size:14px;
-margin-top:4px;
 color:#cbd5e1;
+margin-top:4px;
 }
 
 .card{
@@ -58,7 +58,6 @@ background:#1e293b;
 padding:14px;
 border-radius:18px;
 margin-bottom:14px;
-box-shadow:0 0 18px rgba(0,0,0,0.25);
 }
 
 .liveTitle{
@@ -68,7 +67,7 @@ margin-bottom:10px;
 }
 
 .runnerName{
-font-size:24px;
+font-size:26px;
 font-weight:bold;
 line-height:1.2;
 }
@@ -107,7 +106,7 @@ margin-bottom:6px;
 }
 
 .scoreValue{
-font-size:22px;
+font-size:24px;
 font-weight:bold;
 }
 
@@ -115,62 +114,22 @@ font-weight:bold;
 background:linear-gradient(135deg,#2563eb,#7c3aed);
 }
 
-.totalCard .scoreValue{
-font-size:30px;
-}
-
 .placeBox{
 margin-top:12px;
 padding:10px;
 border-radius:14px;
-font-size:20px;
+font-size:22px;
 font-weight:bold;
 text-align:center;
 background:#16a34a;
 }
 
-.nextRunner{
-font-size:16px;
-font-weight:bold;
-line-height:1.4;
-}
-
-.navButtons{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:8px;
-margin-top:14px;
-}
-
-.navButtons button{
-padding:10px;
-border:none;
-border-radius:12px;
-font-size:14px;
-font-weight:bold;
-cursor:pointer;
-color:white;
-}
-
-.prevBtn{
-background:#334155;
-}
-
-.currentBtn{
-background:#dc2626;
-}
-
-.nextBtn{
-background:#2563eb;
-}
-
 .resultItem{
 background:#334155;
-padding:6px;
+padding:8px;
 border-radius:10px;
-line-height:1.3;
 font-size:12px;
-transition:0.2s;
+line-height:1.4;
 }
 
 .resultItem.live{
@@ -178,7 +137,7 @@ background:#16a34a;
 }
 
 .resultItem.done{
-opacity:0.6;
+opacity:0.7;
 }
 
 .runnerGrid{
@@ -188,41 +147,24 @@ repeat(auto-fit,minmax(170px,1fr));
 gap:8px;
 }
 
-.categoryBlock{
-margin-bottom:18px;
-}
-
 .categoryTitle{
-font-size:16px;
-font-weight:bold;
-margin-bottom:8px;
-color:#60a5fa;
-line-height:1.5;
 background:#1e40af;
 padding:10px;
 border-radius:12px;
+margin-bottom:8px;
+font-weight:bold;
+line-height:1.5;
 }
 
-.footer{
-text-align:center;
-margin-top:18px;
-font-size:13px;
-color:#94a3b8;
+.medal{
+font-size:18px;
+font-weight:bold;
 }
 
 @media(max-width:700px){
 
-.header{
-flex-direction:column;
-text-align:center;
-}
-
 .scoreGrid{
 grid-template-columns:repeat(2,1fr);
-}
-
-.navButtons{
-grid-template-columns:1fr;
 }
 
 .runnerGrid{
@@ -230,7 +172,7 @@ grid-template-columns:repeat(2,1fr);
 }
 
 .runnerName{
-font-size:20px;
+font-size:22px;
 }
 
 }
@@ -266,10 +208,6 @@ initializeApp(firebaseConfig);
 const db =
 getFirestore(app);
 
-let liveData = {};
-let allRunners = [];
-let currentViewIndex = -1;
-
 function updateClock(){
 
 const now = new Date();
@@ -277,7 +215,9 @@ const now = new Date();
 document.getElementById(
 "clock"
 ).innerHTML =
+
 "🕒 " +
+
 now.toLocaleTimeString(
 "de-DE",
 {
@@ -289,9 +229,43 @@ second:"2-digit"
 
 }
 
-function renderRunner(runner){
+function medal(place){
 
-if(!runner)return;
+if(place==1)
+return "🥇";
+
+if(place==2)
+return "🥈";
+
+if(place==3)
+return "🥉";
+
+return "🏆";
+
+}
+
+function render(data){
+
+const competition =
+data?.competition || {};
+
+const runner =
+data?.runner || {};
+
+const nextRunner =
+data?.nextRunner || {};
+
+document.getElementById(
+"competitionInfo"
+).innerHTML =
+
+`
+📍 ${competition.place || "-"}
+<br>
+📅 ${competition.from || "-"}
+`;
+
+if(runner?.id){
 
 document.getElementById(
 "runnerName"
@@ -308,52 +282,102 @@ document.getElementById(
 ).innerHTML =
 runner.category || "-";
 
-const aValue =
-
-Number(runner.a1 || 0) +
-Number(runner.a2 || 0) +
-Number(runner.a3 || 0);
-
-const bValue =
-
-Number(runner.b1 || 0) +
-Number(runner.b2 || 0) +
-Number(runner.b3 || 0);
+if(
+competition.scoringSystem==="rollart"
+){
 
 document.getElementById(
 "scoreA"
 ).innerHTML =
-aValue.toFixed(1);
+runner.aScore || 0;
 
 document.getElementById(
 "scoreB"
 ).innerHTML =
-bValue.toFixed(1);
+runner.bScore || 0;
 
 document.getElementById(
 "deduction"
 ).innerHTML =
 "-" +
-Number(
+(
 runner.deduction || 0
-).toFixed(1);
+);
+
+}else{
+
+document.getElementById(
+"scoreA"
+).innerHTML = "-";
+
+document.getElementById(
+"scoreB"
+).innerHTML = "-";
+
+document.getElementById(
+"deduction"
+).innerHTML = "-";
+
+}
 
 document.getElementById(
 "total"
 ).innerHTML =
-Number(
-runner.total || 0
-).toFixed(1);
+runner.total || 0;
 
 document.getElementById(
 "placeBox"
 ).innerHTML =
-"🏆 Platz " +
+
+medal(runner.place)
++
+" Platz "
++
 (runner.place || "-");
+
+}else{
+
+document.getElementById(
+"runnerName"
+).innerHTML =
+competition.finished
+?
+
+"🏁 Wettbewerb beendet"
+
+:
+
+"Kein aktiver Läufer";
 
 }
 
-function renderAllRunners(){
+document.getElementById(
+"nextRunner"
+).innerHTML =
+
+nextRunner?.name
+
+?
+
+`
+${nextRunner.name}
+<br>
+${nextRunner.club || "-"}
+`
+
+:
+
+"🏁 Kein nächster Läufer";
+
+renderAllRunners(
+competition
+);
+
+}
+
+function renderAllRunners(
+competition
+){
 
 const output =
 document.getElementById(
@@ -361,7 +385,7 @@ document.getElementById(
 );
 
 if(
-!liveData?.competition?.runners
+!competition?.runners
 ){
 
 output.innerHTML =
@@ -371,19 +395,30 @@ return;
 
 }
 
-const runners =
-[...liveData.competition.runners]
+let runners =
+[...competition.runners];
 
-.sort(
+if(competition.finished){
+
+runners.sort(
+(a,b)=>
+Number(a.place)-Number(b.place)
+);
+
+}else{
+
+runners.sort(
 (a,b)=>
 Number(a.start)-Number(b.start)
 );
+
+}
 
 const categories = {};
 
 const categoryInfos = {};
 
-(liveData.competition.categories || [])
+(competition.categories || [])
 .forEach(cat=>{
 
 categoryInfos[cat.name] = cat;
@@ -412,8 +447,6 @@ output.innerHTML = "";
 Object.keys(categories).forEach(category=>{
 
 output.innerHTML += `
-
-<div class="categoryBlock">
 
 <div class="categoryTitle">
 
@@ -445,25 +478,48 @@ ${runner.confirmed ? "done" : ""}
 
 ">
 
-<b>
-${runner.start}
-</b>
+<div class="medal">
 
-—
+${medal(runner.place)}
+
+${runner.place || runner.start}
+
+</div>
+
+<br>
 
 ${runner.name}
 
 <br>
 
-${runner.club}
+${runner.club || "-"}
 
 <br><br>
 
-⭐ ${runner.total || 0}
+${competition.scoringSystem==="rollart"
 
-|
+?
 
-🏆 ${runner.place || "-"}
+`
+⭐ Technik:
+${runner.aScore || 0}
+
+<br>
+
+🎨 Kunst:
+${runner.bScore || 0}
+`
+
+:
+
+""
+
+}
+
+<br>
+
+🏆 Gesamt:
+${runner.total || 0}
 
 </div>
 
@@ -471,151 +527,11 @@ ${runner.club}
 
 </div>
 
-</div>
+<br>
 
 `;
 
 });
-
-}
-
-function render(data){
-
-liveData = data || {};
-
-const competition =
-data?.competition || {};
-
-const runner =
-data?.runner || {};
-
-const nextRunner =
-data?.nextRunner || {};
-
-allRunners =
-[...(competition.runners || [])]
-
-.sort(
-(a,b)=>
-Number(a.start)-Number(b.start)
-);
-
-if(runner?.id){
-
-currentViewIndex =
-allRunners.findIndex(
-r=>String(r.id)===String(runner.id)
-);
-
-renderRunner(runner);
-
-}else{
-
-document.getElementById(
-"runnerName"
-).innerHTML =
-"Kein aktiver Läufer";
-
-document.getElementById(
-"runnerClub"
-).innerHTML =
-"-";
-
-document.getElementById(
-"runnerCategory"
-).innerHTML =
-"-";
-
-document.getElementById(
-"scoreA"
-).innerHTML = "0";
-
-document.getElementById(
-"scoreB"
-).innerHTML = "0";
-
-document.getElementById(
-"deduction"
-).innerHTML = "0";
-
-document.getElementById(
-"total"
-).innerHTML = "0";
-
-document.getElementById(
-"placeBox"
-).innerHTML =
-"🏁 Wettbewerb noch nicht gestartet";
-
-}
-
-document.getElementById(
-"competitionInfo"
-).innerHTML =
-
-`
-📍 ${competition.place || "-"}
-<br>
-📅 ${competition.from || "-"}
-`;
-
-document.getElementById(
-"nextRunner"
-).innerHTML =
-
-nextRunner?.name ?
-
-`
-${nextRunner.name}
-<br>
-${nextRunner.club || "-"}
-`
-
-:
-
-"🏁 Kein nächster Läufer";
-
-renderAllRunners();
-
-}
-
-window.showPreviousRunner = function(){
-
-if(allRunners.length===0)
-return;
-
-if(currentViewIndex > 0){
-
-currentViewIndex--;
-
-renderRunner(
-allRunners[currentViewIndex]
-);
-
-}
-
-}
-
-window.showNextRunner = function(){
-
-if(allRunners.length===0)
-return;
-
-if(currentViewIndex < allRunners.length-1){
-
-currentViewIndex++;
-
-renderRunner(
-allRunners[currentViewIndex]
-);
-
-}
-
-}
-
-window.showCurrentRunner = function(){
-
-render(liveData);
 
 }
 
@@ -627,11 +543,9 @@ doc(db,"rollart","live"),
 
 if(snapshot.exists()){
 
-render(snapshot.data());
-
-}else{
-
-render({});
+render(
+snapshot.data()
+);
 
 }
 
@@ -670,7 +584,7 @@ class="logo">
 id="competitionInfo"
 class="clock">
 
-Kein aktiver Wettbewerb
+Kein Wettbewerb
 
 </div>
 
@@ -689,7 +603,7 @@ class="clock">
 <div class="card">
 
 <div class="liveTitle">
-AKTUELLER LÄUFER
+🔴 AKTUELLER LÄUFER
 </div>
 
 <div
@@ -792,34 +706,6 @@ class="placeBox">
 
 </div>
 
-<div class="navButtons">
-
-<button
-onclick="showPreviousRunner()"
-class="prevBtn">
-
-⬅ Zurück
-
-</button>
-
-<button
-onclick="showCurrentRunner()"
-class="currentBtn">
-
-🔴 Aktuell
-
-</button>
-
-<button
-onclick="showNextRunner()"
-class="nextBtn">
-
-➡ Weiter
-
-</button>
-
-</div>
-
 </div>
 
 <div class="card">
@@ -830,7 +716,7 @@ class="nextBtn">
 
 <div
 id="nextRunner"
-class="nextRunner">
+class="runnerClub">
 
 -
 
@@ -841,15 +727,11 @@ class="nextRunner">
 <div class="card">
 
 <div class="liveTitle">
-👥 Kategorien & Läufer
+👥 Kategorien & Ergebnisse
 </div>
 
 <div id="allRunners"></div>
 
-</div>
-
-<div class="footer">
-TV Walsum-Aldenrade 07
 </div>
 
 </div>
