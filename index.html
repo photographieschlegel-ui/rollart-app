@@ -3,13 +3,15 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>🏆 RollArt Live</title>
 
 <link rel="manifest" href="./manifest.json">
 
-<meta name="theme-color" content="#dc2626">
+<meta name="theme-color"
+content="#dc2626">
 
 <style>
 
@@ -22,7 +24,7 @@ color:white;
 }
 
 .app{
-max-width:1600px;
+max-width:1700px;
 margin:auto;
 padding:10px;
 }
@@ -43,7 +45,7 @@ border-radius:14px;
 }
 
 .title{
-font-size:24px;
+font-size:26px;
 font-weight:bold;
 }
 
@@ -67,7 +69,7 @@ margin-bottom:10px;
 }
 
 .runnerName{
-font-size:26px;
+font-size:28px;
 font-weight:bold;
 line-height:1.2;
 }
@@ -87,7 +89,8 @@ color:#60a5fa;
 
 .scoreGrid{
 display:grid;
-grid-template-columns:repeat(4,1fr);
+grid-template-columns:
+repeat(4,1fr);
 gap:10px;
 margin-top:16px;
 }
@@ -111,7 +114,12 @@ font-weight:bold;
 }
 
 .totalCard{
-background:linear-gradient(135deg,#2563eb,#7c3aed);
+background:
+linear-gradient(
+135deg,
+#2563eb,
+#7c3aed
+);
 }
 
 .placeBox{
@@ -161,14 +169,23 @@ font-size:18px;
 font-weight:bold;
 }
 
+.archiveItem{
+background:#1e293b;
+padding:12px;
+border-radius:14px;
+margin-bottom:10px;
+}
+
 @media(max-width:700px){
 
 .scoreGrid{
-grid-template-columns:repeat(2,1fr);
+grid-template-columns:
+repeat(2,1fr);
 }
 
 .runnerGrid{
-grid-template-columns:repeat(2,1fr);
+grid-template-columns:
+repeat(2,1fr);
 }
 
 .runnerName{
@@ -193,12 +210,23 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 
-apiKey: "AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-authDomain: "rollart-score-5319a.firebaseapp.com",
-projectId: "rollart-score-5319a",
-storageBucket: "rollart-score-5319a.firebasestorage.app",
-messagingSenderId: "658963624980",
-appId: "1:658963624980:web:2e4d153f5df087c4f42301"
+apiKey:
+"AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+
+authDomain:
+"rollart-score-5319a.firebaseapp.com",
+
+projectId:
+"rollart-score-5319a",
+
+storageBucket:
+"rollart-score-5319a.firebasestorage.app",
+
+messagingSenderId:
+"658963624980",
+
+appId:
+"1:658963624980:web:2e4d153f5df087c4f42301"
 
 };
 
@@ -207,6 +235,8 @@ initializeApp(firebaseConfig);
 
 const db =
 getFirestore(app);
+
+let archiveData = [];
 
 function updateClock(){
 
@@ -244,16 +274,13 @@ return "🏆";
 
 }
 
-function render(data){
+function renderLive(data){
 
 const competition =
 data?.competition || {};
 
 const runner =
 data?.runner || {};
-
-const nextRunner =
-data?.nextRunner || {};
 
 document.getElementById(
 "competitionInfo"
@@ -263,6 +290,8 @@ document.getElementById(
 📍 ${competition.place || "-"}
 <br>
 📅 ${competition.from || "-"}
+ -
+${competition.to || "-"}
 `;
 
 if(runner?.id){
@@ -282,10 +311,6 @@ document.getElementById(
 ).innerHTML =
 runner.category || "-";
 
-if(
-competition.scoringSystem==="rollart"
-){
-
 document.getElementById(
 "scoreA"
 ).innerHTML =
@@ -295,30 +320,6 @@ document.getElementById(
 "scoreB"
 ).innerHTML =
 runner.bScore || 0;
-
-document.getElementById(
-"deduction"
-).innerHTML =
-"-" +
-(
-runner.deduction || 0
-);
-
-}else{
-
-document.getElementById(
-"scoreA"
-).innerHTML = "-";
-
-document.getElementById(
-"scoreB"
-).innerHTML = "-";
-
-document.getElementById(
-"deduction"
-).innerHTML = "-";
-
-}
 
 document.getElementById(
 "total"
@@ -351,24 +352,6 @@ competition.finished
 
 }
 
-document.getElementById(
-"nextRunner"
-).innerHTML =
-
-nextRunner?.name
-
-?
-
-`
-${nextRunner.name}
-<br>
-${nextRunner.club || "-"}
-`
-
-:
-
-"🏁 Kein nächster Läufer";
-
 renderAllRunners(
 competition
 );
@@ -384,9 +367,7 @@ document.getElementById(
 "allRunners"
 );
 
-if(
-!competition?.runners
-){
+if(!competition.runners){
 
 output.innerHTML =
 "Keine Läufer";
@@ -395,131 +376,88 @@ return;
 
 }
 
-let runners =
-[...competition.runners];
-
-if(competition.finished){
-
-runners.sort(
-(a,b)=>
-Number(a.place)-Number(b.place)
-);
-
-}else{
-
-runners.sort(
-(a,b)=>
-Number(a.start)-Number(b.start)
-);
-
-}
-
 const categories = {};
 
-const categoryInfos = {};
+competition.runners.forEach(r=>{
 
-(competition.categories || [])
-.forEach(cat=>{
+if(!categories[r.category]){
 
-categoryInfos[cat.name] = cat;
-
-});
-
-runners.forEach(runner=>{
-
-if(!categories[runner.category]){
-
-categories[runner.category] = [];
+categories[r.category]=[];
 
 }
 
-categories[runner.category].push(
-runner
-);
-
-categories[runner.category].info =
-categoryInfos[runner.category];
+categories[r.category].push(r);
 
 });
 
 output.innerHTML = "";
 
-Object.keys(categories).forEach(category=>{
+Object.keys(categories).forEach(cat=>{
 
 output.innerHTML += `
 
 <div class="categoryTitle">
 
-📂 ${category}
-
-<br>
-
-🕒 ${categories[category].info?.begin || "--:--"}
- -
-${categories[category].info?.end || "--:--"}
-
-<br>
-
-👥 ${categories[category].info?.participants || "-"}
-
- Teilnehmer
+📂 ${cat}
 
 </div>
 
 <div class="runnerGrid">
 
-${categories[category].map(runner=>`
+${categories[cat]
+
+.sort((a,b)=>{
+
+if(competition.finished){
+
+return Number(a.place)-Number(b.place);
+
+}
+
+return Number(a.start)-Number(b.start);
+
+})
+
+.map(r=>`
 
 <div class="resultItem
 
-${runner.liveActive ? "live" : ""}
+${r.liveActive?"live":""}
 
-${runner.confirmed ? "done" : ""}
+${r.confirmed?"done":""}
 
 ">
 
 <div class="medal">
 
-${medal(runner.place)}
+${medal(r.place)}
 
-${runner.place || runner.start}
+${r.place || r.start}
 
 </div>
 
 <br>
 
-${runner.name}
+${r.name}
 
 <br>
 
-${runner.club || "-"}
+${r.club || "-"}
 
 <br><br>
 
-${competition.scoringSystem==="rollart"
-
-?
-
-`
 ⭐ Technik:
-${runner.aScore || 0}
+${r.aScore || 0}
 
 <br>
 
 🎨 Kunst:
-${runner.bScore || 0}
-`
-
-:
-
-""
-
-}
+${r.bScore || 0}
 
 <br>
 
 🏆 Gesamt:
-${runner.total || 0}
+${r.total || 0}
 
 </div>
 
@@ -535,6 +473,64 @@ ${runner.total || 0}
 
 }
 
+function renderArchive(){
+
+const output =
+document.getElementById(
+"archiveList"
+);
+
+output.innerHTML = "";
+
+archiveData.forEach(comp=>{
+
+const winners =
+
+[...comp.runners]
+
+.sort(
+(a,b)=>
+Number(a.place)-Number(b.place)
+)
+
+.slice(0,3);
+
+output.innerHTML += `
+
+<div class="archiveItem">
+
+<b>${comp.name}</b>
+
+<br><br>
+
+📍 ${comp.place}
+
+<br>
+
+📅 ${comp.from}
+-
+${comp.to}
+
+<br><br>
+
+${winners.map(w=>`
+
+${medal(w.place)}
+${w.name}
+(${w.total})
+
+<br>
+
+`).join("")}
+
+</div>
+
+`;
+
+});
+
+}
+
 onSnapshot(
 
 doc(db,"rollart","live"),
@@ -543,9 +539,29 @@ doc(db,"rollart","live"),
 
 if(snapshot.exists()){
 
-render(
+renderLive(
 snapshot.data()
 );
+
+}
+
+}
+
+);
+
+onSnapshot(
+
+doc(db,"rollart","database"),
+
+(snapshot)=>{
+
+if(snapshot.exists()){
+
+archiveData =
+snapshot.data()
+.archivedCompetitions || [];
+
+renderArchive();
 
 }
 
@@ -664,22 +680,6 @@ class="scoreValue">
 
 </div>
 
-<div class="scoreCard">
-
-<div class="scoreLabel">
-➖ Abzug
-</div>
-
-<div
-id="deduction"
-class="scoreValue">
-
-0
-
-</div>
-
-</div>
-
 <div class="scoreCard totalCard">
 
 <div class="scoreLabel">
@@ -696,29 +696,21 @@ class="scoreValue">
 
 </div>
 
+<div class="scoreCard">
+
+<div class="scoreLabel">
+🏅 Platz
 </div>
 
 <div
 id="placeBox"
-class="placeBox">
-
-🏆 Platz -
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="liveTitle">
-➡ NÄCHSTER LÄUFER
-</div>
-
-<div
-id="nextRunner"
-class="runnerClub">
+class="scoreValue">
 
 -
+
+</div>
+
+</div>
 
 </div>
 
@@ -731,6 +723,16 @@ class="runnerClub">
 </div>
 
 <div id="allRunners"></div>
+
+</div>
+
+<div class="card">
+
+<div class="liveTitle">
+📂 Archivierte Wettbewerbe
+</div>
+
+<div id="archiveList"></div>
 
 </div>
 
