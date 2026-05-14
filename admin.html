@@ -703,6 +703,10 @@ renderLiveScoring();
 
 window.resetCompetition = function(){
 
+if(!confirm(
+"Alle Testdaten wirklich löschen?"
+)) return;
+
 if(!activeCompetition)
 return;
 
@@ -711,9 +715,24 @@ activeCompetition.finished = false;
 activeCompetition.runners.forEach(r=>{
 
 r.confirmed = false;
+
 r.liveActive = false;
 
 r.place = "";
+
+r.a1 = 0;
+r.a2 = 0;
+r.a3 = 0;
+
+r.b1 = 0;
+r.b2 = 0;
+r.b3 = 0;
+
+r.aScore = 0;
+r.bScore = 0;
+
+r.deduction = 0;
+
 r.total = 0;
 
 });
@@ -911,7 +930,7 @@ ${categories[category].info?.end || "--:--"}
 
 👥 ${categories[category].info?.participants || "-"}
 
- Teilnehmer
+Teilnehmer
 
 </div>
 
@@ -1042,15 +1061,11 @@ id="competitionTo">
 <select id="competitionScoring">
 
 <option value="rollart">
-
 RollArt
-
 </option>
 
 <option value="simple">
-
 Vereinswertung
-
 </option>
 
 </select>
