@@ -392,6 +392,16 @@ competitions.filter(
 c=>c.id!==id
 );
 
+await setDoc(
+doc(db,"rollart","live"),
+{
+
+competition:null,
+runner:null
+
+}
+);
+
 await saveDatabase();
 
 renderCompetitions();
@@ -415,6 +425,16 @@ archivedCompetitions.push(comp);
 competitions =
 competitions.filter(
 c=>c.id!==id
+);
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+
+competition:null,
+runner:null
+
+}
 );
 
 await saveDatabase();
@@ -891,22 +911,33 @@ renderLiveScoring();
 };
 
 window.finishCompetition =
-function(){
+async function(){
 
 if(!activeCompetition)
 return;
 
-activeCompetition.finished=true;
+activeCompetition.finished = true;
 
 activeCompetition.runners.forEach(r=>{
 
-r.liveActive=false;
+r.liveActive = false;
 
 });
 
-saveDatabase();
+await saveDatabase();
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+
+competition:null,
+runner:null
+
+}
+);
 
 renderRunners();
+
 renderLiveScoring();
 
 };
