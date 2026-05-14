@@ -1,4 +1,3 @@
-```html id="live-full-final-v3"
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -22,93 +21,93 @@ color:white;
 }
 
 .app{
-max-width:1400px;
+max-width:1500px;
 margin:auto;
-padding:12px;
+padding:10px;
 }
 
 .header{
 display:flex;
 align-items:center;
 gap:15px;
-margin-bottom:18px;
+margin-bottom:14px;
 }
 
 .logo{
-width:70px;
-height:70px;
+width:60px;
+height:60px;
 object-fit:contain;
 background:white;
-padding:8px;
-border-radius:16px;
+padding:6px;
+border-radius:14px;
 }
 
 .title{
-font-size:28px;
+font-size:24px;
 font-weight:bold;
 }
 
 .clock{
-font-size:16px;
+font-size:14px;
 margin-top:4px;
 color:#cbd5e1;
 }
 
 .card{
 background:#1e293b;
-padding:16px;
-border-radius:22px;
-margin-bottom:16px;
-box-shadow:0 0 20px rgba(0,0,0,0.3);
+padding:14px;
+border-radius:18px;
+margin-bottom:14px;
+box-shadow:0 0 18px rgba(0,0,0,0.25);
 }
 
 .liveTitle{
-font-size:16px;
+font-size:14px;
 color:#cbd5e1;
-margin-bottom:12px;
+margin-bottom:10px;
 }
 
 .runnerName{
-font-size:30px;
+font-size:24px;
 font-weight:bold;
 line-height:1.2;
 }
 
 .runnerClub{
-font-size:18px;
-margin-top:8px;
+font-size:16px;
+margin-top:6px;
 color:#cbd5e1;
 }
 
 .runnerCategory{
-margin-top:10px;
-font-size:18px;
+margin-top:8px;
+font-size:16px;
 font-weight:bold;
 color:#60a5fa;
 }
 
 .scoreGrid{
 display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:12px;
-margin-top:18px;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+margin-top:16px;
 }
 
 .scoreCard{
 background:#334155;
-padding:14px;
-border-radius:16px;
+padding:10px;
+border-radius:14px;
 text-align:center;
 }
 
 .scoreLabel{
-font-size:14px;
+font-size:12px;
 color:#cbd5e1;
-margin-bottom:8px;
+margin-bottom:6px;
 }
 
 .scoreValue{
-font-size:28px;
+font-size:22px;
 font-weight:bold;
 }
 
@@ -117,37 +116,37 @@ background:linear-gradient(135deg,#2563eb,#7c3aed);
 }
 
 .totalCard .scoreValue{
-font-size:40px;
+font-size:30px;
 }
 
 .placeBox{
-margin-top:16px;
-padding:14px;
-border-radius:16px;
-font-size:24px;
+margin-top:12px;
+padding:10px;
+border-radius:14px;
+font-size:20px;
 font-weight:bold;
 text-align:center;
 background:#16a34a;
 }
 
 .nextRunner{
-font-size:20px;
+font-size:16px;
 font-weight:bold;
-line-height:1.5;
+line-height:1.4;
 }
 
 .navButtons{
 display:grid;
 grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin-top:18px;
+gap:8px;
+margin-top:14px;
 }
 
 .navButtons button{
-padding:14px;
+padding:10px;
 border:none;
-border-radius:14px;
-font-size:16px;
+border-radius:12px;
+font-size:14px;
 font-weight:bold;
 cursor:pointer;
 color:white;
@@ -167,34 +166,47 @@ background:#2563eb;
 
 .resultItem{
 background:#334155;
-padding:8px;
+padding:6px;
 border-radius:10px;
-line-height:1.4;
-font-size:13px;
+line-height:1.3;
+font-size:12px;
+transition:0.2s;
+}
+
+.resultItem.live{
+background:#16a34a;
+}
+
+.resultItem.done{
+opacity:0.6;
 }
 
 .runnerGrid{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:10px;
+grid-template-columns:
+repeat(auto-fit,minmax(170px,1fr));
+gap:8px;
 }
 
 .categoryBlock{
-margin-bottom:20px;
+margin-bottom:18px;
 }
 
 .categoryTitle{
-font-size:18px;
+font-size:16px;
 font-weight:bold;
-margin-bottom:10px;
+margin-bottom:8px;
 color:#60a5fa;
-line-height:1.6;
+line-height:1.5;
+background:#1e40af;
+padding:10px;
+border-radius:12px;
 }
 
 .footer{
 text-align:center;
-margin-top:24px;
-font-size:14px;
+margin-top:18px;
+font-size:13px;
 color:#94a3b8;
 }
 
@@ -206,7 +218,7 @@ text-align:center;
 }
 
 .scoreGrid{
-grid-template-columns:1fr;
+grid-template-columns:repeat(2,1fr);
 }
 
 .navButtons{
@@ -215,6 +227,10 @@ grid-template-columns:1fr;
 
 .runnerGrid{
 grid-template-columns:repeat(2,1fr);
+}
+
+.runnerName{
+font-size:20px;
 }
 
 }
@@ -421,26 +437,33 @@ ${categories[category].info?.end || "--:--"}
 
 ${categories[category].map(runner=>`
 
-<div class="resultItem">
+<div class="resultItem
 
-🕒 Start ${runner.start}
+${runner.liveActive ? "live" : ""}
 
-<br><br>
+${runner.confirmed ? "done" : ""}
 
-👤 ${runner.name}
+">
+
+<b>
+${runner.start}
+</b>
+
+—
+
+${runner.name}
 
 <br>
 
-🏢 ${runner.club}
+${runner.club}
 
 <br><br>
-
-🏆 Platz:
-${runner.place || "-"}
-
-<br>
 
 ⭐ ${runner.total || 0}
+
+|
+
+🏆 ${runner.place || "-"}
 
 </div>
 
@@ -698,7 +721,7 @@ class="runnerCategory">
 <div class="scoreCard">
 
 <div class="scoreLabel">
-⭐ A Wert
+⭐ Technik
 </div>
 
 <div
@@ -714,7 +737,7 @@ class="scoreValue">
 <div class="scoreCard">
 
 <div class="scoreLabel">
-⭐ B Wert
+🎨 Kunst
 </div>
 
 <div
@@ -818,7 +841,7 @@ class="nextRunner">
 <div class="card">
 
 <div class="liveTitle">
-👥 Alle Kategorien & Läufer
+👥 Kategorien & Läufer
 </div>
 
 <div id="allRunners"></div>
@@ -833,4 +856,3 @@ TV Walsum-Aldenrade 07
 
 </body>
 </html>
-```
