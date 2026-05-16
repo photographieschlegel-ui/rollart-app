@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -113,14 +112,6 @@ margin-bottom:8px;
 font-weight:bold;
 }
 
-.scoreGrid{
-display:grid;
-grid-template-columns:
-repeat(3,1fr);
-gap:8px;
-margin-top:8px;
-}
-
 .medal{
 font-size:18px;
 font-weight:bold;
@@ -158,21 +149,6 @@ const db = getFirestore(app);
 let competitions = [];
 let archivedCompetitions = [];
 let activeCompetition = null;
-
-const deductions = {
-
-"1":0.3,
-"2":0.2,
-"3":0.3,
-"4":0.2,
-"5":0.3,
-"6":0.3,
-"7":0.3,
-"8":0.3,
-"9":0.5,
-"10":0.5
-
-};
 
 async function saveDatabase(){
 
@@ -241,46 +217,6 @@ return "🏆";
 
 }
 
-function validateScore(value){
-
-let num = parseFloat(value);
-
-if(isNaN(num)) return 0;
-
-if(num<0.1) num=0.1;
-if(num>10) num=10;
-
-return Number(num.toFixed(1));
-
-}
-
-function calculateAverage(values){
-
-const sorted =
-values
-.filter(v=>!isNaN(v))
-.sort((a,b)=>a-b);
-
-if(sorted.length>=3){
-
-sorted.shift();
-sorted.pop();
-
-}
-
-if(sorted.length===0)
-return 0;
-
-return Number(
-(
-sorted.reduce((a,b)=>a+b,0)
-/
-sorted.length
-).toFixed(2)
-);
-
-}
-
 window.saveCompetition =
 async function(){
 
@@ -331,6 +267,14 @@ if(!confirm(
 competitions =
 competitions.filter(
 c=>c.id!==id
+);
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+competition:null,
+runner:null
+}
 );
 
 await saveDatabase();
@@ -476,19 +420,8 @@ currentCategory.name,
 categoryId:
 currentCategory.id,
 
-a1:0,
-a2:0,
-a3:0,
-
-b1:0,
-b2:0,
-b3:0,
-
 aScore:0,
 bScore:0,
-
-deduction:0,
-
 total:0,
 
 place:"",
@@ -547,14 +480,18 @@ r=>r.liveActive===true
 if(!runner)return;
 
 runner.aScore =
-validateScore(
-document.getElementById("live_a1").value
-);
+parseFloat(
+document.getElementById(
+"live_a"
+).value
+) || 0;
 
 runner.bScore =
-validateScore(
-document.getElementById("live_b1").value
-);
+parseFloat(
+document.getElementById(
+"live_b"
+).value
+) || 0;
 
 runner.total =
 Number(
@@ -587,7 +524,10 @@ r.liveActive=false;
 });
 
 const first =
-activeCompetition.runners.sort(
+
+activeCompetition.runners
+
+.sort(
 (a,b)=>
 Number(a.start)-Number(b.start)
 )[0];
@@ -613,7 +553,9 @@ return;
 
 const runners =
 
-activeCompetition.runners.sort(
+activeCompetition.runners
+
+.sort(
 (a,b)=>
 Number(a.start)-Number(b.start)
 );
@@ -674,7 +616,13 @@ runner:null
 
 await saveDatabase();
 
+activeCompetition = null;
+
 renderRunners();
+
+document.getElementById(
+"liveScoring"
+).innerHTML = "";
 
 };
 
@@ -755,11 +703,11 @@ output.innerHTML = `
 <b>${runner.name}</b>
 
 <input
-id="live_a1"
+id="live_a"
 placeholder="Technik">
 
 <input
-id="live_b1"
+id="live_b"
 placeholder="Kunst">
 
 <button onclick="saveLiveScore()">
@@ -937,8 +885,6 @@ document.getElementById(
 "archiveList"
 );
 
-if(!output) return;
-
 output.innerHTML="";
 
 archivedCompetitions.forEach(comp=>{
@@ -966,16 +912,6 @@ output.innerHTML += `
 🏁 ${comp.name}
 
 </h3>
-
-📍 ${comp.place}
-
-<br>
-
-📅 ${comp.from}
--
-${comp.to}
-
-<br><br>
 
 ${Object.keys(categories).map(cat=>`
 
