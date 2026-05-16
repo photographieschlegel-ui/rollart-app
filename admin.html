@@ -3,7 +3,8 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>🏆 RollArt Admin</title>
 
@@ -46,7 +47,8 @@ gap:8px;
 
 input,
 button,
-textarea{
+textarea,
+select{
 width:100%;
 padding:12px;
 margin-top:8px;
@@ -57,7 +59,8 @@ box-sizing:border-box;
 }
 
 input,
-textarea{
+textarea,
+select{
 background:#475569;
 color:white;
 }
@@ -245,6 +248,11 @@ document.getElementById(
 "competitionTo"
 ).value,
 
+defaultScoringSystem:
+document.getElementById(
+"defaultScoringSystem"
+).value,
+
 finished:false,
 
 categories:[],
@@ -294,6 +302,7 @@ c=>c.id===id
 
 renderRunners();
 renderLiveScoring();
+renderCategorySettings();
 
 };
 
@@ -388,7 +397,11 @@ begin:parts[0],
 end:parts[1],
 
 name:
-parts.slice(6).join(" ")
+parts.slice(6).join(" "),
+
+scoringSystem:
+activeCompetition
+.defaultScoringSystem || "rollart"
 
 };
 
@@ -429,7 +442,7 @@ w==="RSC" ||
 w==="REV" ||
 w==="RSV" ||
 w==="ESG" ||
-w==="1 RC"  ||
+w==="1 RC" ||
 w==="RRD"
 ){
 
@@ -473,6 +486,9 @@ currentCategory.name,
 categoryId:
 currentCategory.id,
 
+scoringSystem:
+currentCategory.scoringSystem,
+
 aScore:0,
 bScore:0,
 total:0,
@@ -495,8 +511,120 @@ document.getElementById(
 saveDatabase();
 
 renderRunners();
+renderCategorySettings();
 
 };
+
+window.changeCategorySystem =
+function(categoryId,value){
+
+const cat =
+
+activeCompetition.categories.find(
+c=>c.id==categoryId
+);
+
+if(!cat)return;
+
+cat.scoringSystem = value;
+
+activeCompetition.runners.forEach(r=>{
+
+if(r.categoryId==categoryId){
+
+r.scoringSystem = value;
+
+}
+
+});
+
+saveDatabase();
+
+renderCategorySettings();
+
+};
+
+function renderCategorySettings(){
+
+const output =
+document.getElementById(
+"categorySettings"
+);
+
+if(!output)return;
+
+if(!activeCompetition){
+
+output.innerHTML="";
+return;
+
+}
+
+output.innerHTML="";
+
+activeCompetition.categories.forEach(cat=>{
+
+output.innerHTML += `
+
+<div class="card">
+
+<b>
+
+📂 ${cat.name}
+
+</b>
+
+<select
+onchange="changeCategorySystem(
+'${cat.id}',
+this.value
+)">
+
+<option
+value="rollart"
+${cat.scoringSystem==="rollart"
+?"selected":""}>
+
+RollArt
+
+</option>
+
+<option
+value="gesamt"
+${cat.scoringSystem==="gesamt"
+?"selected":""}>
+
+Gesamtwertung
+
+</option>
+
+<option
+value="pflicht"
+${cat.scoringSystem==="pflicht"
+?"selected":""}>
+
+Pflicht + Kür
+
+</option>
+
+<option
+value="verein"
+${cat.scoringSystem==="verein"
+?"selected":""}>
+
+Vereinswertung
+
+</option>
+
+</select>
+
+</div>
+
+`;
+
+});
+
+}
 
 function updateRanking(categoryId){
 
@@ -532,6 +660,17 @@ r=>r.liveActive===true
 
 if(!runner)return;
 
+if(runner.scoringSystem==="gesamt"){
+
+runner.total =
+parseFloat(
+document.getElementById(
+"live_total"
+).value
+) || 0;
+
+}else{
+
 runner.aScore =
 parseFloat(
 document.getElementById(
@@ -553,6 +692,8 @@ runner.aScore +
 runner.bScore
 ).toFixed(2)
 );
+
+}
 
 updateRanking(
 runner.categoryId
@@ -669,8 +810,6 @@ runner:null
 
 await saveDatabase();
 
-activeCompetition = null;
-
 renderRunners();
 
 renderLiveScoring();
@@ -747,6 +886,36 @@ return;
 
 }
 
+if(runner.scoringSystem==="gesamt"){
+
+output.innerHTML = `
+
+<div class="card">
+
+<b>${runner.name}</b>
+
+<br>
+
+${runner.club || "-"}
+
+<input
+id="live_total"
+placeholder="Gesamtwertung">
+
+<button onclick="saveLiveScore()">
+
+💾 Speichern
+
+</button>
+
+</div>
+
+`;
+
+return;
+
+}
+
 output.innerHTML = `
 
 <div class="card">
@@ -788,6 +957,8 @@ output.innerHTML="";
 
 if(!activeCompetition)
 return;
+
+renderCategorySettings();
 
 const categories = {};
 
@@ -853,6 +1024,10 @@ ${r.club || "-"}
 
 <br><br>
 
+📋 ${r.scoringSystem}
+
+<br><br>
+
 ⭐ Technik:
 ${r.aScore || 0}
 
@@ -906,6 +1081,10 @@ output.innerHTML += `
 📅 ${comp.from}
 -
 ${comp.to}
+
+<br><br>
+
+📋 ${comp.defaultScoringSystem}
 
 <button onclick="openCompetition(${comp.id})">
 
@@ -1011,6 +1190,10 @@ ${r.club || "-"}
 
 <br><br>
 
+📋 ${r.scoringSystem}
+
+<br><br>
+
 ⭐ Technik:
 ${r.aScore || 0}
 
@@ -1085,6 +1268,26 @@ id="competitionFrom">
 type="date"
 id="competitionTo">
 
+<select id="defaultScoringSystem">
+
+<option value="rollart">
+RollArt
+</option>
+
+<option value="gesamt">
+Gesamtwertung
+</option>
+
+<option value="pflicht">
+Pflicht + Kür
+</option>
+
+<option value="verein">
+Vereinswertung
+</option>
+
+</select>
+
 <button onclick="saveCompetition()">
 
 💾 Wettbewerb speichern
@@ -1119,6 +1322,14 @@ placeholder="PDF Text hier einfügen">
 📥 Wettbewerb importieren
 
 </button>
+
+</div>
+
+<div class="card">
+
+<h2>⚙ Kategorien</h2>
+
+<div id="categorySettings"></div>
 
 </div>
 
