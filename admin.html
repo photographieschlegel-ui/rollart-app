@@ -129,6 +129,10 @@ font-size:18px;
 font-weight:bold;
 }
 
+summary{
+cursor:pointer;
+}
+
 </style>
 
 <script type="module">
@@ -389,10 +393,52 @@ document.getElementById(
 const lines =
 text.split("\n");
 
+const fixedLines = [];
+
+for(let i=0;i<lines.length;i++){
+
+let current =
+lines[i].trim();
+
+if(!current) continue;
+
+const next =
+lines[i+1]
+? lines[i+1].trim()
+: "";
+
+if(
+
+current.match(/^\d+\s+[A-Za-zÄÖÜäöü]/)
+
+&&
+
+next
+
+&&
+
+!next.match(/^\d+/)
+
+&&
+
+!next.match(/^\d{2}:\d{2}/)
+
+){
+
+current += " " + next;
+
+i++;
+
+}
+
+fixedLines.push(current);
+
+}
+
 let currentCategory = null;
 let globalStart = 1;
 
-lines.forEach(line=>{
+fixedLines.forEach(line=>{
 
 line = line.trim();
 
@@ -1269,21 +1315,48 @@ categories[r.category].push(r);
 
 output.innerHTML += `
 
-<div class="card">
+<details class="card">
 
-<h3>
+<summary style="
+font-size:18px;
+font-weight:bold;
+">
 
 🏁 ${comp.name}
 
-</h3>
+</summary>
+
+<br>
+
+📍 ${comp.place}
+
+<br>
+
+📅 ${comp.from}
+-
+${comp.to}
+
+<br><br>
 
 ${Object.keys(categories).map(cat=>`
 
-<div class="categoryTitle">
+<details
+style="
+margin-bottom:12px;
+background:#1e293b;
+padding:10px;
+border-radius:12px;
+">
+
+<summary style="
+font-weight:bold;
+">
 
 📂 ${cat}
 
-</div>
+</summary>
+
+<br>
 
 <div class="runnerGrid">
 
@@ -1344,7 +1417,11 @@ ${r.total || 0}
 
 </div>
 
+</details>
+
 `).join("")}
+
+<br>
 
 <button
 class="deleteButton"
@@ -1354,7 +1431,7 @@ onclick="deleteArchiveCompetition(${comp.id})">
 
 </button>
 
-</div>
+</details>
 
 `;
 
@@ -1505,8 +1582,7 @@ onclick="resetCompetition()">
 <h2>📂 Archiv</h2>
 
 <div
-id="archiveList"
-class="grid">
+id="archiveList">
 </div>
 
 </div>
