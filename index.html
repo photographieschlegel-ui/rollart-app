@@ -128,13 +128,30 @@ const categories = {};
 
 comp.runners.forEach(r=>{
 
-if(!categories[r.category]){
+const key =
+r.category || "Ohne Kategorie";
 
-categories[r.category]=[];
+if(!categories[key]){
+
+categories[key]=[];
 
 }
 
-categories[r.category].push(r);
+const exists =
+categories[key].find(
+x=>
+x.name===r.name
+&&
+x.club===r.club
+&&
+x.start===r.start
+);
+
+if(!exists){
+
+categories[key].push(r);
+
+}
 
 });
 
@@ -267,13 +284,30 @@ const categories = {};
 
 comp.runners.forEach(r=>{
 
-if(!categories[r.category]){
+const key =
+r.category || "Ohne Kategorie";
 
-categories[r.category]=[];
+if(!categories[key]){
+
+categories[key]=[];
 
 }
 
-categories[r.category].push(r);
+const exists =
+categories[key].find(
+x=>
+x.name===r.name
+&&
+x.club===r.club
+&&
+x.start===r.start
+);
+
+if(!exists){
+
+categories[key].push(r);
+
+}
 
 });
 
