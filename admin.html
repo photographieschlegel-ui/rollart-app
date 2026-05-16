@@ -52,7 +52,7 @@ font-size:26px;
 background:#2563eb;
 padding:14px;
 border-radius:16px;
-margin-top:10px;
+margin-bottom:14px;
 text-align:center;
 }
 
@@ -136,7 +136,7 @@ transition:0.3s;
 
 .resultItem.live{
 background:#16a34a;
-transform:scale(1.04);
+transform:scale(1.03);
 }
 
 .resultItem.done{
@@ -218,8 +218,8 @@ const deductionTable = {
 
 1:{value:0.3,text:"Schwierigkeit"},
 4:{value:0.2,text:"Zeitfehler"},
-16:{value:0.5,text:"Sturz"},
-15:{value:0.3,text:"Unsicherheit"}
+15:{value:0.3,text:"Unsicherheit"},
+16:{value:0.5,text:"Sturz"}
 
 };
 
@@ -265,6 +265,7 @@ if(!activeCompetition)
 return;
 
 const currentRunner =
+
 activeCompetition.runners.find(
 r=>r.liveActive===true
 );
@@ -347,6 +348,76 @@ renderCompetitions();
 
 };
 
+window.deleteCompetition =
+async function(id){
+
+if(!confirm(
+"Wettbewerb löschen?"
+)) return;
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+await saveDatabase();
+
+renderCompetitions();
+
+};
+
+window.archiveCompetition =
+async function(id){
+
+const comp =
+competitions.find(
+c=>c.id===id
+);
+
+if(!comp)return;
+
+comp.finished = true;
+
+archivedCompetitions.push(comp);
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+competition:null,
+runner:null
+}
+);
+
+await saveDatabase();
+
+renderCompetitions();
+renderArchive();
+
+};
+
+window.deleteArchiveCompetition =
+async function(id){
+
+if(!confirm(
+"Archiv löschen?"
+)) return;
+
+archivedCompetitions =
+archivedCompetitions.filter(
+c=>c.id!==id
+);
+
+await saveDatabase();
+
+renderArchive();
+
+};
+
 window.openCompetition =
 function(id){
 
@@ -357,6 +428,142 @@ c=>c.id===id
 
 renderRunners();
 renderLiveScoring();
+
+};
+
+window.parseCompetitionText =
+function(){
+
+if(!activeCompetition)
+return;
+
+const text =
+document.getElementById(
+"competitionText"
+).value;
+
+const lines =
+text.split("\n");
+
+let currentCategory = null;
+let globalStart = 1;
+
+lines.forEach(line=>{
+
+line = line.trim();
+
+if(!line)return;
+
+if(line.match(/^\d{2}:\d{2}/)){
+
+const parts =
+line.split(/\s+/);
+
+currentCategory = {
+
+id:Date.now()+Math.random(),
+
+name:
+parts.slice(6).join(" ")
+
+};
+
+activeCompetition.categories.push(
+currentCategory
+);
+
+return;
+
+}
+
+const runnerMatch =
+line.match(/^(\d+)\s+(.+)$/);
+
+if(runnerMatch && currentCategory){
+
+const runnerText =
+runnerMatch[2];
+
+const words =
+runnerText.split(" ");
+
+let name = runnerText;
+let club = "-";
+
+if(words.length >= 3){
+
+club =
+words.slice(-2).join(" ");
+
+name =
+words.slice(0,-2).join(" ");
+
+}
+
+if(
+
+!club.match(
+/(TV|TG|TSV|TuS|VfL|SSC|ERC|RSC|REV|RSV|ESG|RC|RRD|RESG|SSG)/
+)
+
+){
+
+club =
+words.slice(-1).join(" ");
+
+name =
+words.slice(0,-1).join(" ");
+
+}
+
+activeCompetition.runners.push({
+
+id:Date.now()+Math.random(),
+
+start:globalStart++,
+
+name,
+club,
+
+category:
+currentCategory.name,
+
+categoryId:
+currentCategory.id,
+
+a1:0,
+a2:0,
+a3:0,
+
+b1:0,
+b2:0,
+b3:0,
+
+aScore:0,
+bScore:0,
+
+deduction:0,
+deductionNumbers:"",
+
+total:0,
+place:"",
+
+confirmed:false,
+liveActive:false
+
+});
+
+}
+
+});
+
+document.getElementById(
+"competitionText"
+).value="";
+
+saveDatabase();
+
+renderRunners();
 
 };
 
@@ -427,12 +634,6 @@ currentIndex+1;
 if(nextIndex<runners.length){
 
 runners[nextIndex].liveActive=true;
-
-document.getElementById(
-"runnerList"
-).scrollIntoView({
-behavior:"smooth"
-});
 
 }else{
 
@@ -515,16 +716,15 @@ document.getElementById(
 runner.deductionNumbers =
 deductionInput;
 
-const deductionNumbers =
+const nums =
 deductionInput
 .split(",")
-
 .map(n=>parseInt(n.trim()))
 .filter(n=>!isNaN(n));
 
 let deduction = 0;
 
-deductionNumbers.forEach(n=>{
+nums.forEach(n=>{
 
 if(deductionTable[n]){
 
@@ -584,6 +784,69 @@ r.place=i+1;
 
 }
 
+window.finishCompetition =
+async function(){
+
+if(!activeCompetition)
+return;
+
+activeCompetition.finished=true;
+
+activeCompetition.runners.forEach(r=>{
+
+r.liveActive=false;
+
+});
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+competition:null,
+runner:null
+}
+);
+
+await saveDatabase();
+
+renderLiveScoring();
+
+};
+
+window.resetCompetition =
+async function(){
+
+if(!confirm(
+"Alles zurücksetzen?"
+)) return;
+
+activeCompetition.runners.forEach(r=>{
+
+r.a1=0;
+r.a2=0;
+r.a3=0;
+
+r.b1=0;
+r.b2=0;
+r.b3=0;
+
+r.aScore=0;
+r.bScore=0;
+
+r.deduction=0;
+r.total=0;
+
+r.place="";
+r.confirmed=false;
+r.liveActive=false;
+
+});
+
+await saveDatabase();
+
+renderRunners();
+
+};
+
 function renderLiveScoring(){
 
 const output =
@@ -632,11 +895,7 @@ output.innerHTML = `
 
 <div class="liveNow">
 
-<div>
-
 🔴 AKTUELL
-
-</div>
 
 <h1>
 
@@ -654,7 +913,7 @@ ${currentRunner.club}
 
 <div class="nextRunner">
 
-⏭ Danach:
+⏭ Danach
 
 <br><br>
 
@@ -704,7 +963,7 @@ ${nextRunner
 
 <input
 id="deductionNumbers"
-placeholder="z.B. 16,4">
+placeholder="16,4">
 
 <div class="deductionHelp">
 
@@ -720,7 +979,7 @@ placeholder="z.B. 16,4">
 
 <button onclick="saveLiveScore()">
 
-💾 Speichern
+💾 Wertung speichern
 
 </button>
 
@@ -789,6 +1048,8 @@ return Number(a.start)-Number(b.start);
 <div class="resultItem
 
 ${r.liveActive?"live":""}
+
+${r.done?"done":""}
 
 ${r.place==1?"place1":""}
 
@@ -878,6 +1139,22 @@ ${comp.to}
 
 </button>
 
+<button
+class="archiveButton"
+onclick="archiveCompetition(${comp.id})">
+
+🏁 Archivieren
+
+</button>
+
+<button
+class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
+
+🗑 Löschen
+
+</button>
+
 </div>
 
 `;
@@ -893,7 +1170,35 @@ document.getElementById(
 "archiveList"
 );
 
-output.innerHTML="Archiv später";
+output.innerHTML="";
+
+archivedCompetitions.forEach(comp=>{
+
+output.innerHTML += `
+
+<details class="card">
+
+<summary>
+
+🏁 ${comp.name}
+
+</summary>
+
+<br>
+
+<button
+class="deleteButton"
+onclick="deleteArchiveCompetition(${comp.id})">
+
+🗑 Archiv löschen
+
+</button>
+
+</details>
+
+`;
+
+});
 
 }
 
@@ -965,6 +1270,24 @@ class="grid">
 
 <div class="card">
 
+<h2>📥 PDF Import</h2>
+
+<textarea
+id="competitionText"
+rows="12"
+placeholder="PDF Text hier einfügen">
+</textarea>
+
+<button onclick="parseCompetitionText()">
+
+📥 PDF importieren
+
+</button>
+
+</div>
+
+<div class="card">
+
 <h2>🔴 Live Steuerung</h2>
 
 <div id="liveScoring"></div>
@@ -979,6 +1302,30 @@ onclick="startCompetition()">
 
 </button>
 
+<button
+class="nextButton"
+onclick="nextRunner()">
+
+⏭ Weiter
+
+</button>
+
+<button
+class="finishButton"
+onclick="finishCompetition()">
+
+🏁 Abschließen
+
+</button>
+
+<button
+class="resetButton"
+onclick="resetCompetition()">
+
+🧪 Reset
+
+</button>
+
 </div>
 
 </div>
@@ -988,6 +1335,14 @@ onclick="startCompetition()">
 <h2>👥 Läufer</h2>
 
 <div id="runnerList"></div>
+
+</div>
+
+<div class="card">
+
+<h2>📂 Archiv</h2>
+
+<div id="archiveList"></div>
 
 </div>
 
