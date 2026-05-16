@@ -452,7 +452,15 @@ lines[i+1]
 
 if(
 
+(
+
 current.match(/^\d+\s+/)
+
+||
+
+current.match(/^[A-Za-zÄÖÜäöüß\-]+$/)
+
+)
 
 &&
 
