@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport"
 content="width=device-width, initial-scale=1.0">
@@ -246,8 +245,13 @@ r=>r.liveActive===true
 await setDoc(
 doc(db,"rollart","live"),
 {
-competition:activeCompetition,
-runner:currentRunner || null
+competition:
+activeCompetition.finished
+? null
+: activeCompetition,
+
+runner:
+currentRunner || null
 }
 );
 
@@ -425,7 +429,16 @@ text.split("\n");
 
 const fixedLines = [];
 
+let skipNext = false;
+
 for(let i=0;i<lines.length;i++){
+
+if(skipNext){
+
+skipNext = false;
+continue;
+
+}
 
 let current =
 lines[i].trim();
@@ -439,7 +452,7 @@ lines[i+1]
 
 if(
 
-current.match(/^\d+\s+[A-Za-zÄÖÜäöü]/)
+current.match(/^\d+\s+/)
 
 &&
 
@@ -447,7 +460,7 @@ next
 
 &&
 
-!next.match(/^\d+/)
+!next.match(/^\d+\s+/)
 
 &&
 
@@ -455,9 +468,10 @@ next
 
 ){
 
-current += " " + next;
+current =
+current + " " + next;
 
-i++;
+skipNext = true;
 
 }
 
@@ -534,7 +548,8 @@ const clubKeywords = [
 "ESG",
 "RC",
 "RRD",
-"RESG"
+"RESG",
+"SSG"
 
 ];
 
@@ -814,9 +829,11 @@ updateRanking(
 runner.categoryId
 );
 
-saveDatabase();
-
 renderRunners();
+
+nextRunner();
+
+saveDatabase();
 
 };
 
@@ -891,6 +908,12 @@ runners[nextIndex].liveActive = true;
 }else{
 
 activeCompetition.finished = true;
+
+activeCompetition.runners.forEach(r=>{
+
+r.liveActive = false;
+
+});
 
 }
 
@@ -1580,14 +1603,6 @@ class="nextButton"
 onclick="startCompetition()">
 
 ▶ Start
-
-</button>
-
-<button
-class="nextButton"
-onclick="nextRunner()">
-
-➡ Weiter
 
 </button>
 
