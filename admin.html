@@ -320,7 +320,6 @@ c=>c.id===id
 
 renderRunners();
 renderLiveScoring();
-renderCategorySettings();
 
 };
 
@@ -444,26 +443,51 @@ runnerText.split(" ");
 
 let clubStart = -1;
 
+const clubKeywords = [
+
+"TV",
+"TG",
+"TSV",
+"TuS",
+"VfL",
+"SSC",
+"ERC",
+"RSC",
+"REV",
+"RSV",
+"ESG",
+"RC",
+"RRD",
+"RESG"
+
+];
+
 for(let i=0;i<words.length;i++){
 
 const w = words[i];
 
 if(
-w==="TV" ||
-w==="TG" ||
-w==="TSV" ||
-w==="TuS" ||
-w==="VfL" ||
-w==="SSC" ||
-w==="ERC" ||
-w==="RSC" ||
-w==="REV" ||
-w==="RSV" ||
-w==="ESG" ||
-w==="RC" ||
-w==="RRD" ||
-w==="RESG" ||
-(w==="1." && words[i+1]==="RC")
+
+clubKeywords.includes(w)
+
+||
+
+(
+i < words.length-1
+&&
+clubKeywords.includes(
+words[i+1]
+)
+)
+
+||
+
+(
+w==="1."
+&&
+words[i+1]==="RC"
+)
+
 ){
 
 clubStart = i;
@@ -542,7 +566,6 @@ document.getElementById(
 saveDatabase();
 
 renderRunners();
-renderCategorySettings();
 
 };
 
@@ -571,73 +594,9 @@ r.scoringSystem = value;
 
 saveDatabase();
 
-renderCategorySettings();
+renderRunners();
 
 };
-
-function renderCategorySettings(){
-
-const output =
-document.getElementById(
-"categorySettings"
-);
-
-if(!output)return;
-
-if(!activeCompetition){
-
-output.innerHTML="";
-return;
-
-}
-
-output.innerHTML="";
-
-activeCompetition.categories.forEach(cat=>{
-
-output.innerHTML += `
-
-<div class="card">
-
-<b>
-
-📂 ${cat.name}
-
-</b>
-
-<select
-onchange="changeCategorySystem(
-'${cat.id}',
-this.value
-)">
-
-<option
-value="rollart"
-${cat.scoringSystem==="rollart"
-?"selected":""}>
-
-RollArt
-
-</option>
-
-<option
-value="gesamt"
-${cat.scoringSystem==="gesamt"
-?"selected":""}>
-
-Gesamtwertung
-
-</option>
-
-</select>
-
-</div>
-
-`;
-
-});
-
-}
 
 function updateRanking(categoryId){
 
@@ -1075,8 +1034,6 @@ output.innerHTML="";
 if(!activeCompetition)
 return;
 
-renderCategorySettings();
-
 const categories = {};
 
 activeCompetition.runners.forEach(r=>{
@@ -1097,7 +1054,54 @@ output.innerHTML += `
 
 <div class="categoryTitle">
 
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+">
+
+<div>
+
 📂 ${cat}
+
+</div>
+
+<select
+style="
+max-width:220px;
+margin-top:0;
+background:#0f172a;
+color:white;
+"
+
+onchange="changeCategorySystem(
+'${categories[cat][0].categoryId}',
+this.value
+)">
+
+<option
+value="rollart"
+${categories[cat][0].scoringSystem==="rollart"
+?"selected":""}>
+
+RollArt
+
+</option>
+
+<option
+value="gesamt"
+${categories[cat][0].scoringSystem==="gesamt"
+?"selected":""}>
+
+Gesamtwertung
+
+</option>
+
+</select>
+
+</div>
 
 </div>
 
@@ -1441,14 +1445,6 @@ placeholder="PDF Text hier einfügen">
 📥 Wettbewerb importieren
 
 </button>
-
-</div>
-
-<div class="card">
-
-<h2>⚙ Kategorien</h2>
-
-<div id="categorySettings"></div>
 
 </div>
 
