@@ -21,7 +21,7 @@ color:white;
 .app{
 max-width:1700px;
 margin:auto;
-padding:10px;
+padding:12px;
 }
 
 .card{
@@ -29,63 +29,6 @@ background:#1e293b;
 padding:14px;
 border-radius:18px;
 margin-bottom:14px;
-}
-
-.header{
-display:flex;
-align-items:center;
-gap:14px;
-margin-bottom:14px;
-}
-
-.title{
-font-size:28px;
-font-weight:bold;
-}
-
-.liveRunner{
-font-size:30px;
-font-weight:bold;
-line-height:1.3;
-}
-
-.liveClub{
-font-size:18px;
-color:#cbd5e1;
-margin-top:8px;
-}
-
-.liveCategory{
-margin-top:8px;
-font-size:18px;
-color:#60a5fa;
-font-weight:bold;
-}
-
-.scoreGrid{
-display:grid;
-grid-template-columns:
-repeat(3,1fr);
-gap:10px;
-margin-top:18px;
-}
-
-.scoreCard{
-background:#334155;
-padding:12px;
-border-radius:14px;
-text-align:center;
-}
-
-.scoreLabel{
-font-size:13px;
-color:#cbd5e1;
-margin-bottom:8px;
-}
-
-.scoreValue{
-font-size:28px;
-font-weight:bold;
 }
 
 .runnerGrid{
@@ -103,12 +46,8 @@ font-size:12px;
 line-height:1.5;
 }
 
-.resultItem.live{
+.live{
 background:#16a34a;
-}
-
-.resultItem.done{
-opacity:0.7;
 }
 
 .categoryTitle{
@@ -124,10 +63,8 @@ font-size:18px;
 font-weight:bold;
 }
 
-.clock{
-font-size:14px;
-color:#cbd5e1;
-margin-top:4px;
+summary{
+cursor:pointer;
 }
 
 </style>
@@ -155,10 +92,11 @@ appId:"1:658963624980:web:2e4d153f5df087c4f42301"
 
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app =
+initializeApp(firebaseConfig);
 
-let archiveData = [];
+const db =
+getFirestore(app);
 
 function medal(place){
 
@@ -170,178 +108,25 @@ return "🏆";
 
 }
 
-function updateClock(){
-
-const now = new Date();
-
-document.getElementById(
-"clock"
-).innerHTML =
-
-"🕒 " +
-
-now.toLocaleTimeString(
-"de-DE",
-{
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit"
-}
-);
-
-}
-
-function renderLive(data){
-
-const competition =
-data?.competition || null;
-
-const runner =
-data?.runner || null;
-
-if(!competition || !runner){
-
-document.getElementById(
-"liveArea"
-).innerHTML = `
-
-<div class="card">
-
-<h2>
-🏁 Kein aktiver Wettbewerb
-</h2>
-
-</div>
-
-`;
-
-document.getElementById(
-"allRunners"
-).innerHTML = "";
-
-return;
-
-}
-
-document.getElementById(
-"liveArea"
-).innerHTML = `
-
-<div class="card">
-
-<div class="title">
-
-🏆 ${competition.name || "-"}
-
-</div>
-
-<div class="clock">
-
-📍 ${competition.place || "-"}
-
-<br>
-
-📅 ${competition.from || "-"}
--
-${competition.to || "-"}
-
-</div>
-
-<br>
-
-<div class="liveRunner">
-
-${runner?.name || "-"}
-
-</div>
-
-<div class="liveClub">
-
-${runner?.club || "-"}
-
-</div>
-
-<div class="liveCategory">
-
-📂 ${runner?.category || "-"}
-
-</div>
-
-<div class="scoreGrid">
-
-<div class="scoreCard">
-
-<div class="scoreLabel">
-⭐ Technik
-</div>
-
-<div class="scoreValue">
-
-${runner?.aScore || 0}
-
-</div>
-
-</div>
-
-<div class="scoreCard">
-
-<div class="scoreLabel">
-🎨 Kunst
-</div>
-
-<div class="scoreValue">
-
-${runner?.bScore || 0}
-
-</div>
-
-</div>
-
-<div class="scoreCard">
-
-<div class="scoreLabel">
-🏆 Gesamt
-</div>
-
-<div class="scoreValue">
-
-${runner?.total || 0}
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-`;
-
-renderAllRunners(
-competition
-);
-
-}
-
-function renderAllRunners(
-competition
-){
+function renderCompetition(comp){
 
 const output =
 document.getElementById(
-"allRunners"
+"liveCompetition"
 );
 
-if(!competition?.runners){
+if(!comp){
 
-output.innerHTML="";
+output.innerHTML=
+"🏁 Kein aktiver Wettbewerb";
+
 return;
 
 }
 
 const categories = {};
 
-competition.runners.forEach(r=>{
+comp.runners.forEach(r=>{
 
 if(!categories[r.category]){
 
@@ -353,11 +138,27 @@ categories[r.category].push(r);
 
 });
 
-output.innerHTML="";
+output.innerHTML = `
 
-Object.keys(categories).forEach(cat=>{
+<div class="card">
 
-output.innerHTML += `
+<h2>
+
+🏆 ${comp.name}
+
+</h2>
+
+📍 ${comp.place}
+
+<br>
+
+📅 ${comp.from}
+-
+${comp.to}
+
+</div>
+
+${Object.keys(categories).map(cat=>`
 
 <div class="categoryTitle">
 
@@ -371,7 +172,10 @@ ${categories[cat]
 
 .sort((a,b)=>{
 
-if(competition.finished){
+if(
+a.place &&
+b.place
+){
 
 return Number(a.place)-Number(b.place);
 
@@ -384,16 +188,12 @@ return Number(a.start)-Number(b.start);
 .map(r=>`
 
 <div class="resultItem
-
 ${r.liveActive?"live":""}
-${r.confirmed?"done":""}
-
 ">
 
 <div class="medal">
 
 ${medal(r.place)}
-
 ${r.place || r.start}
 
 </div>
@@ -408,6 +208,10 @@ ${r.club || "-"}
 
 <br><br>
 
+📋 ${r.scoringSystem}
+
+<br><br>
+
 ⭐ Technik:
 ${r.aScore || 0}
 
@@ -415,6 +219,16 @@ ${r.aScore || 0}
 
 🎨 Kunst:
 ${r.bScore || 0}
+
+<br>
+
+⚠ Nummern:
+${r.deductionNumbers || "-"}
+
+<br>
+
+⚠ Abzug:
+${r.deduction || 0}
 
 <br>
 
@@ -429,13 +243,13 @@ ${r.total || 0}
 
 <br>
 
-`;
+`).join("")}
 
-});
+`;
 
 }
 
-function renderArchive(){
+function renderArchive(data){
 
 const output =
 document.getElementById(
@@ -444,7 +258,10 @@ document.getElementById(
 
 output.innerHTML="";
 
-archiveData.forEach(comp=>{
+const archive =
+data.archivedCompetitions || [];
+
+archive.forEach(comp=>{
 
 const categories = {};
 
@@ -462,13 +279,18 @@ categories[r.category].push(r);
 
 output.innerHTML += `
 
-<div class="card">
+<details class="card">
 
-<h3>
+<summary style="
+font-size:18px;
+font-weight:bold;
+">
 
 🏁 ${comp.name}
 
-</h3>
+</summary>
+
+<br>
 
 📍 ${comp.place}
 
@@ -482,11 +304,23 @@ ${comp.to}
 
 ${Object.keys(categories).map(cat=>`
 
-<div class="categoryTitle">
+<details
+style="
+margin-bottom:12px;
+background:#1e293b;
+padding:10px;
+border-radius:12px;
+">
+
+<summary style="
+font-weight:bold;
+">
 
 📂 ${cat}
 
-</div>
+</summary>
+
+<br>
 
 <div class="runnerGrid">
 
@@ -519,6 +353,10 @@ ${r.club || "-"}
 
 <br><br>
 
+📋 ${r.scoringSystem}
+
+<br><br>
+
 ⭐ Technik:
 ${r.aScore || 0}
 
@@ -526,6 +364,16 @@ ${r.aScore || 0}
 
 🎨 Kunst:
 ${r.bScore || 0}
+
+<br>
+
+⚠ Nummern:
+${r.deductionNumbers || "-"}
+
+<br>
+
+⚠ Abzug:
+${r.deduction || 0}
 
 <br>
 
@@ -538,9 +386,11 @@ ${r.total || 0}
 
 </div>
 
+</details>
+
 `).join("")}
 
-</div>
+</details>
 
 `;
 
@@ -556,8 +406,11 @@ doc(db,"rollart","live"),
 
 if(snapshot.exists()){
 
-renderLive(
-snapshot.data()
+const data =
+snapshot.data();
+
+renderCompetition(
+data.competition
 );
 
 }
@@ -574,21 +427,14 @@ doc(db,"rollart","database"),
 
 if(snapshot.exists()){
 
-archiveData =
+renderArchive(
 snapshot.data()
-.archivedCompetitions || [];
-
-renderArchive();
-
-}
-
-}
-
 );
 
-setInterval(
-updateClock,
-1000
+}
+
+}
+
 );
 
 </script>
@@ -599,49 +445,11 @@ updateClock,
 
 <div class="app">
 
-<div class="header">
-
-<div>
-
-<div class="title">
-
-🏆 RollArt Live
-
-</div>
-
-<div
-id="clock"
-class="clock">
-
-🕒 --:--
-
-</div>
-
-</div>
-
-</div>
-
-<div id="liveArea"></div>
+<div id="liveCompetition"></div>
 
 <div class="card">
 
-<h2>
-
-👥 Läufer & Ergebnisse
-
-</h2>
-
-<div id="allRunners"></div>
-
-</div>
-
-<div class="card">
-
-<h2>
-
-📂 Archiv
-
-</h2>
+<h2>📂 Archiv</h2>
 
 <div id="archiveList"></div>
 
