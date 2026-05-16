@@ -539,77 +539,35 @@ runnerMatch[2];
 let words =
 runnerText.split(" ");
 
-let clubStart = -1;
+let name = runnerText;
+let club = "-";
 
-const clubKeywords = [
+if(words.length >= 3){
 
-"TV",
-"TG",
-"TSV",
-"TuS",
-"VfL",
-"SSC",
-"ERC",
-"RSC",
-"REV",
-"RSV",
-"ESG",
-"RC",
-"RRD",
-"RESG",
-"SSG"
+club =
+words.slice(-2).join(" ");
 
-];
+name =
+words.slice(0,-2).join(" ");
 
-for(let i=0;i<words.length;i++){
-
-const w = words[i];
+}
 
 if(
 
-clubKeywords.includes(w)
-
-||
-
-(
-i < words.length-1
-&&
-clubKeywords.includes(
-words[i+1]
-)
-)
-
-||
-
-(
-w==="1."
-&&
-words[i+1]==="RC"
+club.match(
+/^(TV|TG|TSV|TuS|VfL|SSC|ERC|RSC|REV|RSV|ESG|RC|RRD|RESG|SSG)/
 )
 
 ){
 
-clubStart = i;
-break;
-
 }
-
-}
-
-let name = runnerText;
-let club = "-";
-
-if(clubStart > 0){
-
-name =
-words
-.slice(0,clubStart)
-.join(" ");
+else{
 
 club =
-words
-.slice(clubStart)
-.join(" ");
+words.slice(-1).join(" ");
+
+name =
+words.slice(0,-1).join(" ");
 
 }
 
@@ -859,7 +817,7 @@ r.liveActive=false;
 
 const first =
 
-activeCompetition.runners
+[...activeCompetition.runners]
 
 .sort(
 (a,b)=>
@@ -887,7 +845,7 @@ return;
 
 const runners =
 
-activeCompetition.runners
+[...activeCompetition.runners]
 
 .sort(
 (a,b)=>
