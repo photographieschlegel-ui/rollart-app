@@ -45,6 +45,14 @@ repeat(auto-fit,minmax(170px,1fr));
 gap:8px;
 }
 
+.scoreGrid{
+display:grid;
+grid-template-columns:
+repeat(3,1fr);
+gap:8px;
+margin-top:8px;
+}
+
 input,
 button,
 textarea,
@@ -218,6 +226,16 @@ if(place==2) return "🥈";
 if(place==3) return "🥉";
 
 return "🏆";
+
+}
+
+function average(a,b,c){
+
+return Number(
+(
+(a+b+c)/3
+).toFixed(2)
+);
 
 }
 
@@ -442,8 +460,9 @@ w==="RSC" ||
 w==="REV" ||
 w==="RSV" ||
 w==="ESG" ||
-w==="1 RC" ||
-w==="RRD"
+w==="RC" ||
+w==="RRD" ||
+(w==="1." && words[i+1]==="RC")
 ){
 
 clubStart = i;
@@ -488,6 +507,14 @@ currentCategory.id,
 
 scoringSystem:
 currentCategory.scoringSystem,
+
+a1:0,
+a2:0,
+a3:0,
+
+b1:0,
+b2:0,
+b3:0,
 
 aScore:0,
 bScore:0,
@@ -598,24 +625,6 @@ Gesamtwertung
 
 </option>
 
-<option
-value="pflicht"
-${cat.scoringSystem==="pflicht"
-?"selected":""}>
-
-Pflicht + Kür
-
-</option>
-
-<option
-value="verein"
-${cat.scoringSystem==="verein"
-?"selected":""}>
-
-Vereinswertung
-
-</option>
-
 </select>
 
 </div>
@@ -671,19 +680,49 @@ document.getElementById(
 
 }else{
 
-runner.aScore =
+runner.a1 =
 parseFloat(
-document.getElementById(
-"live_a"
-).value
+document.getElementById("a1").value
 ) || 0;
 
-runner.bScore =
+runner.a2 =
 parseFloat(
-document.getElementById(
-"live_b"
-).value
+document.getElementById("a2").value
 ) || 0;
+
+runner.a3 =
+parseFloat(
+document.getElementById("a3").value
+) || 0;
+
+runner.b1 =
+parseFloat(
+document.getElementById("b1").value
+) || 0;
+
+runner.b2 =
+parseFloat(
+document.getElementById("b2").value
+) || 0;
+
+runner.b3 =
+parseFloat(
+document.getElementById("b3").value
+) || 0;
+
+runner.aScore =
+average(
+runner.a1,
+runner.a2,
+runner.a3
+);
+
+runner.bScore =
+average(
+runner.b1,
+runner.b2,
+runner.b3
+);
 
 runner.total =
 Number(
@@ -835,6 +874,14 @@ r.liveActive=false;
 
 r.place="";
 
+r.a1=0;
+r.a2=0;
+r.a3=0;
+
+r.b1=0;
+r.b2=0;
+r.b3=0;
+
 r.aScore=0;
 r.bScore=0;
 r.total=0;
@@ -926,13 +973,29 @@ output.innerHTML = `
 
 ${runner.club || "-"}
 
-<input
-id="live_a"
-placeholder="Technik">
+<br><br>
 
-<input
-id="live_b"
-placeholder="Kunst">
+⭐ Technik
+
+<div class="scoreGrid">
+
+<input id="a1" placeholder="A1">
+<input id="a2" placeholder="A2">
+<input id="a3" placeholder="A3">
+
+</div>
+
+<br>
+
+🎨 Kunst
+
+<div class="scoreGrid">
+
+<input id="b1" placeholder="B1">
+<input id="b2" placeholder="B2">
+<input id="b3" placeholder="B3">
+
+</div>
 
 <button onclick="saveLiveScore()">
 
@@ -1276,14 +1339,6 @@ RollArt
 
 <option value="gesamt">
 Gesamtwertung
-</option>
-
-<option value="pflicht">
-Pflicht + Kür
-</option>
-
-<option value="verein">
-Vereinswertung
 </option>
 
 </select>
