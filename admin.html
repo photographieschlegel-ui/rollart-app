@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -404,15 +405,31 @@ line.match(/^(\d+)\s+(.+)$/);
 
 if(runnerMatch && currentCategory){
 
+const runnerText =
+runnerMatch[2];
+
+let name = runnerText;
+let club = "-";
+
+const split =
+runnerText.split("  ");
+
+if(split.length >= 2){
+
+name = split[0];
+club = split.slice(1).join(" ");
+
+}
+
 activeCompetition.runners.push({
 
 id:Date.now()+Math.random(),
 
 start:globalStart++,
 
-name:runnerMatch[2],
+name:name,
 
-club:"-",
+club:club,
 
 category:
 currentCategory.name,
@@ -702,6 +719,10 @@ output.innerHTML = `
 
 <b>${runner.name}</b>
 
+<br>
+
+${runner.club || "-"}
+
 <input
 id="live_a"
 placeholder="Technik">
@@ -793,6 +814,10 @@ ${r.place || r.start}
 ${r.name}
 
 <br>
+
+${r.club || "-"}
+
+<br><br>
 
 ⭐ Technik:
 ${r.aScore || 0}
@@ -947,6 +972,10 @@ ${r.place || "-"}
 ${r.name}
 
 <br>
+
+${r.club || "-"}
+
+<br><br>
 
 ⭐ Technik:
 ${r.aScore || 0}
