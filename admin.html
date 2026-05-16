@@ -408,16 +408,47 @@ if(runnerMatch && currentCategory){
 const runnerText =
 runnerMatch[2];
 
+let words =
+runnerText.split(" ");
+
+let clubStart = -1;
+
+for(let i=0;i<words.length;i++){
+
+const w = words[i];
+
+if(
+w==="TV" ||
+w==="ERC" ||
+w==="RSC" ||
+w==="REV" ||
+w==="TuS" ||
+w==="VfL" ||
+w==="SSC" ||
+w==="RC"
+){
+
+clubStart = i;
+break;
+
+}
+
+}
+
 let name = runnerText;
 let club = "-";
 
-const split =
-runnerText.split("  ");
+if(clubStart > 0){
 
-if(split.length >= 2){
+name =
+words
+.slice(0,clubStart)
+.join(" ");
 
-name = split[0];
-club = split.slice(1).join(" ");
+club =
+words
+.slice(clubStart)
+.join(" ");
 
 }
 
@@ -637,9 +668,7 @@ activeCompetition = null;
 
 renderRunners();
 
-document.getElementById(
-"liveScoring"
-).innerHTML = "";
+renderLiveScoring();
 
 };
 
