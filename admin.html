@@ -178,10 +178,10 @@ let activeCompetition = null;
 
 const deductionTable = {
 
-"1":{value:0.3,text:"Schwierigkeit"},
-"4":{value:0.2,text:"Zeitfehler"},
-"15":{value:0.3,text:"Unsicherheit"},
-"16":{value:0.5,text:"Sturz"}
+"1":0.3,
+"4":0.2,
+"15":0.3,
+"16":0.5
 
 };
 
@@ -441,20 +441,6 @@ words.slice(-2).join(" ");
 let name =
 words.slice(0,-2).join(" ");
 
-if(
-!club.match(
-/(TV|TG|TSV|TuS|VfL|SSC|ERC|RSC|REV|RSV|ESG|RC|RRD|RESG|SSG)/
-)
-){
-
-club =
-words.slice(-1).join(" ");
-
-name =
-words.slice(0,-1).join(" ");
-
-}
-
 activeCompetition.runners.push({
 
 id:Date.now()+Math.random(),
@@ -647,20 +633,17 @@ deductionInput;
 let deduction = 0;
 
 const nums =
-deductionInput
-.split(",");
+deductionInput.split(",");
 
 nums.forEach(raw=>{
 
 const n =
 raw.trim();
 
-if(
-deductionTable[n]
-){
+if(deductionTable[n]){
 
 deduction +=
-deductionTable[n].value;
+Number(deductionTable[n]);
 
 }
 
@@ -820,26 +803,6 @@ ${nextRunner
 <input
 id="deductionNumbers"
 placeholder="16,4">
-
-<details style="margin-top:10px;">
-
-<summary>
-
-❔ Abzugshilfe
-
-</summary>
-
-<br>
-
-16 = Sturz (-0.5)
-<br>
-
-4 = Zeitfehler (-0.2)
-<br>
-
-15 = Unsicherheit (-0.3)
-
-</details>
 
 <button onclick="saveLiveScore()">
 
