@@ -107,14 +107,6 @@ cursor:pointer;
 background:#16a34a;
 }
 
-.finishButton{
-background:#ea580c;
-}
-
-.resetButton{
-background:#7c3aed;
-}
-
 .deleteButton{
 background:#dc2626;
 }
@@ -216,14 +208,6 @@ const deductionTable = {
 16:{value:0.5,text:"Sturz"}
 
 };
-
-function total3(a,b,c){
-
-return Number(
-(a+b+c).toFixed(2)
-);
-
-}
 
 async function saveDatabase(){
 
@@ -385,6 +369,24 @@ runner:null
 await saveDatabase();
 
 renderCompetitions();
+renderArchive();
+
+};
+
+window.deleteArchiveCompetition =
+async function(id){
+
+if(!confirm(
+"Archiv wirklich löschen?"
+)) return;
+
+archivedCompetitions =
+archivedCompetitions.filter(
+c=>c.id!==id
+);
+
+await saveDatabase();
+
 renderArchive();
 
 };
@@ -656,17 +658,21 @@ document.getElementById("b3").value
 ) || 0;
 
 runner.aScore =
-total3(
-runner.a1,
-runner.a2,
+Number(
+(
+runner.a1 +
+runner.a2 +
 runner.a3
+).toFixed(2)
 );
 
 runner.bScore =
-total3(
-runner.b1,
-runner.b2,
+Number(
+(
+runner.b1 +
+runner.b2 +
 runner.b3
+).toFixed(2)
 );
 
 const deductionInput =
@@ -863,7 +869,13 @@ ${nextRunner
 id="deductionNumbers"
 placeholder="16,4">
 
-<div class="deductionHelp">
+<details class="deductionHelp">
+
+<summary>
+
+❔ Abzugshilfe
+
+</summary>
 
 16 = Sturz (-0.5)
 <br>
@@ -873,7 +885,7 @@ placeholder="16,4">
 
 15 = Unsicherheit (-0.3)
 
-</div>
+</details>
 
 <button onclick="saveLiveScore()">
 
@@ -1089,6 +1101,16 @@ output.innerHTML += `
 📅 ${comp.from}
 -
 ${comp.to}
+
+<br><br>
+
+<button
+class="deleteButton"
+onclick="deleteArchiveCompetition(${comp.id})">
+
+🗑 Archiv löschen
+
+</button>
 
 </details>
 
