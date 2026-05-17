@@ -404,135 +404,6 @@ renderLiveScoring();
 
 };
 
-window.parseCompetitionText =
-function(){
-
-if(!activeCompetition)
-return;
-
-const text =
-document.getElementById(
-"competitionText"
-).value;
-
-const lines =
-text.split("\n");
-
-let currentCategory = null;
-let globalStart = 1;
-
-lines.forEach(line=>{
-
-line=line.trim();
-
-if(!line)return;
-
-if(line.match(/^\d{2}:\d{2}/)){
-
-const parts =
-line.split(/\s+/);
-
-currentCategory = {
-
-id:Date.now()+Math.random(),
-
-name:
-parts.slice(6).join(" ")
-
-};
-
-activeCompetition.categories.push(
-currentCategory
-);
-
-return;
-
-}
-
-const runnerMatch =
-line.match(/^(\d+)\s+(.+)$/);
-
-if(runnerMatch && currentCategory){
-
-const runnerText =
-runnerMatch[2];
-
-const words =
-runnerText.split(" ");
-
-let club =
-words.slice(-2).join(" ");
-
-let name =
-words.slice(0,-2).join(" ");
-
-if(
-
-!club.match(
-/(TV|TG|TSV|TuS|VfL|SSC|ERC|RSC|REV|RSV|ESG|RC|RRD|RESG|SSG)/
-)
-
-){
-
-club =
-words.slice(-1).join(" ");
-
-name =
-words.slice(0,-1).join(" ");
-
-}
-
-activeCompetition.runners.push({
-
-id:Date.now()+Math.random(),
-
-start:globalStart++,
-
-name,
-club,
-
-category:
-currentCategory.name,
-
-categoryId:
-currentCategory.id,
-
-a1:0,
-a2:0,
-a3:0,
-
-b1:0,
-b2:0,
-b3:0,
-
-aScore:0,
-bScore:0,
-
-deduction:0,
-deductionNumbers:"",
-
-total:0,
-place:"",
-
-confirmed:false,
-liveActive:false
-
-});
-
-}
-
-});
-
-document.getElementById(
-"competitionText"
-).value="";
-
-saveDatabase();
-
-renderRunners();
-
-};
-
 window.startCompetition =
 function(){
 
@@ -627,35 +498,24 @@ r=>r.liveActive===true
 
 if(!runner)return;
 
-runner.a1 =
-parseFloat(
-document.getElementById("a1").value
+function val(id){
+
+return parseFloat(
+document
+.getElementById(id)
+.value
+.replace(",",".")
 ) || 0;
 
-runner.a2 =
-parseFloat(
-document.getElementById("a2").value
-) || 0;
+}
 
-runner.a3 =
-parseFloat(
-document.getElementById("a3").value
-) || 0;
+runner.a1 = val("a1");
+runner.a2 = val("a2");
+runner.a3 = val("a3");
 
-runner.b1 =
-parseFloat(
-document.getElementById("b1").value
-) || 0;
-
-runner.b2 =
-parseFloat(
-document.getElementById("b2").value
-) || 0;
-
-runner.b3 =
-parseFloat(
-document.getElementById("b3").value
-) || 0;
+runner.b1 = val("b1");
+runner.b2 = val("b2");
+runner.b3 = val("b3");
 
 runner.aScore =
 Number(
@@ -684,10 +544,20 @@ runner.deductionNumbers =
 deductionInput;
 
 const nums =
+
 deductionInput
+
 .split(",")
-.map(n=>parseInt(n.trim()))
-.filter(n=>!isNaN(n));
+
+.map(n=>
+parseInt(
+n.trim()
+)
+)
+
+.filter(n=>
+!isNaN(n)
+);
 
 let deduction = 0;
 
@@ -1283,24 +1153,6 @@ id="competitionTo">
 id="competitionList"
 class="grid">
 </div>
-
-</div>
-
-<div class="card">
-
-<h2>📥 PDF Import</h2>
-
-<textarea
-id="competitionText"
-rows="12"
-placeholder="PDF Text hier einfügen">
-</textarea>
-
-<button onclick="parseCompetitionText()">
-
-📥 PDF importieren
-
-</button>
 
 </div>
 
