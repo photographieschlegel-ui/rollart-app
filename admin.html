@@ -223,6 +223,14 @@ const deductionTable = {
 
 };
 
+function total3(a,b,c){
+
+return Number(
+(a+b+c).toFixed(2)
+);
+
+}
+
 async function saveDatabase(){
 
 await setDoc(
@@ -234,28 +242,6 @@ archivedCompetitions
 );
 
 await updateLive();
-
-}
-
-async function loadDatabase(){
-
-const snap =
-await getDoc(
-doc(db,"rollart","database")
-);
-
-if(snap.exists()){
-
-competitions =
-snap.data().competitions || [];
-
-archivedCompetitions =
-snap.data().archivedCompetitions || [];
-
-}
-
-renderCompetitions();
-renderArchive();
 
 }
 
@@ -285,6 +271,28 @@ currentRunner || null
 
 }
 
+async function loadDatabase(){
+
+const snap =
+await getDoc(
+doc(db,"rollart","database")
+);
+
+if(snap.exists()){
+
+competitions =
+snap.data().competitions || [];
+
+archivedCompetitions =
+snap.data().archivedCompetitions || [];
+
+}
+
+renderCompetitions();
+renderArchive();
+
+}
+
 function medal(place){
 
 if(place==1) return "🥇";
@@ -292,14 +300,6 @@ if(place==2) return "🥈";
 if(place==3) return "🥉";
 
 return "🏆";
-
-}
-
-function average(a,b,c){
-
-return Number(
-((a+b+c)/3).toFixed(2)
-);
 
 }
 
@@ -330,11 +330,6 @@ document.getElementById(
 "competitionTo"
 ).value,
 
-defaultScoringSystem:
-document.getElementById(
-"defaultScoringSystem"
-).value,
-
 finished:false,
 
 categories:[],
@@ -345,76 +340,6 @@ runners:[]
 await saveDatabase();
 
 renderCompetitions();
-
-};
-
-window.deleteCompetition =
-async function(id){
-
-if(!confirm(
-"Wettbewerb löschen?"
-)) return;
-
-competitions =
-competitions.filter(
-c=>c.id!==id
-);
-
-await saveDatabase();
-
-renderCompetitions();
-
-};
-
-window.archiveCompetition =
-async function(id){
-
-const comp =
-competitions.find(
-c=>c.id===id
-);
-
-if(!comp)return;
-
-comp.finished = true;
-
-archivedCompetitions.push(comp);
-
-competitions =
-competitions.filter(
-c=>c.id!==id
-);
-
-await setDoc(
-doc(db,"rollart","live"),
-{
-competition:null,
-runner:null
-}
-);
-
-await saveDatabase();
-
-renderCompetitions();
-renderArchive();
-
-};
-
-window.deleteArchiveCompetition =
-async function(id){
-
-if(!confirm(
-"Archiv löschen?"
-)) return;
-
-archivedCompetitions =
-archivedCompetitions.filter(
-c=>c.id!==id
-);
-
-await saveDatabase();
-
-renderArchive();
 
 };
 
@@ -450,7 +375,7 @@ let globalStart = 1;
 
 lines.forEach(line=>{
 
-line = line.trim();
+line=line.trim();
 
 if(!line)return;
 
@@ -487,18 +412,11 @@ runnerMatch[2];
 const words =
 runnerText.split(" ");
 
-let name = runnerText;
-let club = "-";
-
-if(words.length >= 3){
-
-club =
+let club =
 words.slice(-2).join(" ");
 
-name =
+let name =
 words.slice(0,-2).join(" ");
-
-}
 
 if(
 
@@ -604,9 +522,6 @@ renderLiveScoring();
 window.nextRunner =
 function(){
 
-if(!activeCompetition)
-return;
-
 const runners =
 
 [...activeCompetition.runners]
@@ -695,14 +610,14 @@ document.getElementById("b3").value
 ) || 0;
 
 runner.aScore =
-average(
+total3(
 runner.a1,
 runner.a2,
 runner.a3
 );
 
 runner.bScore =
-average(
+total3(
 runner.b1,
 runner.b2,
 runner.b3
@@ -783,69 +698,6 @@ r.place=i+1;
 });
 
 }
-
-window.finishCompetition =
-async function(){
-
-if(!activeCompetition)
-return;
-
-activeCompetition.finished=true;
-
-activeCompetition.runners.forEach(r=>{
-
-r.liveActive=false;
-
-});
-
-await setDoc(
-doc(db,"rollart","live"),
-{
-competition:null,
-runner:null
-}
-);
-
-await saveDatabase();
-
-renderLiveScoring();
-
-};
-
-window.resetCompetition =
-async function(){
-
-if(!confirm(
-"Alles zurücksetzen?"
-)) return;
-
-activeCompetition.runners.forEach(r=>{
-
-r.a1=0;
-r.a2=0;
-r.a3=0;
-
-r.b1=0;
-r.b2=0;
-r.b3=0;
-
-r.aScore=0;
-r.bScore=0;
-
-r.deduction=0;
-r.total=0;
-
-r.place="";
-r.confirmed=false;
-r.liveActive=false;
-
-});
-
-await saveDatabase();
-
-renderRunners();
-
-};
 
 function renderLiveScoring(){
 
@@ -1049,8 +901,6 @@ return Number(a.start)-Number(b.start);
 
 ${r.liveActive?"live":""}
 
-${r.done?"done":""}
-
 ${r.place==1?"place1":""}
 
 ${r.place==2?"place2":""}
@@ -1139,22 +989,6 @@ ${comp.to}
 
 </button>
 
-<button
-class="archiveButton"
-onclick="archiveCompetition(${comp.id})">
-
-🏁 Archivieren
-
-</button>
-
-<button
-class="deleteButton"
-onclick="deleteCompetition(${comp.id})">
-
-🗑 Löschen
-
-</button>
-
 </div>
 
 `;
@@ -1165,40 +999,9 @@ onclick="deleteCompetition(${comp.id})">
 
 function renderArchive(){
 
-const output =
 document.getElementById(
 "archiveList"
-);
-
-output.innerHTML="";
-
-archivedCompetitions.forEach(comp=>{
-
-output.innerHTML += `
-
-<details class="card">
-
-<summary>
-
-🏁 ${comp.name}
-
-</summary>
-
-<br>
-
-<button
-class="deleteButton"
-onclick="deleteArchiveCompetition(${comp.id})">
-
-🗑 Archiv löschen
-
-</button>
-
-</details>
-
-`;
-
-});
+).innerHTML="";
 
 }
 
@@ -1238,16 +1041,6 @@ id="competitionFrom">
 <input
 type="date"
 id="competitionTo">
-
-<select id="defaultScoringSystem">
-
-<option value="rollart">
-
-RollArt
-
-</option>
-
-</select>
 
 <button onclick="saveCompetition()">
 
@@ -1307,22 +1100,6 @@ class="nextButton"
 onclick="nextRunner()">
 
 ⏭ Weiter
-
-</button>
-
-<button
-class="finishButton"
-onclick="finishCompetition()">
-
-🏁 Abschließen
-
-</button>
-
-<button
-class="resetButton"
-onclick="resetCompetition()">
-
-🧪 Reset
 
 </button>
 
