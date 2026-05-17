@@ -984,19 +984,23 @@ ${r.club}
 
 <br><br>
 
-⭐ ${r.aScore || 0}
+⭐ Technik:
+${r.aScore || 0}
 
 <br>
 
-🎨 ${r.bScore || 0}
+🎨 Kunst:
+${r.bScore || 0}
 
 <br>
 
-⚠ ${r.deduction || 0}
+⚠ Abzug:
+${r.deduction || 0}
 
 <br>
 
-🏆 ${r.total || 0}
+🏆 Gesamt:
+${r.total || 0}
 
 </div>
 
@@ -1082,11 +1086,28 @@ output.innerHTML="";
 
 archivedCompetitions.forEach(comp=>{
 
+const categories = {};
+
+comp.runners.forEach(r=>{
+
+if(!categories[r.category]){
+
+categories[r.category]=[];
+
+}
+
+categories[r.category].push(r);
+
+});
+
 output.innerHTML += `
 
 <details class="card">
 
-<summary>
+<summary style="
+font-size:18px;
+font-weight:bold;
+">
 
 🏁 ${comp.name}
 
@@ -1103,6 +1124,95 @@ output.innerHTML += `
 ${comp.to}
 
 <br><br>
+
+${Object.keys(categories).map(cat=>`
+
+<details
+style="
+margin-bottom:12px;
+background:#1e293b;
+padding:10px;
+border-radius:12px;
+">
+
+<summary style="
+font-weight:bold;
+">
+
+📂 ${cat}
+
+</summary>
+
+<br>
+
+<div class="runnerGrid">
+
+${categories[cat]
+
+.sort(
+(a,b)=>
+Number(a.place)-Number(b.place)
+)
+
+.map(r=>`
+
+<div class="resultItem
+
+${r.place==1?"place1":""}
+
+${r.place==2?"place2":""}
+
+${r.place==3?"place3":""}
+
+">
+
+<div class="medal">
+
+${medal(r.place)}
+
+${r.place || "-"}
+
+</div>
+
+<br>
+
+${r.name}
+
+<br>
+
+${r.club || "-"}
+
+<br><br>
+
+⭐ Technik:
+${r.aScore || 0}
+
+<br>
+
+🎨 Kunst:
+${r.bScore || 0}
+
+<br>
+
+⚠ Abzug:
+${r.deduction || 0}
+
+<br>
+
+🏆 Gesamt:
+${r.total || 0}
+
+</div>
+
+`).join("")}
+
+</div>
+
+</details>
+
+`).join("")}
+
+<br>
 
 <button
 class="deleteButton"
