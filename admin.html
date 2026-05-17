@@ -14,7 +14,6 @@ padding:0;
 font-family:Arial,sans-serif;
 background:#0f172a;
 color:white;
-scroll-behavior:smooth;
 }
 
 .app{
@@ -36,16 +35,6 @@ padding:20px;
 border-radius:20px;
 text-align:center;
 margin-bottom:14px;
-}
-
-.liveNow h1{
-margin:0;
-font-size:42px;
-}
-
-.liveNow h2{
-margin:8px 0 0 0;
-font-size:26px;
 }
 
 .nextRunner{
@@ -75,7 +64,6 @@ display:grid;
 grid-template-columns:
 repeat(3,1fr);
 gap:8px;
-margin-top:8px;
 }
 
 input,
@@ -86,7 +74,6 @@ padding:12px;
 margin-top:8px;
 border:none;
 border-radius:12px;
-font-size:14px;
 box-sizing:border-box;
 }
 
@@ -107,12 +94,12 @@ cursor:pointer;
 background:#16a34a;
 }
 
-.deleteButton{
-background:#dc2626;
-}
-
 .archiveButton{
 background:#0891b2;
+}
+
+.deleteButton{
+background:#dc2626;
 }
 
 .resultItem{
@@ -121,12 +108,10 @@ padding:8px;
 border-radius:10px;
 font-size:12px;
 line-height:1.5;
-transition:0.3s;
 }
 
 .resultItem.live{
 background:#16a34a;
-transform:scale(1.03);
 }
 
 .place1{
@@ -152,15 +137,6 @@ font-weight:bold;
 .medal{
 font-size:18px;
 font-weight:bold;
-}
-
-.deductionHelp{
-background:#0f172a;
-padding:10px;
-border-radius:12px;
-margin-top:8px;
-font-size:13px;
-line-height:1.6;
 }
 
 summary{
@@ -202,10 +178,10 @@ let activeCompetition = null;
 
 const deductionTable = {
 
-1:{value:0.3,text:"Schwierigkeit"},
-4:{value:0.2,text:"Zeitfehler"},
-15:{value:0.3,text:"Unsicherheit"},
-16:{value:0.5,text:"Sturz"}
+"1":{value:0.3,text:"Schwierigkeit"},
+"4":{value:0.2,text:"Zeitfehler"},
+"15":{value:0.3,text:"Unsicherheit"},
+"16":{value:0.5,text:"Sturz"}
 
 };
 
@@ -229,7 +205,6 @@ if(!activeCompetition)
 return;
 
 const currentRunner =
-
 activeCompetition.runners.find(
 r=>r.liveActive===true
 );
@@ -467,11 +442,9 @@ let name =
 words.slice(0,-2).join(" ");
 
 if(
-
 !club.match(
 /(TV|TG|TSV|TuS|VfL|SSC|ERC|RSC|REV|RSV|ESG|RC|RRD|RESG|SSG)/
 )
-
 ){
 
 club =
@@ -580,7 +553,6 @@ Number(a.start)-Number(b.start)
 );
 
 const currentIndex =
-
 runners.findIndex(
 r=>r.liveActive===true
 );
@@ -672,27 +644,20 @@ document.getElementById(
 runner.deductionNumbers =
 deductionInput;
 
-const nums =
-
-deductionInput
-
-.split(",")
-
-.map(n=>
-parseInt(
-n.trim()
-)
-)
-
-.filter(n=>
-!isNaN(n)
-);
-
 let deduction = 0;
 
-nums.forEach(n=>{
+const nums =
+deductionInput
+.split(",");
 
-if(deductionTable[n]){
+nums.forEach(raw=>{
+
+const n =
+raw.trim();
+
+if(
+deductionTable[n]
+){
 
 deduction +=
 deductionTable[n].value;
@@ -798,19 +763,9 @@ output.innerHTML = `
 
 <div class="liveNow">
 
-🔴 AKTUELL
+<h1>${currentRunner.name}</h1>
 
-<h1>
-
-${currentRunner.name}
-
-</h1>
-
-<h2>
-
-${currentRunner.club}
-
-</h2>
+<h2>${currentRunner.club}</h2>
 
 </div>
 
@@ -821,11 +776,9 @@ ${currentRunner.club}
 <br><br>
 
 <b>
-
 ${nextRunner
 ? nextRunner.name
 : "Ende"}
-
 </b>
 
 <br>
@@ -868,13 +821,15 @@ ${nextRunner
 id="deductionNumbers"
 placeholder="16,4">
 
-<details class="deductionHelp">
+<details style="margin-top:10px;">
 
 <summary>
 
 ❔ Abzugshilfe
 
 </summary>
+
+<br>
 
 16 = Sturz (-0.5)
 <br>
@@ -955,15 +910,10 @@ return Number(a.start)-Number(b.start);
 .map(r=>`
 
 <div class="resultItem
-
 ${r.liveActive?"live":""}
-
 ${r.place==1?"place1":""}
-
 ${r.place==2?"place2":""}
-
 ${r.place==3?"place3":""}
-
 ">
 
 <div class="medal">
@@ -1085,28 +1035,11 @@ output.innerHTML="";
 
 archivedCompetitions.forEach(comp=>{
 
-const categories = {};
-
-comp.runners.forEach(r=>{
-
-if(!categories[r.category]){
-
-categories[r.category]=[];
-
-}
-
-categories[r.category].push(r);
-
-});
-
 output.innerHTML += `
 
 <details class="card">
 
-<summary style="
-font-size:18px;
-font-weight:bold;
-">
+<summary>
 
 🏁 ${comp.name}
 
@@ -1123,95 +1056,6 @@ font-weight:bold;
 ${comp.to}
 
 <br><br>
-
-${Object.keys(categories).map(cat=>`
-
-<details
-style="
-margin-bottom:12px;
-background:#1e293b;
-padding:10px;
-border-radius:12px;
-">
-
-<summary style="
-font-weight:bold;
-">
-
-📂 ${cat}
-
-</summary>
-
-<br>
-
-<div class="runnerGrid">
-
-${categories[cat]
-
-.sort(
-(a,b)=>
-Number(a.place)-Number(b.place)
-)
-
-.map(r=>`
-
-<div class="resultItem
-
-${r.place==1?"place1":""}
-
-${r.place==2?"place2":""}
-
-${r.place==3?"place3":""}
-
-">
-
-<div class="medal">
-
-${medal(r.place)}
-
-${r.place || "-"}
-
-</div>
-
-<br>
-
-${r.name}
-
-<br>
-
-${r.club || "-"}
-
-<br><br>
-
-⭐ Technik:
-${r.aScore || 0}
-
-<br>
-
-🎨 Kunst:
-${r.bScore || 0}
-
-<br>
-
-⚠ Abzug:
-${r.deduction || 0}
-
-<br>
-
-🏆 Gesamt:
-${r.total || 0}
-
-</div>
-
-`).join("")}
-
-</div>
-
-</details>
-
-`).join("")}
-
-<br>
 
 <button
 class="deleteButton"
