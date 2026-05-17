@@ -80,8 +80,7 @@ margin-top:8px;
 
 input,
 button,
-textarea,
-select{
+textarea{
 width:100%;
 padding:12px;
 margin-top:8px;
@@ -92,8 +91,7 @@ box-sizing:border-box;
 }
 
 input,
-textarea,
-select{
+textarea{
 background:#475569;
 color:white;
 }
@@ -137,10 +135,6 @@ transition:0.3s;
 .resultItem.live{
 background:#16a34a;
 transform:scale(1.03);
-}
-
-.resultItem.done{
-opacity:0.7;
 }
 
 .place1{
@@ -340,6 +334,58 @@ runners:[]
 await saveDatabase();
 
 renderCompetitions();
+
+};
+
+window.deleteCompetition =
+async function(id){
+
+if(!confirm(
+"Wettbewerb löschen?"
+)) return;
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+await saveDatabase();
+
+renderCompetitions();
+
+};
+
+window.archiveCompetition =
+async function(id){
+
+const comp =
+competitions.find(
+c=>c.id===id
+);
+
+if(!comp)return;
+
+comp.finished = true;
+
+archivedCompetitions.push(comp);
+
+competitions =
+competitions.filter(
+c=>c.id!==id
+);
+
+await setDoc(
+doc(db,"rollart","live"),
+{
+competition:null,
+runner:null
+}
+);
+
+await saveDatabase();
+
+renderCompetitions();
+renderArchive();
 
 };
 
@@ -989,6 +1035,22 @@ ${comp.to}
 
 </button>
 
+<button
+class="archiveButton"
+onclick="archiveCompetition(${comp.id})">
+
+🏁 Archivieren
+
+</button>
+
+<button
+class="deleteButton"
+onclick="deleteCompetition(${comp.id})">
+
+🗑 Löschen
+
+</button>
+
 </div>
 
 `;
@@ -999,9 +1061,40 @@ ${comp.to}
 
 function renderArchive(){
 
+const output =
 document.getElementById(
 "archiveList"
-).innerHTML="";
+);
+
+output.innerHTML="";
+
+archivedCompetitions.forEach(comp=>{
+
+output.innerHTML += `
+
+<details class="card">
+
+<summary>
+
+🏁 ${comp.name}
+
+</summary>
+
+<br>
+
+📍 ${comp.place}
+
+<br>
+
+📅 ${comp.from}
+-
+${comp.to}
+
+</details>
+
+`;
+
+});
 
 }
 
