@@ -404,6 +404,135 @@ renderLiveScoring();
 
 };
 
+window.parseCompetitionText =
+function(){
+
+if(!activeCompetition)
+return;
+
+const text =
+document.getElementById(
+"competitionText"
+).value;
+
+const lines =
+text.split("\n");
+
+let currentCategory = null;
+let globalStart = 1;
+
+lines.forEach(line=>{
+
+line=line.trim();
+
+if(!line)return;
+
+if(line.match(/^\d{2}:\d{2}/)){
+
+const parts =
+line.split(/\s+/);
+
+currentCategory = {
+
+id:Date.now()+Math.random(),
+
+name:
+parts.slice(6).join(" ")
+
+};
+
+activeCompetition.categories.push(
+currentCategory
+);
+
+return;
+
+}
+
+const runnerMatch =
+line.match(/^(\d+)\s+(.+)$/);
+
+if(runnerMatch && currentCategory){
+
+const runnerText =
+runnerMatch[2];
+
+const words =
+runnerText.split(" ");
+
+let club =
+words.slice(-2).join(" ");
+
+let name =
+words.slice(0,-2).join(" ");
+
+if(
+
+!club.match(
+/(TV|TG|TSV|TuS|VfL|SSC|ERC|RSC|REV|RSV|ESG|RC|RRD|RESG|SSG)/
+)
+
+){
+
+club =
+words.slice(-1).join(" ");
+
+name =
+words.slice(0,-1).join(" ");
+
+}
+
+activeCompetition.runners.push({
+
+id:Date.now()+Math.random(),
+
+start:globalStart++,
+
+name,
+club,
+
+category:
+currentCategory.name,
+
+categoryId:
+currentCategory.id,
+
+a1:0,
+a2:0,
+a3:0,
+
+b1:0,
+b2:0,
+b3:0,
+
+aScore:0,
+bScore:0,
+
+deduction:0,
+deductionNumbers:"",
+
+total:0,
+place:"",
+
+confirmed:false,
+liveActive:false
+
+});
+
+}
+
+});
+
+document.getElementById(
+"competitionText"
+).value="";
+
+saveDatabase();
+
+renderRunners();
+
+};
+
 window.startCompetition =
 function(){
 
@@ -1153,6 +1282,24 @@ id="competitionTo">
 id="competitionList"
 class="grid">
 </div>
+
+</div>
+
+<div class="card">
+
+<h2>📥 PDF Import</h2>
+
+<textarea
+id="competitionText"
+rows="12"
+placeholder="PDF Text hier einfügen">
+</textarea>
+
+<button onclick="parseCompetitionText()">
+
+📥 PDF importieren
+
+</button>
 
 </div>
 
