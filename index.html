@@ -3,608 +3,227 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>🏆 RollArt Live</title>
 
 <style>
-
 body{
-margin:0;
-padding:0;
-font-family:Arial,sans-serif;
-background:#0f172a;
-color:white;
-scroll-behavior:smooth;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+  background:#0f172a;
+  color:white;
 }
 
 .app{
-max-width:1700px;
-margin:auto;
-padding:12px;
+  max-width:1700px;
+  margin:auto;
+  padding:12px;
 }
 
 .card{
-background:#1e293b;
-padding:14px;
-border-radius:18px;
-margin-bottom:14px;
+  background:#1e293b;
+  padding:14px;
+  border-radius:18px;
+  margin-bottom:14px;
 }
 
 .liveNow{
-background:#dc2626;
-padding:20px;
-border-radius:20px;
-text-align:center;
-margin-bottom:14px;
+  background:#dc2626;
+  padding:20px;
+  border-radius:20px;
+  text-align:center;
+  margin-bottom:14px;
 }
 
-.liveNow h1{
-margin:0;
-font-size:42px;
-}
-
-.liveNow h2{
-margin:8px 0 0 0;
-font-size:26px;
-}
+.liveNow h1{margin:0;font-size:42px;}
+.liveNow h2{margin:8px 0 0;font-size:26px;}
 
 .nextRunner{
-background:#2563eb;
-padding:14px;
-border-radius:16px;
-margin-bottom:14px;
-text-align:center;
+  background:#2563eb;
+  padding:14px;
+  border-radius:16px;
+  text-align:center;
+  margin-bottom:14px;
 }
 
 .runnerGrid{
-display:grid;
-grid-template-columns:
-repeat(auto-fit,minmax(170px,1fr));
-gap:8px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:8px;
 }
 
 .resultItem{
-background:#334155;
-padding:8px;
-border-radius:10px;
-font-size:12px;
-line-height:1.5;
-transition:0.3s;
+  background:#334155;
+  padding:8px;
+  border-radius:10px;
+  font-size:12px;
+  line-height:1.5;
 }
 
 .resultItem.live{
-background:#16a34a;
-transform:scale(1.04);
+  background:#16a34a;
+  transform:scale(1.04);
 }
 
-.place1{
-background:#ca8a04;
-}
-
-.place2{
-background:#9ca3af;
-}
-
-.place3{
-background:#b45309;
-}
+.place1{background:#ca8a04;}
+.place2{background:#9ca3af;}
+.place3{background:#b45309;}
 
 .categoryTitle{
-background:#1d4ed8;
-padding:10px;
-border-radius:12px;
-margin-bottom:8px;
-font-weight:bold;
+  background:#1d4ed8;
+  padding:10px;
+  border-radius:12px;
+  margin-bottom:8px;
+  font-weight:bold;
 }
 
-.medal{
-font-size:18px;
-font-weight:bold;
-}
-
-summary{
-cursor:pointer;
-}
-
+.medal{font-size:18px;font-weight:bold;}
+summary{cursor:pointer;}
 </style>
 
 <script type="module">
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-doc,
-onSnapshot
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-
-apiKey:"AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-authDomain:"rollart-score-5319a.firebaseapp.com",
-projectId:"rollart-score-5319a",
-storageBucket:"rollart-score-5319a.firebasestorage.app",
-messagingSenderId:"658963624980",
-appId:"1:658963624980:web:2e4d153f5df087c4f42301"
-
+  apiKey:"AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
+  authDomain:"rollart-score-5319a.firebaseapp.com",
+  projectId:"rollart-score-5319a"
 };
 
-const app =
-initializeApp(firebaseConfig);
-
-const db =
-getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 function medal(place){
-
-if(place==1) return "🥇";
-if(place==2) return "🥈";
-if(place==3) return "🥉";
-
-return "🏆";
-
+  if(place==1) return "🥇";
+  if(place==2) return "🥈";
+  if(place==3) return "🥉";
+  return "🏆";
 }
 
 function renderCompetition(comp){
 
-const output =
-document.getElementById(
-"liveCompetition"
-);
+  const output = document.getElementById("liveCompetition");
 
-if(!comp){
+  if(!comp){
+    output.innerHTML = `<div class="card">🏁 Kein aktiver Wettbewerb</div>`;
+    return;
+  }
 
-output.innerHTML=
-`
-<div class="card">
+  const runners = [...comp.runners].sort((a,b)=>Number(a.start)-Number(b.start));
 
-🏁 Kein aktiver Wettbewerb
+  const currentRunner = runners.find(r=>r.liveActive);
+  const nextRunner = runners.find(r=>Number(r.start) === Number(currentRunner?.start)+1);
 
-</div>
-`;
+  // Kategorien
+  const categories = {};
+  comp.runners.forEach(r=>{
+    const key = r.category || "Ohne Kategorie";
+    if(!categories[key]) categories[key]=[];
+    categories[key].push(r);
+  });
 
-return;
+  output.innerHTML = `
+    <div class="card">
+      <h2>🏆 ${comp.name}</h2>
+      📍 ${comp.place}<br>
+      📅 ${comp.from} - ${comp.to}
+    </div>
 
+    ${currentRunner ? `
+    <div class="liveNow">
+      🔴 AKTUELL
+      <h1>${currentRunner.name}</h1>
+      <h2>${currentRunner.club || "-"}</h2>
+    </div>` : ""}
+
+    ${nextRunner ? `
+    <div class="nextRunner">
+      ⏭ Danach<br><br>
+      <b>${nextRunner.name}</b><br>
+      ${nextRunner.club || "-"}
+    </div>` : ""}
+
+    ${Object.keys(categories).map(cat => `
+    <details open>
+      <summary class="categoryTitle">📂 ${cat}</summary>
+
+      <div class="runnerGrid">
+        ${categories[cat]
+        .sort((a,b)=>{
+          if(a.place && b.place){
+            return Number(a.place)-Number(b.place);
+          }
+          return Number(a.start)-Number(b.start);
+        })
+        .map(r => `
+          <div class="resultItem 
+            ${r.liveActive?"live":""}
+            ${r.place==1?"place1":""}
+            ${r.place==2?"place2":""}
+            ${r.place==3?"place3":""}
+          ">
+            <div class="medal">
+              ${medal(r.place)} ${r.place || r.start}
+            </div>
+
+            <br>
+            ${r.name}<br>
+            ${r.club || "-"}
+            <br><br>
+
+            ⭐ Technik: ${r.aScore || 0}<br>
+            🎨 Kunst: ${r.bScore || 0}<br>
+
+            ⚠ Nummern: ${r.deductionNumbers || "-"}<br>
+            ⚠ Abzug: ${r.deduction || 0}<br>
+
+            🏆 Gesamt: ${r.total || 0}
+          </div>
+        `).join("")}
+      </div>
+
+    </details><br>
+    `).join("")}
+  `;
 }
 
-const runners =
-
-[...comp.runners]
-
-.sort(
-(a,b)=>
-Number(a.start)-Number(b.start)
-);
-
-const currentRunner =
-runners.find(r=>r.liveActive);
-
-const nextRunner =
-runners.find(
-r=>
-Number(r.start)===
-Number(currentRunner?.start)+1
-);
-
-const categories = {};
-
-comp.runners.forEach(r=>{
-
-const key =
-r.category || "Ohne Kategorie";
-
-if(!categories[key]){
-
-categories[key]=[];
-
-}
-
-const exists =
-categories[key].find(
-x=>
-x.name===r.name
-&&
-x.club===r.club
-&&
-x.start===r.start
-);
-
-if(!exists){
-
-categories[key].push(r);
-
-}
-
+// LIVE Wettbewerb
+onSnapshot(doc(db,"rollart","live"), (snapshot)=>{
+  if(snapshot.exists()){
+    renderCompetition(snapshot.data().competition);
+  }
 });
 
-output.innerHTML = `
-
-<div class="card">
-
-<h2>
-
-🏆 ${comp.name}
-
-</h2>
-
-📍 ${comp.place}
-
-<br>
-
-📅 ${comp.from}
--
-${comp.to}
-
-</div>
-
-${currentRunner ? `
-
-<div class="liveNow">
-
-<div>
-
-🔴 AKTUELL
-
-</div>
-
-<h1>
-
-${currentRunner.name}
-
-</h1>
-
-<h2>
-
-${currentRunner.club || "-"}
-
-</h2>
-
-</div>
-
-` : ""}
-
-${nextRunner ? `
-
-<div class="nextRunner">
-
-⏭ Danach:
-
-<br><br>
-
-<b>
-
-${nextRunner.name}
-
-</b>
-
-<br>
-
-${nextRunner.club || "-"}
-
-</div>
-
-` : ""}
-
-${Object.keys(categories).map(cat=>`
-
-<details open>
-
-<summary class="categoryTitle">
-
-📂 ${cat}
-
-</summary>
-
-<div class="runnerGrid">
-
-${categories[cat]
-
-.sort((a,b)=>{
-
-if(
-a.place &&
-b.place
-){
-
-return Number(a.place)-Number(b.place);
-
-}
-
-return Number(a.start)-Number(b.start);
-
-})
-
-.map(r=>`
-
-<div class="resultItem
-
-${r.liveActive?"live":""}
-
-${r.place==1?"place1":""}
-
-${r.place==2?"place2":""}
-
-${r.place==3?"place3":""}
-
-">
-
-<div class="medal">
-
-${medal(r.place)}
-${r.place || r.start}
-
-</div>
-
-<br>
-
-${r.name}
-
-<br>
-
-${r.club || "-"}
-
-<br><br>
-
-📋 ${r.scoringSystem}
-
-<br><br>
-
-⭐ Technik:
-${r.aScore || 0}
-
-<br>
-
-🎨 Kunst:
-${r.bScore || 0}
-
-<br>
-
-⚠ Nummern:
-${r.deductionNumbers || "-"}
-
-<br>
-
-⚠ Abzug:
-${r.deduction || 0}
-
-<br>
-
-🏆 Gesamt:
-${r.total || 0}
-
-</div>
-
-`).join("")}
-
-</div>
-
-</details>
-
-<br>
-
-`).join("")}
-
-`;
-
-}
-
-function renderArchive(data){
-
-const output =
-document.getElementById(
-"archiveList"
-);
-
-output.innerHTML="";
-
-const archive =
-data.archivedCompetitions || [];
-
-archive.forEach(comp=>{
-
-const categories = {};
-
-comp.runners.forEach(r=>{
-
-if(!categories[r.category]){
-
-categories[r.category]=[];
-
-}
-
-categories[r.category].push(r);
-
+// Archiv
+onSnapshot(doc(db,"rollart","database"), (snapshot)=>{
+  if(!snapshot.exists()) return;
+
+  const archiveList = document.getElementById("archiveList");
+  archiveList.innerHTML="";
+
+  const archive = snapshot.data().archivedCompetitions || [];
+
+  archive.forEach(comp=>{
+    archiveList.innerHTML += `
+      <div class="card">
+        🏁 ${comp.name}
+      </div>
+    `;
+  });
 });
-
-output.innerHTML += `
-
-<details class="card">
-
-<summary style="
-font-size:18px;
-font-weight:bold;
-">
-
-🏁 ${comp.name}
-
-</summary>
-
-<br>
-
-📍 ${comp.place}
-
-<br>
-
-📅 ${comp.from}
--
-${comp.to}
-
-<br><br>
-
-${Object.keys(categories).map(cat=>`
-
-<details
-style="
-margin-bottom:12px;
-background:#1e293b;
-padding:10px;
-border-radius:12px;
-"
->
-
-<summary style="
-font-weight:bold;
-">
-
-📂 ${cat}
-
-</summary>
-
-<br>
-
-<div class="runnerGrid">
-
-${categories[cat]
-
-.sort(
-(a,b)=>
-Number(a.place)-Number(b.place)
-)
-
-.map(r=>`
-
-<div class="resultItem
-
-${r.place==1?"place1":""}
-
-${r.place==2?"place2":""}
-
-${r.place==3?"place3":""}
-
-">
-
-<div class="medal">
-
-${medal(r.place)}
-
-${r.place || "-"}
-
-</div>
-
-<br>
-
-${r.name}
-
-<br>
-
-${r.club || "-"}
-
-<br><br>
-
-📋 ${r.scoringSystem}
-
-<br><br>
-
-⭐ Technik:
-${r.aScore || 0}
-
-<br>
-
-🎨 Kunst:
-${r.bScore || 0}
-
-<br>
-
-⚠ Nummern:
-${r.deductionNumbers || "-"}
-
-<br>
-
-⚠ Abzug:
-${r.deduction || 0}
-
-<br>
-
-🏆 Gesamt:
-${r.total || 0}
-
-</div>
-
-`).join("")}
-
-</div>
-
-</details>
-
-`).join("")}
-
-</details>
-
-`;
-
-});
-
-}
-
-onSnapshot(
-
-doc(db,"rollart","live"),
-
-(snapshot)=>{
-
-if(snapshot.exists()){
-
-const data =
-snapshot.data();
-
-renderCompetition(
-data.competition
-);
-
-}
-
-}
-
-);
-
-onSnapshot(
-
-doc(db,"rollart","database"),
-
-(snapshot)=>{
-
-if(snapshot.exists()){
-
-renderArchive(
-snapshot.data()
-);
-
-}
-
-}
-
-);
-
 </script>
-
 </head>
 
 <body>
 
 <div class="app">
+  <div id="liveCompetition"></div>
 
-<div id="liveCompetition"></div>
-
-<div class="card">
-
-<h2>📂 Archiv</h2>
-
-<div id="archiveList"></div>
-
-</div>
-
+  <div class="card">
+    <h2>📂 Archiv</h2>
+    <div id="archiveList"></div>
+  </div>
 </div>
 
 </body>
