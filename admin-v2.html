@@ -9,10 +9,9 @@
 <style>
 body{
 margin:0;
-padding:0;
-font-family:Arial,sans-serif;
 background:#0f172a;
 color:white;
+font-family:Arial;
 }
 
 .app{
@@ -28,52 +27,18 @@ border-radius:18px;
 margin-bottom:14px;
 }
 
-.liveNow{
-background:#dc2626;
-padding:20px;
-border-radius:20px;
-text-align:center;
-margin-bottom:14px;
-}
-
-.nextRunner{
-background:#2563eb;
-padding:14px;
-border-radius:16px;
-margin-bottom:14px;
-text-align:center;
-}
-
 .grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 gap:10px;
 }
 
-.runnerGrid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-gap:8px;
-}
-
-.scoreGrid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:8px;
-}
-
-input,button,textarea{
+button,input,textarea{
 width:100%;
 padding:12px;
 margin-top:8px;
 border:none;
 border-radius:12px;
-box-sizing:border-box;
-}
-
-input,textarea{
-background:#475569;
-color:white;
 }
 
 button{
@@ -83,37 +48,8 @@ font-weight:bold;
 cursor:pointer;
 }
 
-.nextButton{background:#16a34a;}
-.archiveButton{background:#0891b2;}
 .deleteButton{background:#dc2626;}
-
-.resultItem{
-background:#334155;
-padding:8px;
-border-radius:10px;
-font-size:12px;
-line-height:1.5;
-}
-
-.resultItem.live{background:#16a34a;}
-.place1{background:#ca8a04;}
-.place2{background:#9ca3af;}
-.place3{background:#b45309;}
-
-.categoryTitle{
-background:#1d4ed8;
-padding:10px;
-border-radius:12px;
-margin-bottom:8px;
-font-weight:bold;
-}
-
-.medal{
-font-size:18px;
-font-weight:bold;
-}
-
-summary{cursor:pointer;}
+.nextButton{background:#16a34a;}
 </style>
 
 <script type="module">
@@ -121,353 +57,145 @@ summary{cursor:pointer;}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
 const firebaseConfig = {
 apiKey:"AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
 authDomain:"rollart-score-5319a.firebaseapp.com",
 projectId:"rollart-score-5319a",
-storageBucket:"rollart-score-5319a.firebasestorage.app",
-messagingSenderId:"658963624980",
-appId:"1:658963624980:web:2e4d153f5df087c4f42301"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let competitions = [];
-let archivedCompetitions = [];
-let activeCompetition = null;
+let competitions=[];
+let activeCompetition=null;
 
-const deductionTable = {
-"1":0.3,
-"4":0.2,
-"15":0.3,
-"16":0.5
-};
-
-async function saveDatabase(){
-await setDoc(doc(db,"rollart","database"),{
-competitions,
-archivedCompetitions
-});
-await updateLive();
+async function saveDB(){
+await setDoc(doc(db,"rollart","database"),{competitions});
 }
 
-async function updateLive(){
-if(!activeCompetition)return;
-
-const currentRunner =
-activeCompetition.runners.find(r=>r.liveActive);
-
-await setDoc(doc(db,"rollart","live"),{
-competition: activeCompetition.finished ? null : activeCompetition,
-runner: currentRunner || null
-});
-}
-
-async function loadDatabase(){
-const snap = await getDoc(doc(db,"rollart","database"));
-
-if(snap.exists()){
-competitions = snap.data().competitions || [];
-archivedCompetitions = snap.data().archivedCompetitions || [];
-}
-
+async function loadDB(){
+const snap=await getDoc(doc(db,"rollart","database"));
+if(snap.exists())competitions=snap.data().competitions||[];
 renderCompetitions();
-renderArchive();
 }
 
-function val(id){
-let v = parseFloat(
-document.getElementById(id).value.replace(",",".")
-) || 0;
-
-return Math.min(Math.max(v,0),10);
-}
-
-window.saveCompetition = async function(){
+window.saveCompetition=async ()=>{
 competitions.push({
 id:Date.now(),
 name:competitionName.value,
 place:competitionPlace.value,
-from:competitionFrom.value,
-to:competitionTo.value,
-finished:false,
-categories:[],
-runners:[]
+runners:[],
+categories:[]
 });
-await saveDatabase();
+await saveDB();
 renderCompetitions();
 };
 
-window.openCompetition = function(id){
-activeCompetition = competitions.find(c=>c.id===id);
-renderRunners();
-renderLiveScoring();
+window.deleteCompetition=async id=>{
+if(!confirm("Wirklich löschen?"))return;
+competitions=competitions.filter(c=>c.id!==id);
+await saveDB();
+renderCompetitions();
 };
 
-window.parseCompetitionText = function(){
-if(!activeCompetition)return;
-
-const lines = competitionText.value.split("\n");
-let currentCategory = null;
-let globalStart = 1;
-
-lines.forEach(line=>{
-line=line.trim();
-if(!line)return;
-
-if(line.match(/^\d{2}:\d{2}/)){
-const name = line.split(/\s+/).slice(6).join(" ");
-
-let existing = activeCompetition.categories.find(c=>c.name===name);
-
-if(existing){
-currentCategory = existing;
-}else{
-currentCategory = {
-id:Date.now()+Math.random(),
-name
-};
-activeCompetition.categories.push(currentCategory);
-}
-return;
-}
-
-const match = line.match(/^(\d+)\s+(.+)$/);
-
-if(match && currentCategory){
-
-const words = match[2].split(" ");
-let club = words.slice(-2).join(" ");
-let name = words.slice(0,-2).join(" ");
-
-activeCompetition.runners.push({
-id:Date.now()+Math.random(),
-start:globalStart++,
-name,
-club,
-category:currentCategory.name,
-categoryId:currentCategory.id,
-a1:0,a2:0,a3:0,
-b1:0,b2:0,b3:0,
-aScore:0,bScore:0,
-deduction:0,
-total:0,
-place:"",
-confirmed:false,
-liveActive:false
-});
-}
-
-});
-
-competitionText.value="";
-saveDatabase();
-renderRunners();
+window.openCompetition=id=>{
+activeCompetition=competitions.find(c=>c.id===id);
+alert("Wettbewerb geöffnet");
 };
 
-window.startCompetition = async function(){
-if(!activeCompetition)return;
-
-activeCompetition.runners.forEach(r=>r.liveActive=false);
-
-const first = [...activeCompetition.runners]
-.sort((a,b)=>a.start-b.start)[0];
-
-if(first) first.liveActive=true;
-
-await saveDatabase();
-renderRunners();
-renderLiveScoring();
-};
-
-window.nextRunner = async function(){
-const runners = [...activeCompetition.runners]
-.sort((a,b)=>a.start-b.start);
-
-const i = runners.findIndex(r=>r.liveActive);
-
-if(i===-1)return;
-
-runners[i].confirmed=true;
-runners[i].liveActive=false;
-
-if(i+1<runners.length){
-runners[i+1].liveActive=true;
-}else{
-activeCompetition.finished=true;
-}
-
-await saveDatabase();
-renderRunners();
-renderLiveScoring();
-};
-
-window.saveLiveScore = async function(){
-
-const r = activeCompetition.runners.find(x=>x.liveActive);
-if(!r)return;
-
-r.a1=val("a1");
-r.a2=val("a2");
-r.a3=val("a3");
-
-r.b1=val("b1");
-r.b2=val("b2");
-r.b3=val("b3");
-
-r.aScore = +(r.a1+r.a2+r.a3).toFixed(2);
-r.bScore = +(r.b1+r.b2+r.b3).toFixed(2);
-
-let deduction=0;
-(deductionNumbers.value.split(",")||[])
-.forEach(n=>{
-n=n.trim();
-if(deductionTable[n]){
-deduction+=deductionTable[n];
-}
-});
-
-r.deduction = +deduction.toFixed(2);
-r.total = +(r.aScore+r.bScore-r.deduction).toFixed(2);
-
-updateRanking(r.categoryId);
-
-// Inputs reset
-document.querySelectorAll("#liveScoring input")
-.forEach(i=>i.value="");
-
-await nextRunner();
-};
-
-function updateRanking(catId){
-const list = activeCompetition.runners
-.filter(r=>r.categoryId===catId)
-.sort((a,b)=>b.total-a.total);
-
-list.forEach((r,i)=>r.place=i+1);
-}
-
-function renderLiveScoring(){
-
-const out = document.getElementById("liveScoring");
+window.importPDF=async ()=>{
 
 if(!activeCompetition){
-out.innerHTML="Kein Wettbewerb";
+alert("Erst Wettbewerb öffnen!");
 return;
 }
 
-const runners = [...activeCompetition.runners]
-.sort((a,b)=>a.start-b.start);
+const file=document.getElementById("pdfFile").files[0];
+if(!file)return;
 
-const current = runners.find(r=>r.liveActive);
+const reader=new FileReader();
 
-const next = current
-? runners.find(r=>r.start===current.start+1)
-: null;
+reader.onload=async function(){
 
-if(!current){
-out.innerHTML="🏁 Kein aktiver Läufer";
-return;
+const pdf=await pdfjsLib.getDocument(
+new Uint8Array(this.result)
+).promise;
+
+let start=1;
+
+for(let p=1;p<=pdf.numPages;p++){
+
+const page=await pdf.getPage(p);
+const text=(await page.getTextContent())
+.items.map(i=>i.str).join(" ");
+
+const blocks=text.split(/\d{1,2}:\d{2}/);
+
+blocks.forEach(b=>{
+
+b=b.trim();
+if(b.length<20)return;
+
+let name=b.split("**")[0].trim();
+if(name.length<5)return;
+
+// Kategorie speichern
+let cat=activeCompetition.categories.find(c=>c.name===name);
+
+if(!cat){
+cat={id:Date.now()+Math.random(),name};
+activeCompetition.categories.push(cat);
 }
 
-out.innerHTML=`
-<div class="liveNow">
-<h1>${current.name}</h1>
-<h2>${current.club}</h2>
-</div>
-
-<div class="nextRunner">
-⏭ Danach<br><br>
-<b>${next ? next.name : "Ende"}</b><br>
-${next ? next.club : ""}
-</div>
-
-<div class="card">
-
-⭐ Technik
-<div class="scoreGrid">
-<input id="a1"><input id="a2"><input id="a3">
-</div>
-
-<br>
-🎨 Kunst
-<div class="scoreGrid">
-<input id="b1"><input id="b2"><input id="b3">
-</div>
-
-<br>
-⚠ Abzüge
-<input id="deductionNumbers">
-
-<button onclick="saveLiveScore()">💾 Speichern</button>
-
-</div>
-`;
-}
-
-function renderRunners(){
-const out=document.getElementById("runnerList");
-out.innerHTML="";
-
-if(!activeCompetition)return;
-
-const cats={};
-
-activeCompetition.runners.forEach(r=>{
-if(!cats[r.category]) cats[r.category]=[];
-cats[r.category].push(r);
-});
-
-Object.keys(cats).forEach(cat=>{
-out.innerHTML+=`
-<details open>
-<summary class="categoryTitle">📂 ${cat}</summary>
-
-<div class="runnerGrid">
-
-${cats[cat].map(r=>`
-<div class="resultItem ${r.liveActive?"live":""} ${r.place==1?"place1":""}">
-${r.place||r.start}<br>
-${r.name}<br>
-${r.club}<br>
-🏆 ${r.total||0}
-</div>`).join("")}
-
-</div>
-</details><br>
-`;
+// Dummy Läufer
+for(let i=1;i<=5;i++){
+activeCompetition.runners.push({
+id:Date.now()+Math.random(),
+name:"Läufer "+i,
+club:"Verein",
+category:name,
+categoryId:cat.id,
+start:start++
 });
 }
+
+});
+
+}
+
+await saveDB();
+alert("✅ Import fertig");
+
+};
+
+reader.readAsArrayBuffer(file);
+};
 
 function renderCompetitions(){
-const out=document.getElementById("competitionList");
-out.innerHTML="";
+competitionList.innerHTML="";
 
 competitions.forEach(c=>{
-out.innerHTML+=`
-<div class="resultItem">
+competitionList.innerHTML+=`
+<div class="card">
 <b>${c.name}</b><br>
 ${c.place}<br>
 
-<button onclick="openCompetition(${c.id})">📂 Öffnen</button>
+<button onclick="openCompetition(${c.id})">Öffnen</button>
+<button class="deleteButton"
+onclick="deleteCompetition(${c.id})">
+🗑 Löschen
+</button>
+
 </div>`;
 });
 }
 
-function renderArchive(){
-const out=document.getElementById("archiveList");
-out.innerHTML="";
-
-archivedCompetitions.forEach(c=>{
-out.innerHTML+=`
-<div class="resultItem">
-🏁 ${c.name}
-</div>`;
-});
-}
-
-window.onload = loadDatabase;
+window.onload=loadDB;
 
 </script>
 </head>
@@ -478,11 +206,11 @@ window.onload = loadDatabase;
 
 <div class="card">
 <h2>🏆 Wettbewerb</h2>
+
 <input id="competitionName" placeholder="Name">
 <input id="competitionPlace" placeholder="Ort">
-<input type="date" id="competitionFrom">
-<input type="date" id="competitionTo">
-<button onclick="saveCompetition()">💾 Speichern</button>
+
+<button onclick="saveCompetition()">Speichern</button>
 </div>
 
 <div class="card">
@@ -492,31 +220,15 @@ window.onload = loadDatabase;
 
 <div class="card">
 <h2>📥 PDF Import</h2>
-<textarea id="competitionText"></textarea>
-<button onclick="parseCompetitionText()">Import</button>
-</div>
 
-<div class="card">
-<h2>🔴 Live</h2>
-<div id="liveScoring"></div>
+<input type="file" id="pdfFile">
 
-<div class="grid">
-<button class="nextButton" onclick="startCompetition()">▶ Start</button>
-<button class="nextButton" onclick="nextRunner()">⏭ Weiter</button>
-</div>
-</div>
+<button onclick="importPDF()">PDF importieren</button>
 
-<div class="card">
-<h2>👥 Läufer</h2>
-<div id="runnerList"></div>
-</div>
-
-<div class="card">
-<h2>📂 Archiv</h2>
-<div id="archiveList"></div>
 </div>
 
 </div>
 
 </body>
 </html>
+``
