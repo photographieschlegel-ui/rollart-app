@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>RollArt Admin</title>
+<title>RollArt Wettbewerb</title>
 
 <style>
 body{
@@ -12,29 +12,34 @@ body{
   color:white;
 }
 
-.app{
-  max-width:1400px;
-  margin:auto;
-  padding:15px;
+.container{
+  display:grid;
+  grid-template-columns: 350px 1fr;
+  gap:10px;
+  padding:10px;
 }
 
 .card{
   background:#1e293b;
-  padding:15px;
-  border-radius:16px;
-  margin-bottom:12px;
+  padding:12px;
+  border-radius:12px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:10px;
+input,textarea,button{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border:none;
+  border-radius:8px;
 }
+
+button{background:#2563eb;color:white;}
 
 .runner{
   background:#334155;
-  padding:10px;
-  border-radius:10px;
+  padding:8px;
+  margin:5px;
+  border-radius:8px;
 }
 
 .live{background:#16a34a;}
@@ -42,255 +47,168 @@ body{
 .place2{background:#9ca3af;}
 .place3{background:#b45309;}
 
-input,textarea,button{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  margin-top:6px;
-}
-
-button{
-  background:#2563eb;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
+.big{
+  font-size:28px;
 }
 </style>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<script>
+let runners=[];
+let currentIndex=0;
 
-const app = initializeApp({
- apiKey:"AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
- authDomain:"rollart-score-5319a.firebaseapp.com",
- projectId:"rollart-score-5319a"
-});
-
-const db=getFirestore(app);
-
-let competitions=[];
-let active=null;
-
-// ✅ Abzüge komplett
 const ded={
  "1":0.3,"2":0.5,"3":0.3,"4":0.2,"5":0.3,"6":0.3,"7":0.3,"8":0.3,
  "9":0.5,"10":0.5,"11":0.3,"12":0.3,"13":0.3,"14":0.3,"15":0.3,
  "16":0.5,"17":0.2,"18":0.5,"19":0.5,"20":0.5,"21":0.3,"22":0.5,"23":0.2
 };
 
-// speichern
-async function save(){
- await setDoc(doc(db,"rollart","database"),{competitions});
- updateLive();
-}
+// 📄 IMPORT
+function importText(){
 
-// LIVE
-async function updateLive(){
- if(!active)return;
- const r=active.runners.find(x=>x.live);
- await setDoc(doc(db,"rollart","live"),{
-  competition:active,
-  runner:r||null
- });
-}
-
-// LOAD
-async function load(){
- const snap=await getDoc(doc(db,"rollart","database"));
- if(snap.exists()) competitions=snap.data().competitions||[];
- renderCompetitions();
-}
-window.onload=load;
-
-// ✅ Wettbewerb erstellen
-window.addCompetition=()=>{
- competitions.push({
-  id:Date.now(),
-  name:compName.value,
-  from:compFrom.value,
-  to:compTo.value,
-  runners:[]
- });
-
- save();
- renderCompetitions();
-};
-
-// anzeigen
-function renderCompetitions(){
- compList.innerHTML=competitions.map(c=>`
-  <div class="runner">
-    <b>${c.name}</b><br>
-    📅 ${c.from||"-"} - ${c.to||"-"}
-    <button onclick="openComp(${c.id})">Öffnen</button>
-  </div>
- `).join("");
-}
-
-// öffnen
-window.openComp=(id)=>{
- active=competitions.find(c=>c.id===id);
- renderRunners();
-};
-
-// ✅ IMPORT
-window.importText=()=>{
  let lines=importArea.value.split("\n");
- let cat="";
+ let category="";
  let start=1;
 
  lines.forEach(l=>{
   l=l.trim();
-  if(!l)return;
+  if(!l) return;
 
   if(l.match(/^\d{2}:\d{2}/)){
-   cat=l.split(" ").slice(5).join(" ");
-   return;
+    category = l.split(" ").slice(5).join(" ");
+    return;
   }
 
   let m=l.match(/^(\d+)\s+(.+)$/);
-
   if(m){
-   let parts=m[2].split(" ");
-   let club=parts.slice(-2).join(" ");
-   let name=parts.slice(0,-2).join(" ");
+    let parts=m[2].split(" ");
 
-   active.runners.push({
-    name,club,category:cat,start:start++,
-    total:0,place:0,live:false
-   });
+    let club=parts.slice(-2).join(" ");
+    let name=parts.slice(0,-2).join(" ");
+
+    runners.push({
+      name,
+      club,
+      category,
+      start:start++,
+      total:0,
+      place:0
+    });
   }
  });
 
- save();
- renderRunners();
-};
-
-// anzeigen
-function renderRunners(){
-
- let cats={};
-
- active.runners.forEach(r=>{
-  if(!cats[r.category]) cats[r.category]=[];
-  cats[r.category].push(r);
- });
-
- runnerList.innerHTML=Object.keys(cats).map(cat=>`
-  <div class="card">
-    <b>${cat}</b>
-    <div class="grid">
-     ${cats[cat]
-      .sort((a,b)=>a.place-b.place || a.start-b.start)
-      .map(r=>`
-       <div class="runner 
-        ${r.live?"live":""}
-        ${r.place==1?"place1":""}
-        ${r.place==2?"place2":""}
-        ${r.place==3?"place3":""}">
-         ${r.place||r.start} ${r.name}<br>
-         ${r.club||""}<br>
-         ${r.total||0}
-       </div>
-     `).join("")}
-    </div>
-  </div>
- `).join("");
+ render();
 }
 
-// START
-window.start=()=>{
- active.runners.forEach(r=>r.live=false);
- active.runners.sort((a,b)=>a.start-b.start)[0].live=true;
- save(); renderRunners();
-};
+// ▶ START
+function startRun(){
+ currentIndex=0;
+ highlight();
+}
 
-// NEXT
-window.next=()=>{
- let list=[...active.runners].sort((a,b)=>a.start-b.start);
- let i=list.findIndex(r=>r.live);
+// ➡ WEITER
+function next(){
+ currentIndex++;
+ highlight();
+}
 
- if(i>=0){
-  list[i].live=false;
-  if(list[i+1]) list[i+1].live=true;
- }
+// ⭐ SPEICHERN
+function saveScore(){
 
- save(); renderRunners();
-};
+ let r=runners[currentIndex];
 
-// Abzug
-function calc(input){
+ let A=[A1.value,A2.value,A3.value].map(x=>+x||0);
+ let B=[B1.value,B2.value,B3.value].map(x=>+x||0);
+
+ let a=A.reduce((a,b)=>a+b,0);
+ let b=B.reduce((a,b)=>a+b,0);
+
+ let d=calcDed(dedInput.value);
+
+ r.total=a+b-d;
+
+ ranking();
+
+ next();
+}
+
+// Abzüge
+function calcDed(input){
  let sum=0;
  input.split(",").forEach(n=>{
-  let num=n.trim().toUpperCase().replace("A","").replace("B","");
-  if(ded[num]) sum+=ded[num];
+   let num=n.trim().toUpperCase().replace("A","").replace("B","");
+   if(ded[num]) sum+=ded[num];
  });
  return sum;
 }
 
-// speichern
-window.saveScore=()=>{
-
- let r=active.runners.find(x=>x.live);
- if(!r)return;
-
- let A=[A1.value,A2.value,A3.value].map(n=>+n||0);
- let B=[B1.value,B2.value,B3.value].map(n=>+n||0);
-
- r.aScore=A.reduce((a,b)=>a+b,0);
- r.bScore=B.reduce((a,b)=>a+b,0);
-
- r.deductionNumbers=dedInput.value;
- r.deduction=calc(dedInput.value);
-
- r.total=r.aScore+r.bScore-r.deduction;
-
- ranking();
- next();
-};
-
-// ranking
+// Ranking
 function ranking(){
- active.runners.sort((a,b)=>b.total-a.total);
- active.runners.forEach((r,i)=>r.place=i+1);
+ runners.sort((a,b)=>b.total-a.total);
+ runners.forEach((r,i)=>r.place=i+1);
+}
+
+// Anzeige
+function render(){
+
+ let cats={};
+
+ runners.forEach(r=>{
+  if(!cats[r.category]) cats[r.category]=[];
+  cats[r.category].push(r);
+ });
+
+ list.innerHTML=Object.keys(cats).map(cat=>`
+  <div class="card">
+    <b>${cat}</b>
+    ${cats[cat].map(r=>`
+      <div class="runner
+      ${r.place==1?"place1":""}
+      ${r.place==2?"place2":""}
+      ${r.place==3?"place3":""}">
+      ${r.place||r.start} ${r.name} (${r.club})<br>
+      🏆 ${r.total||0}
+      </div>
+    `).join("")}
+  </div>
+ `).join("");
+}
+
+// aktueller Läufer
+function highlight(){
+
+ render();
+
+ let current=runners[currentIndex];
+
+ if(!current){
+  currentRunner.innerHTML="FERTIG";
+  return;
+ }
+
+ currentRunner.innerHTML=`
+   🔴 <span class="big">${current.name}</span><br>
+   ${current.club}
+ `;
 }
 </script>
 </head>
 
 <body>
 
-<div class="app">
+<div class="container">
+
+<div>
 
 <div class="card">
-<h3>Wettbewerb erstellen</h3>
-<input id="compName" placeholder="Name">
-<input type="date" id="compFrom">
-<input type="date" id="compTo">
-<button onclick="addCompetition()">Speichern</button>
-</div>
-
-<div class="card">
-<h3>Wettbewerbe</h3>
-<div id="compList"></div>
-</div>
-
-<div class="card">
-<h3>PDF / Text Import</h3>
+<h3>Startliste importieren (PDF Text)</h3>
 <textarea id="importArea"></textarea>
 <button onclick="importText()">Import</button>
 </div>
 
 <div class="card">
-<h3>Läufer</h3>
-<div id="runnerList"></div>
-</div>
+<h3>Wertung</h3>
 
-<div class="card">
-<h3>Live</h3>
-
-<button onclick="start()">Start</button>
+<button onclick="startRun()">Start</button>
 
 A:
 <input id="A1"><input id="A2"><input id="A3">
@@ -299,10 +217,22 @@ B:
 <input id="B1"><input id="B2"><input id="B3">
 
 Abzüge:
-<input id="dedInput" placeholder="z.B. 5A,12,3">
+<input id="dedInput" placeholder="z.B. 5,12,3">
 
 <button onclick="saveScore()">Speichern</button>
 <button onclick="next()">Weiter</button>
+
+</div>
+
+</div>
+
+<div>
+
+<div class="card" id="currentRunner">
+Kein Lauf gestartet
+</div>
+
+<div id="list"></div>
 
 </div>
 
