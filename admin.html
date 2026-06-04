@@ -6,35 +6,35 @@
 
 <style>
 body{
+  margin:0;
+  font-family:Arial;
   background:#0f172a;
   color:white;
-  font-family:Arial;
-  margin:0;
 }
 
 .app{
   max-width:1400px;
   margin:auto;
-  padding:10px;
+  padding:15px;
 }
 
 .card{
   background:#1e293b;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:10px;
+  padding:15px;
+  border-radius:16px;
+  margin-bottom:12px;
 }
 
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:8px;
+  gap:10px;
 }
 
 .runner{
   background:#334155;
-  padding:8px;
-  border-radius:8px;
+  padding:10px;
+  border-radius:10px;
 }
 
 .live{background:#16a34a;}
@@ -45,14 +45,16 @@ body{
 input,textarea,button{
   width:100%;
   padding:10px;
-  margin-top:5px;
+  border-radius:10px;
   border:none;
-  border-radius:8px;
+  margin-top:6px;
 }
 
 button{
   background:#2563eb;
   color:white;
+  font-weight:bold;
+  cursor:pointer;
 }
 </style>
 
@@ -72,7 +74,7 @@ let competitions=[];
 let active=null;
 
 // ✅ Abzüge komplett
-const deductions={
+const ded={
  "1":0.3,"2":0.5,"3":0.3,"4":0.2,"5":0.3,"6":0.3,"7":0.3,"8":0.3,
  "9":0.5,"10":0.5,"11":0.3,"12":0.3,"13":0.3,"14":0.3,"15":0.3,
  "16":0.5,"17":0.2,"18":0.5,"19":0.5,"20":0.5,"21":0.3,"22":0.5,"23":0.2
@@ -84,7 +86,7 @@ async function save(){
  updateLive();
 }
 
-// live senden
+// LIVE
 async function updateLive(){
  if(!active)return;
  const r=active.runners.find(x=>x.live);
@@ -94,7 +96,7 @@ async function updateLive(){
  });
 }
 
-// laden
+// LOAD
 async function load(){
  const snap=await getDoc(doc(db,"rollart","database"));
  if(snap.exists()) competitions=snap.data().competitions||[];
@@ -102,73 +104,63 @@ async function load(){
 }
 window.onload=load;
 
-// Wettbewerb erstellen
-window.addCompetition=function(){
+// ✅ Wettbewerb erstellen
+window.addCompetition=()=>{
  competitions.push({
   id:Date.now(),
-  name=compName.value,
-  categories:[],
+  name:compName.value,
+  from:compFrom.value,
+  to:compTo.value,
   runners:[]
  });
- save(); renderCompetitions();
+
+ save();
+ renderCompetitions();
 };
 
 // anzeigen
 function renderCompetitions(){
- let html="";
- competitions.forEach(c=>{
-  html+=`
+ compList.innerHTML=competitions.map(c=>`
   <div class="runner">
-    ${c.name}
+    <b>${c.name}</b><br>
+    📅 ${c.from||"-"} - ${c.to||"-"}
     <button onclick="openComp(${c.id})">Öffnen</button>
-  </div>`;
- });
- compList.innerHTML=html;
+  </div>
+ `).join("");
 }
 
 // öffnen
-window.openComp=function(id){
+window.openComp=(id)=>{
  active=competitions.find(c=>c.id===id);
  renderRunners();
 };
 
-// ✅ PDF/Text Import (mit Kategorien)
-window.importText=function(){
-
- const lines=importTextArea.value.split("\n");
- let currentCat=null;
+// ✅ IMPORT
+window.importText=()=>{
+ let lines=importArea.value.split("\n");
+ let cat="";
  let start=1;
 
- lines.forEach(line=>{
-  line=line.trim();
+ lines.forEach(l=>{
+  l=l.trim();
+  if(!l)return;
 
-  if(!line)return;
-
-  // Kategorie erkennen (Zeit vorne)
-  if(line.match(/^\d{2}:\d{2}/)){
-    const name=line.split(" ").slice(5).join(" ");
-    currentCat=name;
-    return;
+  if(l.match(/^\d{2}:\d{2}/)){
+   cat=l.split(" ").slice(5).join(" ");
+   return;
   }
 
-  const m=line.match(/^(\d+)\s+(.+)$/);
+  let m=l.match(/^(\d+)\s+(.+)$/);
 
   if(m){
-    let text=m[2];
-    let parts=text.split(" ");
+   let parts=m[2].split(" ");
+   let club=parts.slice(-2).join(" ");
+   let name=parts.slice(0,-2).join(" ");
 
-    let club=parts.slice(-2).join(" ");
-    let name=parts.slice(0,-2).join(" ");
-
-    active.runners.push({
-      name,
-      club,
-      category:currentCat,
-      start:start++,
-      a1:0,a2:0,a3:0,
-      b1:0,b2:0,b3:0,
-      total:0,place:0,live:false
-    });
+   active.runners.push({
+    name,club,category:cat,start:start++,
+    total:0,place:0,live:false
+   });
   }
  });
 
@@ -176,7 +168,7 @@ window.importText=function(){
  renderRunners();
 };
 
-// Läufer anzeigen
+// anzeigen
 function renderRunners(){
 
  let cats={};
@@ -186,79 +178,72 @@ function renderRunners(){
   cats[r.category].push(r);
  });
 
- let html="";
-
- Object.keys(cats).forEach(cat=>{
-  html+=`<div class="card"><b>${cat}</b><div class="grid">`;
-
-  cats[cat]
-  .sort((a,b)=>a.place-b.place || a.start-b.start)
-  .forEach(r=>{
-    html+=`
-    <div class="runner 
-    ${r.live?"live":""}
-    ${r.place==1?"place1":""}
-    ${r.place==2?"place2":""}
-    ${r.place==3?"place3":""}">
-     ${r.place||r.start} ${r.name}<br>
-     ${r.club||""}<br>
-     ${r.total||0}
-    </div>`;
-  });
-
-  html+="</div></div>";
- });
-
- runnerList.innerHTML=html;
+ runnerList.innerHTML=Object.keys(cats).map(cat=>`
+  <div class="card">
+    <b>${cat}</b>
+    <div class="grid">
+     ${cats[cat]
+      .sort((a,b)=>a.place-b.place || a.start-b.start)
+      .map(r=>`
+       <div class="runner 
+        ${r.live?"live":""}
+        ${r.place==1?"place1":""}
+        ${r.place==2?"place2":""}
+        ${r.place==3?"place3":""}">
+         ${r.place||r.start} ${r.name}<br>
+         ${r.club||""}<br>
+         ${r.total||0}
+       </div>
+     `).join("")}
+    </div>
+  </div>
+ `).join("");
 }
 
-// Start
-window.start=function(){
+// START
+window.start=()=>{
  active.runners.forEach(r=>r.live=false);
  active.runners.sort((a,b)=>a.start-b.start)[0].live=true;
  save(); renderRunners();
 };
 
-// weiter
-window.next=function(){
+// NEXT
+window.next=()=>{
  let list=[...active.runners].sort((a,b)=>a.start-b.start);
  let i=list.findIndex(r=>r.live);
+
  if(i>=0){
   list[i].live=false;
   if(list[i+1]) list[i+1].live=true;
  }
+
  save(); renderRunners();
 };
 
-// Abzüge
-function calcDed(str){
+// Abzug
+function calc(input){
  let sum=0;
- str.split(",").forEach(n=>{
+ input.split(",").forEach(n=>{
   let num=n.trim().toUpperCase().replace("A","").replace("B","");
-  if(deductions[num]) sum+=deductions[num];
+  if(ded[num]) sum+=ded[num];
  });
  return sum;
 }
 
 // speichern
-window.saveScore=function(){
+window.saveScore=()=>{
 
  let r=active.runners.find(x=>x.live);
  if(!r)return;
 
- r.a1=+A1.value||0;
- r.a2=+A2.value||0;
- r.a3=+A3.value||0;
+ let A=[A1.value,A2.value,A3.value].map(n=>+n||0);
+ let B=[B1.value,B2.value,B3.value].map(n=>+n||0);
 
- r.b1=+B1.value||0;
- r.b2=+B2.value||0;
- r.b3=+B3.value||0;
+ r.aScore=A.reduce((a,b)=>a+b,0);
+ r.bScore=B.reduce((a,b)=>a+b,0);
 
- r.aScore=r.a1+r.a2+r.a3;
- r.bScore=r.b1+r.b2+r.b3;
-
- r.deductionNumbers=ded.value;
- r.deduction=calcDed(ded.value);
+ r.deductionNumbers=dedInput.value;
+ r.deduction=calc(dedInput.value);
 
  r.total=r.aScore+r.bScore-r.deduction;
 
@@ -271,7 +256,6 @@ function ranking(){
  active.runners.sort((a,b)=>b.total-a.total);
  active.runners.forEach((r,i)=>r.place=i+1);
 }
-
 </script>
 </head>
 
@@ -280,8 +264,10 @@ function ranking(){
 <div class="app">
 
 <div class="card">
-<h3>Wettbewerb</h3>
+<h3>Wettbewerb erstellen</h3>
 <input id="compName" placeholder="Name">
+<input type="date" id="compFrom">
+<input type="date" id="compTo">
 <button onclick="addCompetition()">Speichern</button>
 </div>
 
@@ -291,8 +277,8 @@ function ranking(){
 </div>
 
 <div class="card">
-<h3>PDF Import</h3>
-<textarea id="importTextArea"></textarea>
+<h3>PDF / Text Import</h3>
+<textarea id="importArea"></textarea>
 <button onclick="importText()">Import</button>
 </div>
 
@@ -313,7 +299,7 @@ B:
 <input id="B1"><input id="B2"><input id="B3">
 
 Abzüge:
-<input id="ded">
+<input id="dedInput" placeholder="z.B. 5A,12,3">
 
 <button onclick="saveScore()">Speichern</button>
 <button onclick="next()">Weiter</button>
