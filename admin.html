@@ -2,47 +2,54 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>RollArt Wettbewerb</title>
+<title>🏆 Rollkunstlauf Wettbewerb</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#0f172a;
+  background:linear-gradient(180deg,#0f172a,#020617);
   color:white;
 }
 
 .app{
-  max-width:1500px;
+  max-width:1600px;
   margin:auto;
   padding:15px;
 }
 
+h2{text-align:center;}
+
 .card{
-  background:#1e293b;
+  background:linear-gradient(145deg,#1e293b,#0f172a);
   padding:16px;
   border-radius:18px;
-  margin-bottom:12px;
+  margin-bottom:14px;
+  box-shadow:0 0 12px rgba(0,0,0,0.5);
 }
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:10px;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:12px;
 }
 
 .runner{
   background:#334155;
-  padding:10px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:12px;
   transition:0.2s;
 }
 
 .runner:hover{
-  transform:scale(1.03);
+  transform:scale(1.05);
 }
 
-.live{background:#16a34a;}
+.live{
+  background:#16a34a;
+  box-shadow:0 0 10px #16a34a;
+}
+
 .place1{background:#ca8a04;}
 .place2{background:#9ca3af;}
 .place3{background:#b45309;}
@@ -54,6 +61,12 @@ input,textarea,button{
   border:none;
   margin-top:6px;
   box-sizing:border-box;
+  font-size:15px;
+}
+
+input,textarea{
+  background:#475569;
+  color:white;
 }
 
 button{
@@ -68,8 +81,9 @@ button:hover{
 }
 
 .big{
-  font-size:28px;
+  font-size:32px;
   text-align:center;
+  font-weight:bold;
 }
 </style>
 
@@ -78,14 +92,14 @@ let competitions=[];
 let active=null;
 let index=0;
 
-// ✅ Abzüge komplett
+// ✅ Abzüge
 const ded={
  "1":0.3,"2":0.5,"3":0.3,"4":0.2,"5":0.3,"6":0.3,"7":0.3,"8":0.3,
  "9":0.5,"10":0.5,"11":0.3,"12":0.3,"13":0.3,"14":0.3,"15":0.3,
  "16":0.5,"17":0.2,"18":0.5,"19":0.5,"20":0.5,"21":0.3,"22":0.5,"23":0.2
 };
 
-// ✅ Wettbewerb erstellen
+// Wettbewerb
 function addComp(){
  competitions.push({
   id:Date.now(),
@@ -99,18 +113,16 @@ function addComp(){
  renderComps();
 }
 
-// ✅ löschen
 function deleteComp(id){
  if(!confirm("Löschen?")) return;
- competitions = competitions.filter(c=>c.id!==id);
+ competitions=competitions.filter(c=>c.id!==id);
  renderComps();
 }
 
-// anzeigen Wettbewerbe
 function renderComps(){
  compList.innerHTML=competitions.map(c=>`
   <div class="runner">
-   <b>${c.name}</b><br>
+   <b>🏆 ${c.name}</b><br>
    📅 ${c.from||"-"} - ${c.to||"-"}
    <button onclick="openComp(${c.id})">Öffnen</button>
    <button onclick="deleteComp(${c.id})">🗑 Löschen</button>
@@ -118,37 +130,51 @@ function renderComps(){
  `).join("");
 }
 
-// öffnen
 function openComp(id){
  active=competitions.find(c=>c.id===id);
  index=0;
  renderRunners();
 }
 
-// 📄 IMPORT Startliste
+// ✅ STARTLISTE IMPORT (DEIN PDF)
 function importText(){
 
  let lines=importArea.value.split("\n");
- let cat="";
+ let category="";
  let start=1;
+
+ active.runners=[];
 
  lines.forEach(l=>{
   l=l.trim();
   if(!l) return;
 
-  if(l.match(/^\d{2}:\d{2}/)){
-   cat=l.split(" ").slice(5).join(" ");
+  if(
+   l.includes("Freiläufer")||
+   l.includes("Anfänger")||
+   l.includes("Minis")||
+   l.includes("Figurenläufer")||
+   l.includes("Schüler")||
+   l.includes("Jugend")||
+   l.includes("Junioren")||
+   l.includes("Kunstläufer")||
+   l.includes("Nachwuchs")||
+   l.includes("Cup")
+  ){
+   category=l;
    return;
   }
 
   let m=l.match(/^(\d+)\s+(.+)$/);
   if(m){
+
    let parts=m[2].split(" ");
+
    let club=parts.slice(-2).join(" ");
    let name=parts.slice(0,-2).join(" ");
 
    active.runners.push({
-    name,club,category:cat,start:start++,
+    name,club,category,start:start++,
     total:0,place:0
    });
   }
@@ -157,23 +183,23 @@ function importText(){
  renderRunners();
 }
 
-// ▶ START
+// START
 function start(){
  index=0;
  showCurrent();
 }
 
-// ➡ Weiter
+// NEXT
 function next(){
  index++;
  showCurrent();
 }
 
-// ⭐ SPEICHERN
+// SAVE
 function saveScore(){
 
  let r=active.runners[index];
- if(!r) return;
+ if(!r)return;
 
  let A=[A1.value,A2.value,A3.value].map(x=>+x||0);
  let B=[B1.value,B2.value,B3.value].map(x=>+x||0);
@@ -183,11 +209,14 @@ function saveScore(){
 
  let d=calc(dedInput.value);
 
+ r.aScore=a;
+ r.bScore=b;
+ r.deduction=d;
  r.total=a+b-d;
 
  ranking();
 
- // reset inputs ✅
+ // reset ✅
  A1.value="";A2.value="";A3.value="";
  B1.value="";B2.value="";B3.value="";
  dedInput.value="";
@@ -195,12 +224,11 @@ function saveScore(){
  next();
 }
 
-// Abzug
 function calc(input){
  let sum=0;
  input.split(",").forEach(n=>{
-  let num=n.trim().toUpperCase().replace("A","").replace("B","");
-  if(ded[num]) sum+=ded[num];
+   let num=n.trim().toUpperCase().replace("A","").replace("B","");
+   if(ded[num]) sum+=ded[num];
  });
  return sum;
 }
@@ -211,7 +239,7 @@ function ranking(){
  active.runners.forEach((r,i)=>r.place=i+1);
 }
 
-// Anzeige Liste
+// anzeigen
 function renderRunners(){
 
  let cats={};
@@ -223,18 +251,25 @@ function renderRunners(){
 
  list.innerHTML=Object.keys(cats).map(cat=>`
   <div class="card">
-   <b>${cat}</b>
+   <b>📂 ${cat}</b>
    <div class="grid">
     ${cats[cat]
-    .sort((a,b)=>a.place-b.place || a.start-b.start)
+    .sort((a,b)=>a.place-b.place||a.start-b.start)
     .map(r=>`
      <div class="runner
      ${r.place==1?"place1":""}
      ${r.place==2?"place2":""}
      ${r.place==3?"place3":""}">
-      ${r.place||r.start} ${r.name}<br>
-      ${r.club||""}<br>
-      🏆 ${r.total||0}
+     
+      🏆 ${r.place||r.start}<br>
+      🛼 ${r.name}<br>
+      <small>${r.club||""}</small><br><br>
+
+      ⭐ ${r.aScore||0}<br>
+      🎨 ${r.bScore||0}<br>
+      ❌ ${r.deduction||0}<br>
+
+      <b>${r.total||0}</b>
      </div>
     `).join("")}
    </div>
@@ -250,15 +285,16 @@ function showCurrent(){
  let r=active.runners[index];
 
  if(!r){
-  current.innerHTML="🏁 Fertig";
+  current.innerHTML="<div class='card big'>🏁 FERTIG</div>";
   return;
  }
 
  current.innerHTML=`
-  <div class="card big">
-   🔴 ${r.name}<br>
-   ${r.club||""}
-  </div>
+ <div class="card big">
+   🔴 AKTUELL<br><br>
+   🛼 ${r.name}<br>
+   <small>${r.club||""}</small>
+ </div>
  `;
 }
 
@@ -269,8 +305,10 @@ function showCurrent(){
 
 <div class="app">
 
+<h2>🏆 Rollkunstlauf Wettbewerb</h2>
+
 <div class="card">
-<h3>Wettbewerb erstellen</h3>
+<h3>Wettbewerb</h3>
 <input id="compName" placeholder="Name">
 <input type="date" id="compFrom">
 <input type="date" id="compTo">
@@ -283,13 +321,13 @@ function showCurrent(){
 </div>
 
 <div class="card">
-<h3>Startliste (PDF/Text)</h3>
+<h3>Startliste (aus PDF kopieren)</h3>
 <textarea id="importArea"></textarea>
 <button onclick="importText()">Import</button>
 </div>
 
 <div class="card">
-<h3>Live</h3>
+<h3>Live Wertung</h3>
 
 <button onclick="start()">Start</button>
 
@@ -304,7 +342,6 @@ Abzüge:
 
 <button onclick="saveScore()">Speichern</button>
 <button onclick="next()">Weiter</button>
-
 </div>
 
 <div id="current"></div>
