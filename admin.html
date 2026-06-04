@@ -2,228 +2,222 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏆 RollArt Live</title>
+<title>Admin</title>
 
 <style>
-body{
-  margin:0;
-  padding:0;
-  font-family:Arial,sans-serif;
-  background:#0f172a;
-  color:white;
-}
-
-.app{
-  max-width:1700px;
-  margin:auto;
-  padding:12px;
-}
-
-.card{
-  background:#1e293b;
-  padding:14px;
-  border-radius:18px;
-  margin-bottom:14px;
-}
-
-.liveNow{
-  background:#dc2626;
-  padding:20px;
-  border-radius:20px;
-  text-align:center;
-  margin-bottom:14px;
-}
-
-.liveNow h1{margin:0;font-size:42px;}
-.liveNow h2{margin:8px 0 0;font-size:26px;}
-
-.nextRunner{
-  background:#2563eb;
-  padding:14px;
-  border-radius:16px;
-  text-align:center;
-  margin-bottom:14px;
-}
-
-.runnerGrid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-  gap:8px;
-}
-
-.resultItem{
-  background:#334155;
-  padding:8px;
-  border-radius:10px;
-  font-size:12px;
-  line-height:1.5;
-}
-
-.resultItem.live{
-  background:#16a34a;
-  transform:scale(1.04);
-}
-
-.place1{background:#ca8a04;}
-.place2{background:#9ca3af;}
-.place3{background:#b45309;}
-
-.categoryTitle{
-  background:#1d4ed8;
-  padding:10px;
-  border-radius:12px;
-  margin-bottom:8px;
-  font-weight:bold;
-}
-
-.medal{font-size:18px;font-weight:bold;}
-summary{cursor:pointer;}
+body{font-family:Arial;background:#0f172a;color:white;margin:0;padding:10px;}
+.card{background:#1e293b;padding:10px;margin-bottom:10px;border-radius:10px;}
+button{padding:10px;margin-top:5px;width:100%;}
+input{width:100%;padding:10px;margin-top:5px;}
+.result{background:#334155;padding:5px;margin:5px;border-radius:8px;}
 </style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey:"AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
-  authDomain:"rollart-score-5319a.firebaseapp.com",
-  projectId:"rollart-score-5319a"
+const app = initializeApp({
+ apiKey:"AIzaSy...",
+ authDomain:"rollart-score-5319a.firebaseapp.com",
+ projectId:"rollart-score-5319a"
+});
+
+const db=getFirestore(app);
+
+let competitions=[];
+let active=null;
+
+// ✅ komplette abzüge
+const deductions={
+ "1":0.3,"2":0.5,"3":0.3,"4":0.2,"5":0.3,"6":0.3,"7":0.3,"8":0.3,
+ "9":0.5,"10":0.5,"11":0.3,"12":0.3,"13":0.3,"14":0.3,"15":0.3,
+ "16":0.5,"17":0.2,"18":0.5,"19":0.5,"20":0.5,"21":0.3,"22":0.5,"23":0.2
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-function medal(place){
-  if(place==1) return "🥇";
-  if(place==2) return "🥈";
-  if(place==3) return "🥉";
-  return "🏆";
+async function save(){
+ await setDoc(doc(db,"rollart","database"),{competitions});
+ updateLive();
 }
 
-function renderCompetition(comp){
-
-  const output = document.getElementById("liveCompetition");
-
-  if(!comp){
-    output.innerHTML = `<div class="card">🏁 Kein aktiver Wettbewerb</div>`;
-    return;
-  }
-
-  const runners = [...comp.runners].sort((a,b)=>Number(a.start)-Number(b.start));
-
-  const currentRunner = runners.find(r=>r.liveActive);
-  const nextRunner = runners.find(r=>Number(r.start) === Number(currentRunner?.start)+1);
-
-  // Kategorien
-  const categories = {};
-  comp.runners.forEach(r=>{
-    const key = r.category || "Ohne Kategorie";
-    if(!categories[key]) categories[key]=[];
-    categories[key].push(r);
-  });
-
-  output.innerHTML = `
-    <div class="card">
-      <h2>🏆 ${comp.name}</h2>
-      📍 ${comp.place}<br>
-      📅 ${comp.from} - ${comp.to}
-    </div>
-
-    ${currentRunner ? `
-    <div class="liveNow">
-      🔴 AKTUELL
-      <h1>${currentRunner.name}</h1>
-      <h2>${currentRunner.club || "-"}</h2>
-    </div>` : ""}
-
-    ${nextRunner ? `
-    <div class="nextRunner">
-      ⏭ Danach<br><br>
-      <b>${nextRunner.name}</b><br>
-      ${nextRunner.club || "-"}
-    </div>` : ""}
-
-    ${Object.keys(categories).map(cat => `
-    <details open>
-      <summary class="categoryTitle">📂 ${cat}</summary>
-
-      <div class="runnerGrid">
-        ${categories[cat]
-        .sort((a,b)=>{
-          if(a.place && b.place){
-            return Number(a.place)-Number(b.place);
-          }
-          return Number(a.start)-Number(b.start);
-        })
-        .map(r => `
-          <div class="resultItem 
-            ${r.liveActive?"live":""}
-            ${r.place==1?"place1":""}
-            ${r.place==2?"place2":""}
-            ${r.place==3?"place3":""}
-          ">
-            <div class="medal">
-              ${medal(r.place)} ${r.place || r.start}
-            </div>
-
-            <br>
-            ${r.name}<br>
-            ${r.club || "-"}
-            <br><br>
-
-            ⭐ Technik: ${r.aScore || 0}<br>
-            🎨 Kunst: ${r.bScore || 0}<br>
-
-            ⚠ Nummern: ${r.deductionNumbers || "-"}<br>
-            ⚠ Abzug: ${r.deduction || 0}<br>
-
-            🏆 Gesamt: ${r.total || 0}
-          </div>
-        `).join("")}
-      </div>
-
-    </details><br>
-    `).join("")}
-  `;
+async function updateLive(){
+ if(!active)return;
+ const runner=active.runners.find(r=>r.live);
+ await setDoc(doc(db,"rollart","live"),{
+  competition:active,
+  runner:runner||null
+ });
 }
 
-// LIVE Wettbewerb
-onSnapshot(doc(db,"rollart","live"), (snapshot)=>{
-  if(snapshot.exists()){
-    renderCompetition(snapshot.data().competition);
+// ✅ laden
+async function load(){
+ const snap=await getDoc(doc(db,"rollart","database"));
+ if(snap.exists()) competitions=snap.data().competitions||[];
+ renderComps();
+}
+
+window.onload=load;
+
+// ✅ Wettbewerb erstellen
+window.addComp=function(){
+ competitions.push({
+  id:Date.now(),
+  name:compName.value,
+  runners:[],
+  finished:false
+ });
+ save(); renderComps();
+};
+
+// ✅ anzeigen
+function renderComps(){
+ let out="";
+ competitions.forEach(c=>{
+  out+=`<div class="result">
+  ${c.name}
+  <button onclick="openComp(${c.id})">Öffnen</button>
+  </div>`;
+ });
+ compList.innerHTML=out;
+}
+
+// ✅ öffnen
+window.openComp=function(id){
+ active=competitions.find(c=>c.id===id);
+ renderRunners();
+};
+
+// ✅ Läufer hinzufügen
+window.addRunner=function(){
+ active.runners.push({
+  name:runnerName.value,
+  a1:0,a2:0,a3:0,
+  b1:0,b2:0,b3:0,
+  total:0,
+  deduction:0,
+  place:0,
+  live:false
+ });
+ save(); renderRunners();
+};
+
+// ✅ Start
+window.startComp=function(){
+ active.runners.forEach(r=>r.live=false);
+ active.runners[0].live=true;
+ save(); renderRunners();
+};
+
+// ✅ nächster
+window.next=function(){
+ const i=active.runners.findIndex(r=>r.live);
+ if(i>=0){
+  active.runners[i].live=false;
+  if(active.runners[i+1]){
+   active.runners[i+1].live=true;
   }
-});
+ }
+ save(); renderRunners();
+};
 
-// Archiv
-onSnapshot(doc(db,"rollart","database"), (snapshot)=>{
-  if(!snapshot.exists()) return;
+// ✅ Abzug berechnung
+function calcDed(input){
+ let sum=0;
+ input.split(",").forEach(n=>{
+  let num=n.trim().toUpperCase().replace("A","").replace("B","");
+  if(deductions[num]) sum+=deductions[num];
+ });
+ return sum;
+}
 
-  const archiveList = document.getElementById("archiveList");
-  archiveList.innerHTML="";
+// ✅ speichern
+window.saveScore=function(){
 
-  const archive = snapshot.data().archivedCompetitions || [];
+ const r=active.runners.find(x=>x.live);
+ if(!r)return;
 
-  archive.forEach(comp=>{
-    archiveList.innerHTML += `
-      <div class="card">
-        🏁 ${comp.name}
-      </div>
-    `;
-  });
-});
+ r.a1=A1.value||0;
+ r.a2=A2.value||0;
+ r.a3=A3.value||0;
+
+ r.b1=B1.value||0;
+ r.b2=B2.value||0;
+ r.b3=B3.value||0;
+
+ r.aScore=+r.a1+ +r.a2+ +r.a3;
+ r.bScore=+r.b1+ +r.b2+ +r.b3;
+
+ r.deductionNumbers=ded.value;
+ r.deduction=calcDed(ded.value);
+
+ r.total=r.aScore+r.bScore-r.deduction;
+
+ ranking();
+
+ next();
+};
+
+// ✅ ranking
+function ranking(){
+ active.runners.sort((a,b)=>b.total-a.total);
+ active.runners.forEach((r,i)=>r.place=i+1);
+}
+
+// ✅ anzeigen
+function renderRunners(){
+ if(!active)return;
+
+ let out="";
+ active.runners.forEach(r=>{
+  out+=`<div class="result">
+  ${r.place||""} ${r.name} (${r.total})
+  ${r.live?"🔴":""}
+  </div>`;
+ });
+ runnerList.innerHTML=out;
+}
+
 </script>
 </head>
 
 <body>
 
-<div class="app">
-  <div id="liveCompetition"></div>
+<div class="card">
+<h3>Wettbewerb erstellen</h3>
+<input id="compName" placeholder="Name">
+<button onclick="addComp()">Speichern</button>
+</div>
 
-  <div class="card">
-    <h2>📂 Archiv</h2>
-    <div id="archiveList"></div>
-  </div>
+<div class="card">
+<h3>Wettbewerbe</h3>
+<div id="compList"></div>
+</div>
+
+<div class="card">
+<h3>Läufer</h3>
+<input id="runnerName" placeholder="Name">
+<button onclick="addRunner()">Hinzufügen</button>
+<div id="runnerList"></div>
+</div>
+
+<div class="card">
+<h3>Live</h3>
+
+<button onclick="startComp()">Start</button>
+
+<br>
+A:
+<input id="A1"><input id="A2"><input id="A3">
+
+<br>
+B:
+<input id="B1"><input id="B2"><input id="B3">
+
+<br>
+Abzüge:
+<input id="ded" placeholder="z.B. 5,12,3">
+
+<button onclick="saveScore()">Speichern</button>
+<button onclick="next()">Weiter</button>
 </div>
 
 </body>
