@@ -12,34 +12,34 @@ body{
   color:white;
 }
 
-.container{
-  display:grid;
-  grid-template-columns: 350px 1fr;
-  gap:10px;
-  padding:10px;
+.app{
+  max-width:1500px;
+  margin:auto;
+  padding:15px;
 }
 
 .card{
   background:#1e293b;
-  padding:12px;
-  border-radius:12px;
+  padding:16px;
+  border-radius:18px;
+  margin-bottom:12px;
 }
 
-input,textarea,button{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border:none;
-  border-radius:8px;
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:10px;
 }
-
-button{background:#2563eb;color:white;}
 
 .runner{
   background:#334155;
-  padding:8px;
-  margin:5px;
-  border-radius:8px;
+  padding:10px;
+  border-radius:10px;
+  transition:0.2s;
+}
+
+.runner:hover{
+  transform:scale(1.03);
 }
 
 .live{background:#16a34a;}
@@ -47,26 +47,89 @@ button{background:#2563eb;color:white;}
 .place2{background:#9ca3af;}
 .place3{background:#b45309;}
 
+input,textarea,button{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  margin-top:6px;
+  box-sizing:border-box;
+}
+
+button{
+  background:#2563eb;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#1d4ed8;
+}
+
 .big{
   font-size:28px;
+  text-align:center;
 }
 </style>
 
 <script>
-let runners=[];
-let currentIndex=0;
+let competitions=[];
+let active=null;
+let index=0;
 
+// ✅ Abzüge komplett
 const ded={
  "1":0.3,"2":0.5,"3":0.3,"4":0.2,"5":0.3,"6":0.3,"7":0.3,"8":0.3,
  "9":0.5,"10":0.5,"11":0.3,"12":0.3,"13":0.3,"14":0.3,"15":0.3,
  "16":0.5,"17":0.2,"18":0.5,"19":0.5,"20":0.5,"21":0.3,"22":0.5,"23":0.2
 };
 
-// 📄 IMPORT
+// ✅ Wettbewerb erstellen
+function addComp(){
+ competitions.push({
+  id:Date.now(),
+  name:compName.value,
+  from:compFrom.value,
+  to:compTo.value,
+  runners:[]
+ });
+
+ compName.value="";
+ renderComps();
+}
+
+// ✅ löschen
+function deleteComp(id){
+ if(!confirm("Löschen?")) return;
+ competitions = competitions.filter(c=>c.id!==id);
+ renderComps();
+}
+
+// anzeigen Wettbewerbe
+function renderComps(){
+ compList.innerHTML=competitions.map(c=>`
+  <div class="runner">
+   <b>${c.name}</b><br>
+   📅 ${c.from||"-"} - ${c.to||"-"}
+   <button onclick="openComp(${c.id})">Öffnen</button>
+   <button onclick="deleteComp(${c.id})">🗑 Löschen</button>
+  </div>
+ `).join("");
+}
+
+// öffnen
+function openComp(id){
+ active=competitions.find(c=>c.id===id);
+ index=0;
+ renderRunners();
+}
+
+// 📄 IMPORT Startliste
 function importText(){
 
  let lines=importArea.value.split("\n");
- let category="";
+ let cat="";
  let start=1;
 
  lines.forEach(l=>{
@@ -74,47 +137,43 @@ function importText(){
   if(!l) return;
 
   if(l.match(/^\d{2}:\d{2}/)){
-    category = l.split(" ").slice(5).join(" ");
-    return;
+   cat=l.split(" ").slice(5).join(" ");
+   return;
   }
 
   let m=l.match(/^(\d+)\s+(.+)$/);
   if(m){
-    let parts=m[2].split(" ");
+   let parts=m[2].split(" ");
+   let club=parts.slice(-2).join(" ");
+   let name=parts.slice(0,-2).join(" ");
 
-    let club=parts.slice(-2).join(" ");
-    let name=parts.slice(0,-2).join(" ");
-
-    runners.push({
-      name,
-      club,
-      category,
-      start:start++,
-      total:0,
-      place:0
-    });
+   active.runners.push({
+    name,club,category:cat,start:start++,
+    total:0,place:0
+   });
   }
  });
 
- render();
+ renderRunners();
 }
 
 // ▶ START
-function startRun(){
- currentIndex=0;
- highlight();
+function start(){
+ index=0;
+ showCurrent();
 }
 
-// ➡ WEITER
+// ➡ Weiter
 function next(){
- currentIndex++;
- highlight();
+ index++;
+ showCurrent();
 }
 
 // ⭐ SPEICHERN
 function saveScore(){
 
- let r=runners[currentIndex];
+ let r=active.runners[index];
+ if(!r) return;
 
  let A=[A1.value,A2.value,A3.value].map(x=>+x||0);
  let B=[B1.value,B2.value,B3.value].map(x=>+x||0);
@@ -122,93 +181,117 @@ function saveScore(){
  let a=A.reduce((a,b)=>a+b,0);
  let b=B.reduce((a,b)=>a+b,0);
 
- let d=calcDed(dedInput.value);
+ let d=calc(dedInput.value);
 
  r.total=a+b-d;
 
  ranking();
 
+ // reset inputs ✅
+ A1.value="";A2.value="";A3.value="";
+ B1.value="";B2.value="";B3.value="";
+ dedInput.value="";
+
  next();
 }
 
-// Abzüge
-function calcDed(input){
+// Abzug
+function calc(input){
  let sum=0;
  input.split(",").forEach(n=>{
-   let num=n.trim().toUpperCase().replace("A","").replace("B","");
-   if(ded[num]) sum+=ded[num];
+  let num=n.trim().toUpperCase().replace("A","").replace("B","");
+  if(ded[num]) sum+=ded[num];
  });
  return sum;
 }
 
-// Ranking
+// ranking
 function ranking(){
- runners.sort((a,b)=>b.total-a.total);
- runners.forEach((r,i)=>r.place=i+1);
+ active.runners.sort((a,b)=>b.total-a.total);
+ active.runners.forEach((r,i)=>r.place=i+1);
 }
 
-// Anzeige
-function render(){
+// Anzeige Liste
+function renderRunners(){
 
  let cats={};
 
- runners.forEach(r=>{
+ active.runners.forEach(r=>{
   if(!cats[r.category]) cats[r.category]=[];
   cats[r.category].push(r);
  });
 
  list.innerHTML=Object.keys(cats).map(cat=>`
   <div class="card">
-    <b>${cat}</b>
-    ${cats[cat].map(r=>`
-      <div class="runner
-      ${r.place==1?"place1":""}
-      ${r.place==2?"place2":""}
-      ${r.place==3?"place3":""}">
-      ${r.place||r.start} ${r.name} (${r.club})<br>
+   <b>${cat}</b>
+   <div class="grid">
+    ${cats[cat]
+    .sort((a,b)=>a.place-b.place || a.start-b.start)
+    .map(r=>`
+     <div class="runner
+     ${r.place==1?"place1":""}
+     ${r.place==2?"place2":""}
+     ${r.place==3?"place3":""}">
+      ${r.place||r.start} ${r.name}<br>
+      ${r.club||""}<br>
       🏆 ${r.total||0}
-      </div>
+     </div>
     `).join("")}
+   </div>
   </div>
  `).join("");
 }
 
 // aktueller Läufer
-function highlight(){
+function showCurrent(){
 
- render();
+ renderRunners();
 
- let current=runners[currentIndex];
+ let r=active.runners[index];
 
- if(!current){
-  currentRunner.innerHTML="FERTIG";
+ if(!r){
+  current.innerHTML="🏁 Fertig";
   return;
  }
 
- currentRunner.innerHTML=`
-   🔴 <span class="big">${current.name}</span><br>
-   ${current.club}
+ current.innerHTML=`
+  <div class="card big">
+   🔴 ${r.name}<br>
+   ${r.club||""}
+  </div>
  `;
 }
+
 </script>
 </head>
 
 <body>
 
-<div class="container">
-
-<div>
+<div class="app">
 
 <div class="card">
-<h3>Startliste importieren (PDF Text)</h3>
+<h3>Wettbewerb erstellen</h3>
+<input id="compName" placeholder="Name">
+<input type="date" id="compFrom">
+<input type="date" id="compTo">
+<button onclick="addComp()">Speichern</button>
+</div>
+
+<div class="card">
+<h3>Wettbewerbe</h3>
+<div id="compList"></div>
+</div>
+
+<div class="card">
+<h3>Startliste (PDF/Text)</h3>
 <textarea id="importArea"></textarea>
 <button onclick="importText()">Import</button>
 </div>
 
 <div class="card">
-<h3>Wertung</h3>
+<h3>Live</h3>
 
-<button onclick="startRun()">Start</button>
+<button onclick="start()">Start</button>
 
 A:
 <input id="A1"><input id="A2"><input id="A3">
@@ -217,24 +300,15 @@ B:
 <input id="B1"><input id="B2"><input id="B3">
 
 Abzüge:
-<input id="dedInput" placeholder="z.B. 5,12,3">
+<input id="dedInput" placeholder="z.B. 5A,12,3">
 
 <button onclick="saveScore()">Speichern</button>
 <button onclick="next()">Weiter</button>
 
 </div>
 
-</div>
-
-<div>
-
-<div class="card" id="currentRunner">
-Kein Lauf gestartet
-</div>
-
+<div id="current"></div>
 <div id="list"></div>
-
-</div>
 
 </div>
 
