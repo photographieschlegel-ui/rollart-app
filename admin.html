@@ -5,31 +5,73 @@
 <title>RollArt Admin</title>
 
 <style>
-body{background:#0f172a;color:white;font-family:Arial;margin:0;padding:10px;}
-.card{background:#1e293b;padding:12px;border-radius:12px;margin-bottom:10px;}
-input,button{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none;}
-button{background:#2563eb;color:white;}
-.runner{background:#334155;padding:8px;margin:5px;border-radius:8px;}
+body{
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  margin:0;
+}
+
+.app{
+  max-width:1400px;
+  margin:auto;
+  padding:10px;
+}
+
+.card{
+  background:#1e293b;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:8px;
+}
+
+.runner{
+  background:#334155;
+  padding:8px;
+  border-radius:8px;
+}
+
 .live{background:#16a34a;}
+.place1{background:#ca8a04;}
+.place2{background:#9ca3af;}
+.place3{background:#b45309;}
+
+input,textarea,button{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border:none;
+  border-radius:8px;
+}
+
+button{
+  background:#2563eb;
+  color:white;
+}
 </style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
+const app = initializeApp({
  apiKey:"AIzaSyDtwZxklHFyqzEkhGbpBHKjcgLmPcD-oAU",
  authDomain:"rollart-score-5319a.firebaseapp.com",
  projectId:"rollart-score-5319a"
-};
+});
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db=getFirestore(app);
 
 let competitions=[];
 let active=null;
 
-// ✅ komplette Abzüge
+// ✅ Abzüge komplett
 const deductions={
  "1":0.3,"2":0.5,"3":0.3,"4":0.2,"5":0.3,"6":0.3,"7":0.3,"8":0.3,
  "9":0.5,"10":0.5,"11":0.3,"12":0.3,"13":0.3,"14":0.3,"15":0.3,
@@ -45,10 +87,10 @@ async function save(){
 // live senden
 async function updateLive(){
  if(!active)return;
- const runner=active.runners.find(r=>r.live);
+ const r=active.runners.find(x=>x.live);
  await setDoc(doc(db,"rollart","live"),{
   competition:active,
-  runner:runner||null
+  runner:r||null
  });
 }
 
@@ -64,11 +106,11 @@ window.onload=load;
 window.addCompetition=function(){
  competitions.push({
   id:Date.now(),
-  name:compName.value,
+  name=compName.value,
+  categories:[],
   runners:[]
  });
- save();
- renderCompetitions();
+ save(); renderCompetitions();
 };
 
 // anzeigen
@@ -78,58 +120,120 @@ function renderCompetitions(){
   html+=`
   <div class="runner">
     ${c.name}
-    <button onclick="openCompetition(${c.id})">Öffnen</button>
+    <button onclick="openComp(${c.id})">Öffnen</button>
   </div>`;
  });
  compList.innerHTML=html;
 }
 
 // öffnen
-window.openCompetition=function(id){
+window.openComp=function(id){
  active=competitions.find(c=>c.id===id);
  renderRunners();
 };
 
-// Läufer hinzufügen
-window.addRunner=function(){
- active.runners.push({
-  name:runnerName.value,
-  a1:0,a2:0,a3:0,
-  b1:0,b2:0,b3:0,
-  total:0,
-  deduction:0,
-  place:0,
-  live:false
+// ✅ PDF/Text Import (mit Kategorien)
+window.importText=function(){
+
+ const lines=importTextArea.value.split("\n");
+ let currentCat=null;
+ let start=1;
+
+ lines.forEach(line=>{
+  line=line.trim();
+
+  if(!line)return;
+
+  // Kategorie erkennen (Zeit vorne)
+  if(line.match(/^\d{2}:\d{2}/)){
+    const name=line.split(" ").slice(5).join(" ");
+    currentCat=name;
+    return;
+  }
+
+  const m=line.match(/^(\d+)\s+(.+)$/);
+
+  if(m){
+    let text=m[2];
+    let parts=text.split(" ");
+
+    let club=parts.slice(-2).join(" ");
+    let name=parts.slice(0,-2).join(" ");
+
+    active.runners.push({
+      name,
+      club,
+      category:currentCat,
+      start:start++,
+      a1:0,a2:0,a3:0,
+      b1:0,b2:0,b3:0,
+      total:0,place:0,live:false
+    });
+  }
  });
+
  save();
  renderRunners();
 };
+
+// Läufer anzeigen
+function renderRunners(){
+
+ let cats={};
+
+ active.runners.forEach(r=>{
+  if(!cats[r.category]) cats[r.category]=[];
+  cats[r.category].push(r);
+ });
+
+ let html="";
+
+ Object.keys(cats).forEach(cat=>{
+  html+=`<div class="card"><b>${cat}</b><div class="grid">`;
+
+  cats[cat]
+  .sort((a,b)=>a.place-b.place || a.start-b.start)
+  .forEach(r=>{
+    html+=`
+    <div class="runner 
+    ${r.live?"live":""}
+    ${r.place==1?"place1":""}
+    ${r.place==2?"place2":""}
+    ${r.place==3?"place3":""}">
+     ${r.place||r.start} ${r.name}<br>
+     ${r.club||""}<br>
+     ${r.total||0}
+    </div>`;
+  });
+
+  html+="</div></div>";
+ });
+
+ runnerList.innerHTML=html;
+}
 
 // Start
-window.startCompetition=function(){
+window.start=function(){
  active.runners.forEach(r=>r.live=false);
- if(active.runners.length>0) active.runners[0].live=true;
- save();
- renderRunners();
+ active.runners.sort((a,b)=>a.start-b.start)[0].live=true;
+ save(); renderRunners();
 };
 
-// nächster
-window.nextRunner=function(){
- const i=active.runners.findIndex(r=>r.live);
+// weiter
+window.next=function(){
+ let list=[...active.runners].sort((a,b)=>a.start-b.start);
+ let i=list.findIndex(r=>r.live);
  if(i>=0){
-  active.runners[i].live=false;
-  if(active.runners[i+1]){
-   active.runners[i+1].live=true;
-  }
+  list[i].live=false;
+  if(list[i+1]) list[i+1].live=true;
  }
- save();
- renderRunners();
+ save(); renderRunners();
 };
 
-// Abzug berechnen
-function calcDed(input){
+// Abzüge
+function calcDed(str){
  let sum=0;
- input.split(",").forEach(n=>{
+ str.split(",").forEach(n=>{
   let num=n.trim().toUpperCase().replace("A","").replace("B","");
   if(deductions[num]) sum+=deductions[num];
  });
@@ -138,7 +242,8 @@ function calcDed(input){
 
 // speichern
 window.saveScore=function(){
- const r=active.runners.find(x=>x.live);
+
+ let r=active.runners.find(x=>x.live);
  if(!r)return;
 
  r.a1=+A1.value||0;
@@ -158,36 +263,24 @@ window.saveScore=function(){
  r.total=r.aScore+r.bScore-r.deduction;
 
  ranking();
- nextRunner();
+ next();
 };
 
-// Ranking
+// ranking
 function ranking(){
  active.runners.sort((a,b)=>b.total-a.total);
  active.runners.forEach((r,i)=>r.place=i+1);
 }
 
-// anzeigen
-function renderRunners(){
- if(!active)return;
-
- let html="";
- active.runners.forEach(r=>{
-  html+=`
-  <div class="runner ${r.live?"live":""}">
-    ${r.place||""} ${r.name} - ${r.total || 0}
-  </div>`;
- });
-
- runnerList.innerHTML=html;
-}
 </script>
 </head>
 
 <body>
 
+<div class="app">
+
 <div class="card">
-<h3>Wettbewerb erstellen</h3>
+<h3>Wettbewerb</h3>
 <input id="compName" placeholder="Name">
 <button onclick="addCompetition()">Speichern</button>
 </div>
@@ -198,28 +291,34 @@ function renderRunners(){
 </div>
 
 <div class="card">
+<h3>PDF Import</h3>
+<textarea id="importTextArea"></textarea>
+<button onclick="importText()">Import</button>
+</div>
+
+<div class="card">
 <h3>Läufer</h3>
-<input id="runnerName" placeholder="Name">
-<button onclick="addRunner()">Hinzufügen</button>
 <div id="runnerList"></div>
 </div>
 
 <div class="card">
-<h3>Live Wertung</h3>
+<h3>Live</h3>
 
-<button onclick="startCompetition()">Start</button>
+<button onclick="start()">Start</button>
 
-<br> A:
+A:
 <input id="A1"><input id="A2"><input id="A3">
 
-<br> B:
+B:
 <input id="B1"><input id="B2"><input id="B3">
 
-<br> Abzüge:
-<input id="ded" placeholder="z.B. 5,12,3">
+Abzüge:
+<input id="ded">
 
 <button onclick="saveScore()">Speichern</button>
-<button onclick="nextRunner()">Weiter</button>
+<button onclick="next()">Weiter</button>
+
+</div>
 
 </div>
 
